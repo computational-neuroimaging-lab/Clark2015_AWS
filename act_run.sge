@@ -1,0 +1,14 @@
+#! /bin/bash
+#$ -cwd
+#$ -S /bin/bash
+#$ -V
+#$ -t 1-50
+#$ -q all.q
+#$ -pe mpi_smp 8
+#$ -e /home/ubuntu/act_run.err
+#$ -o /home/ubuntu/act_run.out
+source /etc/profile.d/cpac_env.sh
+echo "Start - TASKID " $SGE_TASK_ID " : " $(date)
+export ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS=8
+python /home/ubuntu/act_run.py $SGE_TASK_ID /mnt
+echo "End - TASKID " $SGE_TASK_ID " : " $(date)

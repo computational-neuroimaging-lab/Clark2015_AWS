@@ -165,6 +165,7 @@ def main(index, local_dir):
     s3_key = bucket.get_key(s3_path)
     s3_filename = os.path.basename(s3_path)
     dl_filename = os.path.join(dl_dir, subj_id, s3_filename)
+
     # Make folders if need be
     dl_dirs = os.path.dirname(dl_filename)
     if not os.path.exists(dl_dirs):
