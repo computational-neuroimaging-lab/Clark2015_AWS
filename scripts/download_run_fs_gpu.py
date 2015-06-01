@@ -133,6 +133,7 @@ def main(index, local_dir):
     from CPAC.AWS import aws_utils, fetch_creds
     import pycuda.autoinit
     import pycuda.driver as cuda
+    from multiprocessing import Process
 
     # Init variables
     creds_path = '/home/ubuntu/secure-creds/aws-keys/fcp-indi-keys2.csv'
