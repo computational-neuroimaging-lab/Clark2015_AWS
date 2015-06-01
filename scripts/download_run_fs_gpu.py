@@ -165,7 +165,7 @@ def main(index, local_dir):
     proc=[]
     upload_proc=[]
     for inst in range(num_gpus):
-       
+
         # Set environment variable.
         os.environ['FREESURFER_CUDA_DEVICE'] = str(inst) 
         # Get the index of the subject to be run.
@@ -173,7 +173,7 @@ def main(index, local_dir):
         # Extract subject of interest
         subj_id.append(key_list[subj_index])
         s3_path = anat_dict[subj_id[inst]]
-    
+
         # Download data
         fs_log.info('Downloading %s...' % s3_path)
         s3_key = bucket.get_key(s3_path)
@@ -186,7 +186,8 @@ def main(index, local_dir):
         s3_key.get_contents_to_filename(dl_filename)
 
         # Execute recon-all
-	cmd_list = ['recon-all', '-use_gpu','-openmp','8', '-time','-qcache', '-i', dl_filename, '-subjid', subj_id[inst], '-all']
+        cmd_list = ['recon-all', '-use_gpu','-openmp','8', '-time', '-qcache',
+                    '-i', dl_filename, '-subjid', subj_id[inst], '-all']
         cmd_str = ' '.join(cmd_list)
         fs_log.info('Executing %s...' % cmd_str)
         # Use subprocess to send command and communicate outputs
@@ -205,16 +206,17 @@ def main(index, local_dir):
                 upl_list.extend([os.path.join(root, fl) for fl in files])
         # Update log with upload info
         fs_log.info('Gathered %d files for upload to S3' % len(upl_list))
-    
+
         # Build upload list
         upl_prefix = os.path.join(prefix.replace('RawData', 'Outputs'),
-                                  'IBA_TRT', 'freesurfer_gpu', subj_id[inst])
+                                  'freesurfer_gpu', subj_id[inst])
         s3_upl_list = [upl.replace(subj_dir, upl_prefix) for upl in upl_list]
-    
+
         # Upload to S3
-        upload_proc.append(Process(target=aws_utils.s3_upload, args=(bucket, upl_list, s3_upl_list)))
-	upload_proc[inst].start()
-    
+        upload_proc.append(Process(target=aws_utils.s3_upload,
+                                   args=(bucket, upl_list, s3_upl_list)))
+        upload_proc[inst].start()
+
     # Check that uploading has finished. 
     for inst in range(0,num_gpus):
         upload_proc[inst].join()
