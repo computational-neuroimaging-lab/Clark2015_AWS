@@ -198,7 +198,7 @@ def main(index, local_dir):
 
     # Build upload list
     upl_prefix = os.path.join(prefix.replace('RawData', 'Outputs'),
-                              'IBA_TRT', 'freesurfer', subj_id)
+                              'freesurfer', subj_id)
     s3_upl_list = [upl.replace(subj_dir, upl_prefix) for upl in upl_list]
 
     # Upload to S3
