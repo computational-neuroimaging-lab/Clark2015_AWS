@@ -1,0 +1,6 @@
+Number of subjects passed: 104
+Number of subjects failed: 96
+Average CPAC run time: 32.792 minutes
+Average upload time: 4.539 minutes *this includes uploading some working directories
+Output directory avg size: 2.27 GB 
+*most of the upload times were in the 2-3 mins range, upload speed? ~750MB/min

@@ -87,6 +87,7 @@ def setup_logger(logger_name, log_file, level, to_screen=False):
     # Return the logger
     return logger
 
+
 # Print status of file progression in loop
 def print_loop_status(itr, full_len):
     '''
@@ -106,6 +107,113 @@ def print_loop_status(itr, full_len):
     # Print the percentage complete
     per = 100*(float(itr)/full_len)
     print '%d/%d\n%f%% complete' % (itr, full_len, per)
+
+
+# Lookup tables for pricing for EBS
+def get_ebs_costs(av_zone):
+    '''
+    Data transfer into EC2 from the internet is free (all regions)
+
+    Region name - Location mapping
+    ------------------------------
+    us-east-1 - N. Virginia
+    us-west-1 - N. California
+    us-west-2 - Oregon
+    eu-west-1 - Ireland
+    eu-central-1 - Frankfurt
+    ap-southeast-1 - Singapore
+    ap-southeast-2 - Sydney
+    ap-northeast-1 - Tokyo
+    sa-east-1 - Sao Paulo
+
+    References
+    ----------
+    EBS pricing: http://aws.amazon.com/ebs/pricing/
+    '''
+
+    # Import packages
+
+    # Init variables
+    region = av_zone[:-1]
+
+    # EBS general purpose storage
+    ebs_gen_purp = {'us-east-1' : 0.1,
+                    'us-west-1' : 0.12,
+                    'us-west-2' : 0.1,
+                    'eu-west-1' : 0.11,
+                    'eu-central-1' : 0.119,
+                    'ap-southeast-1' : 0.12,
+                    'ap-southeast-2' : 0.12,
+                    'ap-northeast-1' : 0.12,
+                    'sa-east-1' : 0.19}
+    # EBS magnetic storage (plus same price per million I/O requests)
+    ebs_mag = {'us-east-1' : 0.05,
+               'us-west-1' : 0.08,
+               'us-west-2' : 0.05,
+               'eu-west-1' : 0.055,
+               'eu-central-1' : 0.059,
+               'ap-southeast-1' : 0.08,
+               'ap-southeast-2' : 0.08,
+               'ap-northeast-1' : 0.08,
+               'sa-east-1' : 0.12}
+
+    # Get costs for downloading data from EC2 (up to 10TB/month), in $/GB
+    ec2_xfer_out = {'us-east-1' : 0.09,
+                    'us-west-1' : 0.09,
+                    'us-west-2' : 0.09,
+                    'eu-west-1' : 0.09,
+                    'eu-central-1' : 0.09,
+                    'ap-southeast-1' : 0.12,
+                    'ap-southeast-2' : 0.14,
+                    'ap-northeast-1' : 0.14,
+                    'sa-east-1' : 0.25}
+
+
+# Lookup tables for pricing for EBS
+def get_s3_costs(av_zone):
+    '''
+    Data transfer to S3 from anywhere is free (all regions)
+    Data transfer from S3 to EC2 in same region is free (all regions)
+
+    References
+    ----------
+    S3 pricing: http://aws.amazon.com/s3/pricing/
+    '''
+
+    # S3 standard storage (up to 1TB/month), units of $/GB
+    s3_stor = {'us-east-1' : 0.03,
+               'us-west-1' : 0.033,
+               'us-west-2' : 0.03,
+               'eu-west-1' : 0.03,
+               'eu-central-1' : 0.0324,
+               'ap-southeast-1' : 0.03,
+               'ap-southeast-2' : 0.033,
+               'ap-northeast-1' : 0.033,
+               'sa-east-1' : 0.0408}
+
+    # Get costs for downloading data from S3 (up to 10TB/month), in $/GB
+    s3_xfer_out = {'us-east-1' : 0.09,
+                   'us-west-1' : 0.09,
+                   'us-west-2' : 0.09,
+                   'eu-west-1' : 0.09,
+                   'eu-central-1' : 0.09,
+                   'ap-southeast-1' : 0.12,
+                   'ap-southeast-2' : 0.14,
+                   'ap-northeast-1' : 0.14,
+                   'sa-east-1' : 0.25}
+
+    # Request pricing (put vs get on S3)
+    # Put - $/1,000 reqs (upload)
+    # Get - $/10,000 reqs (download)
+    s3_reqs = {'us-east-1' : {'put' : 0.005, 'get' : 0.004},
+               'us-west-1' : {'put' : 0.0055, 'get' : 0.0044},
+               'us-west-2' : {'put' : 0.005, 'get' : 0.004},
+               'eu-west-1' : {'put' : 0.005, 'get' : 0.004},
+               'eu-central-1' : {'put' : 0.0054, 'get' : 0.0043},
+               'ap-southeast-1' : {'put' : 0.005, 'get' : 0.004},
+               'ap-southeast-2' : {'put' : 0.0055, 'get' : 0.0044},
+               'ap-northeast-1' : {'put' : 0.0047, 'get' : 0.0037},
+               'sa-east-1' : {'put' : 0.007, 'get' : 0.0056}}
 
 
 # Find how often a number of jobs fails and its total cost
