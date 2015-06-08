@@ -181,6 +181,8 @@ def get_s3_costs(av_zone, in_gb, out_gb):
     '''
 
     # Init variables
+    region = av_zone[:-1]
+
     # How many output files get generated per input file
     # Assume ~50
     out_ratio = 50
