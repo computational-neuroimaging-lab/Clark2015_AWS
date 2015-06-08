@@ -124,3 +124,10 @@ sympy-plots-for-*.tex/
 # WinEdt
 *.bak
 *.sav
+
+# Eclipse/PyDev
+*.project
+*.pydevproject
+
+# Vim
+*.swp

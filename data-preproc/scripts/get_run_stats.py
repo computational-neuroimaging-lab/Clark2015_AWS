@@ -26,6 +26,9 @@ def get_cpac_runtimes(log_str):
             upl_start_line = log_line
         elif 'finished file' in log_line:
             num_files = int(log_line.split('/')[-1])
+        elif 'detailed dot file' in log_line:
+            subj_id = log_line.split(': ')[1].split('resting_preproc_')[1].split('/')[0]
+
 
     # Get CPAC runtime
     cpac_time = float(cpac_time_line.split(': ')[-1])
@@ -43,7 +46,7 @@ def get_cpac_runtimes(log_str):
     upl_time = (upl_finish_dt - upl_start_dt).total_seconds()/60.0
 
     # Return variables
-    return cpac_time, upl_time, num_files
+    return cpac_time, upl_time, num_files, subj_id
 
 
 # Get CPAC runtimes from SGE logs
@@ -72,7 +75,7 @@ def cpac_sge_logstats(s3_prefix, str_filt, creds_path, bucket_name):
     # Get only tasks that finished
     print 'Searching for complete CPAC runs and getting runtimes...'
     for idx, key in enumerate(log_keys):
-        kname = str(k.name)
+        kname = str(key.name)
         # Get log contents as a string in memory
         log_str = key.get_contents_as_string()
 
@@ -88,13 +91,13 @@ def cpac_sge_logstats(s3_prefix, str_filt, creds_path, bucket_name):
         # If it has 'End' at the end, it ran without crashing
         if 'End' in log_str[-2] and cpac_pass:
             # Get runtimes
-            cpac_time, upl_time, num_files = get_cpac_runtimes(log_str)
-            log_pass[kname] = (cpac_time, upl_time, num_files)
+            cpac_time, upl_time, num_files, subj = get_cpac_runtimes(log_str)
+            log_pass[subj] = (cpac_time, upl_time, num_files)
         else:
             log_fail.append(kname)
 
         # Update status
-        print '%%.3f complete' % (float(idx)/len(log_keys))
+        print '%.3f%% complete' % (100*(float(idx)/len(log_keys)))
 
     # Get stats
     num_subs_pass = len(log_pass)
@@ -112,7 +115,7 @@ def cpac_sge_logstats(s3_prefix, str_filt, creds_path, bucket_name):
     with open(os.path.join(os.getcwd(), 'upl_times.yml'), 'w') as f:
         f.write(yaml.dump(upl_times))
     with open(os.path.join(os.getcwd(), 'fail_logs.yml'), 'w') as f:
-        f.write(yaml.dump(logs_fail))
+        f.write(yaml.dump(log_fail))
 
     # Print report
     print 'Number of subjects passed: %d' % len(log_pass)

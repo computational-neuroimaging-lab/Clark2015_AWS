@@ -170,7 +170,7 @@ def get_ebs_costs(av_zone):
 
 
 # Lookup tables for pricing for EBS
-def get_s3_costs(av_zone):
+def get_s3_costs(av_zone, in_gb, out_gb):
     '''
     Data transfer to S3 from anywhere is free (all regions)
     Data transfer from S3 to EC2 in same region is free (all regions)
@@ -180,7 +180,12 @@ def get_s3_costs(av_zone):
     S3 pricing: http://aws.amazon.com/s3/pricing/
     '''
 
-    # S3 standard storage (up to 1TB/month), units of $/GB
+    # Init variables
+    # How many output files get generated per input file
+    # Assume ~50
+    out_ratio = 50
+
+    # S3 standard storage (up to 1TB/month), units of $/GB-month
     s3_stor = {'us-east-1' : 0.03,
                'us-west-1' : 0.033,
                'us-west-2' : 0.03,
@@ -214,6 +219,19 @@ def get_s3_costs(av_zone):
                'ap-southeast-2' : {'put' : 0.0055, 'get' : 0.0044},
                'ap-northeast-1' : {'put' : 0.0047, 'get' : 0.0037},
                'sa-east-1' : {'put' : 0.007, 'get' : 0.0056}}
+
+    # Return pricing for each storage, transfer, and requests
+    # Assuming in_gb and out_gb stored on S3 for month
+    stor_price = s3_stor[region]*(in_gb+out_gb)
+    xfer_price = s3_xfer_out[region]*(out_gb)
+    req_price = s3_reqs[region]['put']*(num_jobs/1000.0) + \
+                s3_reqs[region]['get']*((out_ratio*num_jobs)/10000.0)
+
+    # Sum of storage, transfer, and requests
+    s3_price = stor_price + xfer_price + req_price
+
+    # Return s3 costs
+    return s3_price
 
 
 # Find how often a number of jobs fails and its total cost
@@ -525,12 +543,11 @@ def main(proc_time, num_jobs, nodes, jobs_per, in_gb, out_gb,
         # Cost is $0.10 per gb-month
         ebs_cost = 0.10*(master_gb_months + nodes_gb_months)
 
-        ### Data transfer costs ###
-        xfer_cost_gb = 0.01
-        data_xfer_cost = xfer_cost_gb*(in_gb+out_gb)
+        ### Data transfer/S3 storage costs ###
+        s3_xfer_stor_cost = get_s3_costs(av_zone, in_gb, out_gb)
 
         ### Total cost ###
-        total_cost = comp_cost + ebs_cost + data_xfer_cost
+        total_cost = comp_cost + ebs_cost + s3_xfer_stor_cost
 
         # Print stats
         stat_log.info('execution time (minutes): %.3f' % (exec_time/60.0))
