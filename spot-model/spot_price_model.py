@@ -580,8 +580,11 @@ def main(proc_time, num_jobs, jobs_per, in_gb, out_gb, out_gb_dl,
     stat_df = pd.DataFrame(columns=stat_df_cols)
 
     # Set up logger
-    log_path = os.path.join(os.getcwd(), '%s_%s_%.3f-bid_stats.log' % \
-                                         (instance_type, av_zone, bid_ratio))
+    base_dir = os.path.join(os.getcwd(), av_zone)
+    if not os.path.exists(base_dir):
+        os.makedirs(base_dir)
+    log_path = os.path.join(base_dir, '%s_%d-jobs_%.3f-bid.log' % \
+                            (instance_type, num_jobs, bid_ratio))
     stat_log = setup_logger('stat_log', log_path, logging.INFO, to_screen=True)
 
     # Calculate number of iterations given run configuration
@@ -682,10 +685,36 @@ def main(proc_time, num_jobs, jobs_per, in_gb, out_gb, out_gb_dl,
         sim_idx += 1
         print_loop_status(sim_idx, sim_length)
 
-    # Write dataframe to disk
-    stat_csv = os.path.join(os.getcwd(), '%s_%s_%.3f-bid_stats.csv' % \
-                                         (instance_type, av_zone, bid_ratio))
+    # Write simulation dataframe to disk
+    sim_csv = os.path.join(base_dir, '%s_%d-jobs_%.3f-bid_sim.csv' % \
+                           (instance_type, num_jobs, bid_ratio))
+    sim_market_df.to_csv(sim_csv)
+
+    # Write stats dataframe to disk
+    stat_csv = os.path.join(base_dir, '%s_%d-jobs_%.3f-bid_stats.csv' % \
+                           (instance_type, num_jobs, bid_ratio))
     stat_df.to_csv(stat_csv)
+
+    # Write parameters yaml to disk
+    params_yml = os.path.join(base_dir, '%s_%d-jobs_%.3f-bid_params.yml' % \
+                              (instance_type, num_jobs, bid_ratio))
+
+    params = {'proc_time' : proc_time,
+              'num_jobs' : num_jobs,
+              'jobs_per' : jobs_per,
+              'in_gb' : in_gb,
+              'out_gb' : out_gb,
+              'out_gb_dl' : out_gb_dl,
+              'up_rate' : up_rate,
+              'down_rate' : down_rate,
+              'bid_ratio' : bid_ratio,
+              'instance_type' : instance_type,
+              'av_zone' : av_zone,
+              'product' : product,
+              'csv_file' : csv_file}
+
+    with open(params_yaml, 'w') as y_file:
+        y_file.write(yaml.dump(params))
 
     # Give simulation-wide statistics
     interrupt_avg = stat_df['Interrupts'].mean()
