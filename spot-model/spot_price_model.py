@@ -19,21 +19,19 @@ def calculate_cost(start_time, uptime_seconds, interp_history, interrupted=False
     import datetime
 
     # Init variables
-    pay_periods = np.floor(uptime_seconds/3600.0)
+    pay_periods = np.ceil(uptime_seconds/3600.0)
     end_time = start_time + datetime.timedelta(seconds=uptime_seconds)
     hour_seq = pd.date_range(start_time, periods=pay_periods, freq='H')
     hourly_series = interp_history[hour_seq]
 
     # Sum up all but last hour price if interrupted
-    total_cost = hourly_series.sum()
+    total_cost = hourly_series[:-1].sum()
 
     # If the user ran residual time without interrupt after last hour
     if not interrupted:
-        if len(hourly_series) == 0:
-            print 'rawdog'
-        residual_time = end_time - (hour_seq[-1]+datetime.timedelta(hours=1))
-        residual_hours = residual_time.total_seconds()/3600.0
-        total_cost += hourly_series[-1]*residual_hours
+        #residual_time = end_time - hour_seq[-1]
+        #residual_hours = residual_time.total_seconds()/3600.0
+        total_cost += hourly_series[-1]
 
     # Return the total cost
     return total_cost
@@ -110,7 +108,7 @@ def print_loop_status(itr, full_len):
 
 
 # Lookup tables for pricing for EBS
-def get_ebs_costs(av_zone):
+def get_ec2_costs(av_zone, cost_type):
     '''
     Data transfer into EC2 from the internet is free (all regions)
 
@@ -128,10 +126,9 @@ def get_ebs_costs(av_zone):
 
     References
     ----------
+    EC2 pricing: http://aws.amazon.com/ec2/pricing/
     EBS pricing: http://aws.amazon.com/ebs/pricing/
     '''
-
-    # Import packages
 
     # Init variables
     region = av_zone[:-1]
@@ -146,6 +143,7 @@ def get_ebs_costs(av_zone):
                     'ap-southeast-2' : 0.12,
                     'ap-northeast-1' : 0.12,
                     'sa-east-1' : 0.19}
+
     # EBS magnetic storage (plus same price per million I/O requests)
     ebs_mag = {'us-east-1' : 0.05,
                'us-west-1' : 0.08,
@@ -167,6 +165,33 @@ def get_ebs_costs(av_zone):
                     'ap-southeast-2' : 0.14,
                     'ap-northeast-1' : 0.14,
                     'sa-east-1' : 0.25}
+
+    # Get $/hour costs of running t2.small master node
+    ec2_t2_small = {'us-east-1' : 0.026,
+                    'us-west-1' : 0.034,
+                    'us-west-2' : 0.026,
+                    'eu-west-1' : 0.028,
+                    'eu-central-1' : 0.030,
+                    'ap-southeast-1' : 0.040,
+                    'ap-southeast-2' : 0.040,
+                    'ap-northeast-1' : 0.040,
+                    'sa-east-1' : 0.054}
+
+    # Select costs type
+    if cost_type == 'ssd':
+        ec2_cost = ebs_gen_purp[region]
+    elif cost_type == 'mag':
+        ec2_cost = ebs_mag[region]
+    elif cost_type == 'xfer':
+        ec2_cost = ec2_xfer_out[region]
+    elif cost_type == 'master':
+        ec2_cost = ec2_t2_small[region]
+    else:
+        err_msg = 'cost_type argument does not support %s' % cost_type
+        raise Exception(err_msg)
+
+    # Return the ec2 cost
+    return ec2_cost
 
 
 # Lookup tables for pricing for EBS
@@ -290,6 +315,10 @@ def simulate_market(start_time, spot_history, interp_history,
     # Init remaining rumtime
     remaining_runtime = proc_time*num_iter
 
+    # Init 1st iteration time
+    first_iter_flg = False
+    first_iter_time = 0
+
     # While there is time left running
     while remaining_runtime > 0:
         # Get only current spot history
@@ -304,7 +333,7 @@ def simulate_market(start_time, spot_history, interp_history,
             interrupt_time = start_time
         else:
             # Otherwise, start instances and charge for launch
-            total_cost += start_price
+            #total_cost += start_price
 
             # Find interrupts
             interrupt_condition = curr_spot_history >= bid_price
@@ -321,6 +350,7 @@ def simulate_market(start_time, spot_history, interp_history,
 
         # See if job completed
         if uptime_seconds > remaining_runtime:
+
             # Add remaining runtime to execution time
             total_runtime += remaining_runtime
 
@@ -352,22 +382,31 @@ def simulate_market(start_time, spot_history, interp_history,
             curr_spot_history = spot_history[interrupt_time:]
             start_condition = curr_spot_history < bid_price
             start_times = curr_spot_history.index[start_condition]
+
             # If we've run out of processing time
             if len(start_times) == 0 or \
                start_times[0] == spot_history.index[-1]:
                 err_msg = 'Job submission could not complete due to too many ' \
                           'interrupts or starting too recently'
                 raise Exception(err_msg)
+
+            # Get the next time we can start
             spot_history_start = min(start_times)
             # and set as the next spot time
             start_time = spot_history_start
-            # 
 
             # And increment wait time by (next start)-(this interrupt)
             total_wait += (start_time - interrupt_time).total_seconds()
 
+        # Check to see if we're setting first iter
+        if not first_iter_flg:
+            # If we were up for at least one amount of processing time
+            if total_runtime >= proc_time:
+                first_iter_time = proc_time + total_wait
+                first_iter_flag = True
+
     # Return results
-    return total_runtime, total_wait, total_cost, num_interrupts
+    return total_runtime, total_wait, total_cost, num_interrupts, first_iter_time
 
 
 # Return a time series from csv data frame
@@ -376,6 +415,7 @@ def spothistory_from_dataframe(csv_file, instance_type, product, av_zone):
     '''
 
     # Import packages
+    import dateutil.parser
     import pandas as pd
 
     # Init variables
@@ -390,13 +430,85 @@ def spothistory_from_dataframe(csv_file, instance_type, product, av_zone):
               (data_frame['Availability zone'] == av_zone)
     df_subset = data_frame[df_bool]
 
+    # Get spot histories from data frame with str timestamps
+    spot_history = df_subset.set_index('Timestamp')['Spot price']
+    spot_history = spot_history.sort_index()
+
+    # Get new histories with datetime timestamps
+    datetimes = [dateutil.parser.parse(ts) for ts in spot_history.index]
+    spot_history = pd.Series(spot_history.values, datetimes)
+
     # Return time series
     return spot_history
 
 
+def calc_full_time_costs(run_time, wait_time, node_cost, first_iter_time,
+                         num_jobs, num_nodes, jobs_per, av_zone,
+                         in_gb, out_gb, out_gb_dl, up_rate, down_rate):
+    '''
+    '''
+
+    # Import packages
+    import numpy as np
+
+    # Init variables
+    cpac_ami_gb = 30
+    secs_per_avg_month = (365/12.0)*24*3600
+    num_iter = np.ceil(num_jobs/float((jobs_per*num_nodes)))
+
+    # Get total execution time as sum of running and waiting times
+    exec_time = run_time + wait_time
+
+    ### Get EBS storage costs ###
+    # Get GB-months
+    nodes_gb_months = num_nodes*cpac_ami_gb*(3600.0*np.ceil(run_time/3600.0)/secs_per_avg_month)
+    # Get nodes EBS SSD costs
+    ebs_ssd = get_ec2_costs(av_zone, 'ssd')
+    ebs_nfs_gb = num_jobs*(in_gb+out_gb)
+
+    ### Master runtime + storage time (EBS) + xfer time ###
+    up_gb_per_sec = up_rate/8.0/1024.0
+    down_gb_per_sec = down_rate/8.0/1024.0
+    xfer_up_time = num_jobs*(in_gb/up_gb_per_sec)
+
+    # 
+    num_jobs_n1 = ((num_iter-1)*num_nodes*jobs_per)
+    xfer_down_time = num_jobs_n1*(out_gb_dl/down_gb_per_sec)
+
+    # End of download of master node
+    master_up_time = xfer_up_time + first_iter_time + np.max([exec_time-first_iter_time, xfer_down_time]) + \
+               (num_jobs-num_jobs_n1)*(out_gb_dl/down_gb_per_sec)
+    
+    master_gb_months = (ebs_nfs_gb+cpac_ami_gb)*(3600.0*np.ceil(master_up_time/3600.0)/secs_per_avg_month)
+    storage_cost = ebs_ssd*(master_gb_months + nodes_gb_months)
+
+    ### Get computation costs ###
+    # Add in master node costs - asssumed to be on-demand, t2.small
+    master_on_demand = get_ec2_costs(av_zone, 'master')
+    master_cost = master_on_demand*np.ceil(master_up_time/3600.0)
+    # Get cumulative cost for running N nodes per iteration
+    nodes_cost = node_cost*num_nodes
+    # Sum master and slave nodes for total computation cost
+    instance_cost = master_cost + nodes_cost
+
+    ### Data transfer costs ###
+    ec2_xfer_out = get_ec2_costs(av_zone, 'xfer')
+    xfer_cost = ec2_xfer_out*(num_jobs*out_gb_dl)
+
+    ### Total cost ###
+    total_cost = instance_cost + storage_cost + xfer_cost
+    ### Total time ###
+    total_time = master_up_time
+
+    # Return data frame entries
+    return total_cost, instance_cost, storage_cost, xfer_cost, \
+           total_time, run_time, wait_time, \
+           xfer_up_time, xfer_down_time
+
 # Main routine
-def main(proc_time, num_jobs, nodes, jobs_per, in_gb, out_gb,
-         bid_price, instance_type, av_zone, product, csv_file=None):
+def main(proc_time, num_jobs, jobs_per, in_gb, out_gb, out_gb_dl,
+         up_rate, down_rate, bid_ratio, instance_type, av_zone, product,
+         csv_file=None):
     '''
     Function to calculate spot instance run statistics based on job
     submission parameters; this function will save the statistics and
@@ -408,18 +520,20 @@ def main(proc_time, num_jobs, nodes, jobs_per, in_gb, out_gb,
         the number of minutes a single job of interest takes to run
     num_jobs : integer
         total number of jobs to run to complete job submission
-    nodes : integer
-        the number of slave nodes to run the job submission over;
-        the number of nodes is in addition to a master node
     jobs_per : integer
         the number of jobs to run per node
     in_gb : float
         the total amount of input data for a particular job (in GB)
     out_gb : float
         the total amount of output data from a particular job (in GB)
-    bid_price : float
-        the dollar amount per hour the user is willing to pay for spot
-        instance usage on AWS
+    out_gb_dl : float
+        the total amount of output data to download from EC2 (in GB)
+    up_rate : float
+        the average upload rate to transfer data to EC2 (in Mb/s)
+    down_rate : float
+        the average download rate to transfer data from EC2 (in Mb/s)
+    bid_ratio : float
+        the ratio to average spot history price to set the bid price to
     instance_type : string
         type of instance to run the jobs on and to get spot history for
     av_zone : string
@@ -452,22 +566,30 @@ def main(proc_time, num_jobs, nodes, jobs_per, in_gb, out_gb,
 
     # Init variables
     proc_time *= 60.0
-    stat_df_cols = ['Start', 'Exec time', 'Run time', 'Wait time',
-                    'Total cost', 'Comp cost', 'Storage cost',
-                    'Transfer cost', 'Interrupts']
+    num_nodes = min(np.ceil(float(num_jobs)/jobs_per), 20)
+
+    # Init simulation market results dataframe
+    sim_market_cols = ['Start time', 'Run time', 'Wait time',
+                       'Per-node cost', 'Interrupts', 'First Iter Time']
+    sim_market_df = pd.DataFrame(columns=sim_market_cols)
+
+    # Init full run stats data frame
+    stat_df_cols = ['Total cost', 'Instance cost', 'Storage cost', 'Tranfer cost',
+                    'Total time', 'Run time', 'Wait time',
+                    'Upload time', 'Download time']
     stat_df = pd.DataFrame(columns=stat_df_cols)
 
     # Set up logger
     log_path = os.path.join(os.getcwd(), '%s_%s_%.3f-bid_stats.log' % \
-                                         (instance_type, av_zone, bid_price))
-    stat_log = setup_logger('stat_log', log_path, logging.INFO)
+                                         (instance_type, av_zone, bid_ratio))
+    stat_log = setup_logger('stat_log', log_path, logging.INFO, to_screen=True)
 
     # Calculate number of iterations given run configuration
     # Round up and assume that we're waiting for all jobs to finish
     # before terminating nodes
-    num_iter = np.ceil(num_jobs/(jobs_per*nodes))
+    num_iter = np.ceil(num_jobs/float((jobs_per*num_nodes)))
     stat_log.info('With %d jobs, %d nodes, and %d jobs running per node...\n' \
-                  'job iterations: %d' % (num_jobs, nodes, jobs_per, num_iter))
+                  'job iterations: %d' % (num_jobs, num_nodes, jobs_per, num_iter))
 
     # Get spot price history, if we're getting it from a csv dataframe
     if csv_file:
@@ -487,6 +609,10 @@ def main(proc_time, num_jobs, nodes, jobs_per, in_gb, out_gb,
         spot_history = pd.Series(prices, timestamps)
         spot_history = spot_history.sort_index()
 
+        # Write spot history to disk
+        sh_csv = os.path.join(os.getcwd(), 'spot_history.csv')
+        spot_history.to_csv(sh_csv)
+
     # Get interpolated times per second (forward fill)
     interp_seq = pd.date_range(spot_history.index[0], spot_history.index[-1],
                             freq='S')
@@ -504,6 +630,12 @@ def main(proc_time, num_jobs, nodes, jobs_per, in_gb, out_gb,
     end_time = spot_history.index[-1]
     time_needed = num_iter*(proc_time)
 
+    # Get bid price
+    spot_history_avg = spot_history.mean()
+    bid_price = bid_ratio*spot_history_avg
+    stat_log.info('Spot history average is $%.3f, bid ratio of %.3fx sets ' \
+                  'bid to $%.3f' % (spot_history_avg, bid_ratio, bid_price))
+
     # Iterate through the interpolated timeseries
     for start_time, start_price in sim_series.iteritems():
         # First see if there's enough time to run jobs
@@ -511,59 +643,40 @@ def main(proc_time, num_jobs, nodes, jobs_per, in_gb, out_gb,
         if time_needed > time_window:
             stat_log.info('Total runtime exceeds time window, ending simulation...')
             break
-        if sim_idx == 4238:
-            print 'rawdog'
+
         # Simulate running job and get stats from that start time
         try:
-            run_time, wait_time, cost, num_interrupts = \
+            run_time, wait_time, pernode_cost, num_interrupts, first_iter_time = \
                     simulate_market(start_time, spot_history, interp_history,
                                     proc_time, num_iter, bid_price)
         except Exception as exc:
             stat_log.info('Could not run full simulation because of:\n%s' % exc)
             continue
 
-        # Get total execution time as sum of running and waiting times
-        exec_time = run_time + wait_time
-        # Get cumulative cost for running N nodes per iteration
-        nodes_cost = cost*nodes
+        # Write simulate market output to dataframe
+        sim_market_df.loc[sim_idx] = [start_time, run_time, wait_time, pernode_cost,
+                                      num_interrupts, first_iter_time]
 
-        ### Get computation costs ###
-        # Add in master node costs - asssumed to be on-demand, t2.small
-        master_on_demand = 0.026
-        # Charge for all hours and any left over partial-hours as well
-        # as first launch (one hour start cost)
-        master_cost = 0.026*np.ceil(exec_time/3600.0) + \
-                      master_on_demand
-        # Sum master and slave nodes for total computation cost
-        comp_cost = master_cost + nodes_cost
-
-        ### Get EBS storage costs ###
-        # 30 GB EBS storage for CPAC AMI
-        cpac_ami_gb = 30
-        secs_per_avg_month = (365/12.0)*24*3600
-        # Get GB-months
-        master_gb_months = cpac_ami_gb*(exec_time/secs_per_avg_month)
-        nodes_gb_months = nodes*cpac_ami_gb*(run_time/secs_per_avg_month)
-        # Cost is $0.10 per gb-month
-        ebs_cost = 0.10*(master_gb_months + nodes_gb_months)
-
-        ### Data transfer/S3 storage costs ###
-        #s3_xfer_stor_cost = get_s3_costs(av_zone, in_gb, out_gb, num_jobs)
-        
-
-        ### Total cost ###
-        total_cost = comp_cost + ebs_cost + s3_xfer_stor_cost
-
-        # Print stats
-        stat_log.info('execution time (minutes): %.3f' % (exec_time/60.0))
-        stat_log.info('total cost: $%.3f' % total_cost)
-        stat_log.info('number of interrupts: %d' % num_interrupts)
-        stat_log.info('wait time (minutes): %.3f' % (wait_time/60.0))
+        # Get complete time and costs from spot market simulation paramters
+        total_cost, instance_cost, stor_cost, xfer_cost, \
+        total_time, run_time, wait_time, \
+        xfer_up_time, xfer_down_time = \
+                calc_full_time_costs(run_time, wait_time, pernode_cost, first_iter_time,
+                                     num_jobs, num_nodes, jobs_per, av_zone,
+                                     in_gb, out_gb, out_gb_dl, up_rate, down_rate)
 
         # Add to output dataframe
-        stat_df.loc[sim_idx] = [start_time, exec_time/60.0, run_time/60.0,
-                                wait_time/60.0, total_cost, comp_cost,
-                                ebs_cost, data_xfer_cost, num_interrupts]
+        stat_df.loc[sim_idx] = [total_cost, instance_cost, stor_cost, xfer_cost,
+                                total_time/60.0, run_time/60.0, wait_time/60.0,
+                                xfer_up_time/60.0, xfer_down_time/60.0]
+
+        # Print stats
+        stat_log.info('Total cost: $%.3f' % total_cost)
+        stat_log.info('Total time (minutes): %.3f' % (total_time/60.0))
+        stat_log.info('run time (minutes): %.3f' % (run_time/60.0))
+        stat_log.info('per-node cost: $%.3f' % pernode_cost)
+        stat_log.info('number of interrupts: %d' % num_interrupts)
+        stat_log.info('wait time (minutes): %.3f' % (wait_time/60.0))
 
         # Print loop status
         sim_idx += 1
@@ -571,16 +684,10 @@ def main(proc_time, num_jobs, nodes, jobs_per, in_gb, out_gb,
 
     # Write dataframe to disk
     stat_csv = os.path.join(os.getcwd(), '%s_%s_%.3f-bid_stats.csv' % \
-                                         (instance_type, av_zone, bid_price))
+                                         (instance_type, av_zone, bid_ratio))
     stat_df.to_csv(stat_csv)
 
-    # Write spot history to disk
-    sh_csv = os.path.join(os.getcwd(), 'spot_history.csv')
-    spot_history.to_csv(sh_csv)
-
     # Give simulation-wide statistics
-    spot_history_avg = spot_history.mean()
-    bid_ratio = bid_price/spot_history_avg
     interrupt_avg = stat_df['Interrupts'].mean()
     exec_time_avg = stat_df['Exec time'].mean()
     cost_avg = stat_df['Total cost'].mean()
@@ -592,15 +699,12 @@ def main(proc_time, num_jobs, nodes, jobs_per, in_gb, out_gb,
     stat_log.info('Average spot history price for %s in %s\n' \
                   'between %s and %s is: $%.3f' % \
                   (instance_type, av_zone, beg_time, end_time, spot_history_avg))
-    stat_log.info('Spot bid of $%.3f was %.3fx the average price' % \
-                  (bid_price, bid_ratio))
+    stat_log.info('Spot ratio of %.3fx the average price set bid to $%.3f' % \
+                  (bid_ratio, bid_price))
     stat_log.info('Average total execution time (mins): %f' % exec_time_avg)
     stat_log.info('Average total cost: $%.3f' % cost_avg)
     stat_log.info('Average number of interruptions: %.3f' % interrupt_avg)
     stat_log.info(72*'-' + '\n')
-
-    # Plot statistics
-    #out_df.boxplot()
 
     # Return dataframes
     return spot_history, stat_df
@@ -621,16 +725,20 @@ if __name__ == '__main__':
                              'successfully (in minutes)')
     parser.add_argument('-j', '--num_jobs', nargs=1, required=True, type=int,
                         help='Total number of jobs to run in AWS')
-    parser.add_argument('-n', '--nodes', nargs=1, required=True, type=int,
-                        help='Number of nodes in cluster to launch')
     parser.add_argument('-per', '--jobs_per', nargs=1, required=True, type=int,
                         help='Number of jobs to run per node')
     parser.add_argument('-ig', '--in_gb', nargs=1, required=True, type=float,
                         help='Input size per job in GB to upload to EC2')
     parser.add_argument('-og', '--out_gb', nargs=1, required=True, type=float,
+                        help='Output size per job in GB to store in EC2 EBS')
+    parser.add_argument('-od', '--out_gb_dl', nargs=1, required=True, type=float,
                         help='Output size per job in GB to download from EC2')
-    parser.add_argument('-b', '--bid_price', nargs=1, required=True,
-                        type=float, help='Spot bid price')
+    parser.add_argument('-ur', '--up_rate', nargs=1, required=True, type=float,
+                        help='Upload rate in Mb/sec')
+    parser.add_argument('-dr', '--down_rate', nargs=1, required=True, type=float,
+                        help='Download rate in Mb/sec')
+    parser.add_argument('-b', '--bid_ratio', nargs=1, required=True,
+                        type=float, help='Bid ratio to average spot price')
     parser.add_argument('-i', '--instance_type', nargs=1, required=True,
                         type=str, help='Instance type to run the jobs on')
 
@@ -648,14 +756,21 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Init variables
+    # Pipeline config params
     proc_time = args.proc_time[0]
     num_jobs = args.num_jobs[0]
-    nodes = args.nodes[0]
+    # Cluster config params
     jobs_per = args.jobs_per[0]
+    instance_type = args.instance_type[0]
+    # Data in/out to store EBS
     in_gb = args.in_gb[0]
     out_gb = args.out_gb[0]
-    bid_price = args.bid_price[0]
-    instance_type = args.instance_type[0]
+    # Data transfer
+    out_gb_dl = args.out_gb_dl[0]
+    up_rate = args.up_rate[0]
+    down_rate = args.down_rate[0]
+    # Bid ratio
+    bid_ratio = args.bid_ratio[0]
 
     # Try and init optional arguments
     try:
@@ -675,5 +790,5 @@ if __name__ == '__main__':
         print 'No csv dataframe specified, only using latest history...'
 
     # Call main routine
-    main(proc_time, num_jobs, nodes, jobs_per, in_gb, out_gb,
-         bid_price, instance_type, av_zone, product, csv_file)
+    main(proc_time, num_jobs, jobs_per, in_gb, out_gb, out_gb_dl,
+         up_rate, down_rate, bid_ratio, instance_type, av_zone, product, csv_file)
