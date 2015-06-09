@@ -170,7 +170,7 @@ def get_ebs_costs(av_zone):
 
 
 # Lookup tables for pricing for EBS
-def get_s3_costs(av_zone, in_gb, out_gb):
+def get_s3_costs(av_zone, in_gb, out_gb, num_jobs):
     '''
     Data transfer to S3 from anywhere is free (all regions)
     Data transfer from S3 to EC2 in same region is free (all regions)
@@ -183,8 +183,10 @@ def get_s3_costs(av_zone, in_gb, out_gb):
     # Init variables
     region = av_zone[:-1]
 
-    # How many output files get generated per input file
-    # Assume ~50
+    # How many input/output files get generated per job
+    # Assume ~2 for input
+    in_ratio = 2
+    # Assume ~50 for outupt
     out_ratio = 50
 
     # S3 standard storage (up to 1TB/month), units of $/GB-month
@@ -546,7 +548,8 @@ def main(proc_time, num_jobs, nodes, jobs_per, in_gb, out_gb,
         ebs_cost = 0.10*(master_gb_months + nodes_gb_months)
 
         ### Data transfer/S3 storage costs ###
-        s3_xfer_stor_cost = get_s3_costs(av_zone, in_gb, out_gb)
+        #s3_xfer_stor_cost = get_s3_costs(av_zone, in_gb, out_gb, num_jobs)
+        
 
         ### Total cost ###
         total_cost = comp_cost + ebs_cost + s3_xfer_stor_cost

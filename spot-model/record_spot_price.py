@@ -95,7 +95,7 @@ def setup_logger(logger_name, log_file, level, to_screen=False):
 
 
 # Return the spot history dataframe for certain categories
-def return_sh_df(start_time, instance_type, product, region, av_zone):
+def return_sh_df(start_time, instance_type, product, av_zone):
     '''
     Function to return the spot prices and timestamps
     '''
