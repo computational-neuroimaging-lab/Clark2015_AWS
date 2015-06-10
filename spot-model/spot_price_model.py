@@ -562,6 +562,7 @@ def main(proc_time, num_jobs, jobs_per, in_gb, out_gb, out_gb_dl,
     import numpy as np
     import os
     import pandas as pd
+    import yaml
     from record_spot_price import return_spot_history
 
     # Init variables
@@ -571,7 +572,7 @@ def main(proc_time, num_jobs, jobs_per, in_gb, out_gb, out_gb_dl,
     # Init simulation market results dataframe
     sim_market_cols = ['Start time', 'Run time', 'Wait time',
                        'Per-node cost', 'Interrupts', 'First Iter Time']
-    sim_market_df = pd.DataFrame(columns=sim_market_cols)
+    sim_df = pd.DataFrame(columns=sim_market_cols)
 
     # Init full run stats data frame
     stat_df_cols = ['Total cost', 'Instance cost', 'Storage cost', 'Tranfer cost',
@@ -657,7 +658,7 @@ def main(proc_time, num_jobs, jobs_per, in_gb, out_gb, out_gb_dl,
             continue
 
         # Write simulate market output to dataframe
-        sim_market_df.loc[sim_idx] = [start_time, run_time, wait_time, pernode_cost,
+        sim_df.loc[sim_idx] = [start_time, run_time, wait_time, pernode_cost,
                                       num_interrupts, first_iter_time]
 
         # Get complete time and costs from spot market simulation paramters
@@ -688,7 +689,7 @@ def main(proc_time, num_jobs, jobs_per, in_gb, out_gb, out_gb_dl,
     # Write simulation dataframe to disk
     sim_csv = os.path.join(base_dir, '%s_%d-jobs_%.3f-bid_sim.csv' % \
                            (instance_type, num_jobs, bid_ratio))
-    sim_market_df.to_csv(sim_csv)
+    sim_df.to_csv(sim_csv)
 
     # Write stats dataframe to disk
     stat_csv = os.path.join(base_dir, '%s_%d-jobs_%.3f-bid_stats.csv' % \
@@ -713,12 +714,12 @@ def main(proc_time, num_jobs, jobs_per, in_gb, out_gb, out_gb_dl,
               'product' : product,
               'csv_file' : csv_file}
 
-    with open(params_yaml, 'w') as y_file:
+    with open(params_yml, 'w') as y_file:
         y_file.write(yaml.dump(params))
 
     # Give simulation-wide statistics
-    interrupt_avg = stat_df['Interrupts'].mean()
-    exec_time_avg = stat_df['Exec time'].mean()
+    interrupt_avg = sim_df['Interrupts'].mean()
+    time_avg = stat_df['Total time'].mean()
     cost_avg = stat_df['Total cost'].mean()
 
     # Print simulation statistics
@@ -730,13 +731,13 @@ def main(proc_time, num_jobs, jobs_per, in_gb, out_gb, out_gb_dl,
                   (instance_type, av_zone, beg_time, end_time, spot_history_avg))
     stat_log.info('Spot ratio of %.3fx the average price set bid to $%.3f' % \
                   (bid_ratio, bid_price))
-    stat_log.info('Average total execution time (mins): %f' % exec_time_avg)
+    stat_log.info('Average total time (mins): %f' % time_avg)
     stat_log.info('Average total cost: $%.3f' % cost_avg)
     stat_log.info('Average number of interruptions: %.3f' % interrupt_avg)
     stat_log.info(72*'-' + '\n')
 
     # Return dataframes
-    return spot_history, stat_df
+    return spot_history, sim_df, stat_df
 
 
 # Make executable

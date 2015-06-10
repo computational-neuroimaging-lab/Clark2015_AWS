@@ -128,6 +128,7 @@ sympy-plots-for-*.tex/
 # Eclipse/PyDev
 *.project
 *.pydevproject
+*.pyc
 
 # Vim
 *.swp
