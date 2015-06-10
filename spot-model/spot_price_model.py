@@ -8,6 +8,135 @@ expected failure time, expected wait time, and probability of failure
 for a job submission to an AWS EC2 SPOT cluster
 '''
 
+# Calculate running time and all other data storage/transfers costs
+def calc_full_time_costs(run_time, wait_time, node_cost, first_iter_time,
+                         num_jobs, num_nodes, jobs_per, av_zone,
+                         in_gb, out_gb, out_gb_dl, up_rate, down_rate):
+    '''
+    Function to take results from the simulate_market function and
+    calculate total costs and runtimes with data transfer and storage
+    included
+
+    Parameters
+    ----------
+    run_time : float
+        the total number of seconds all of the nodes were up running
+    wait_time : float
+        the total number of seconds spent waiting for the spot price
+        to come down below bid
+    node_cost : float
+        the per-node running, or instance, cost
+    first_iter_time : float
+        the number of seconds the first job iteration took to complete;
+        this is used to model when outputs begin downloading from EC2
+    num_jobs : integer
+        total number of jobs to run to complete job submission
+    num_nodes : integer
+        the number of nodes that the cluster uses to run job submission
+    jobs_per : integer
+        the number of jobs to run per node
+    av_zone : string
+        the AWS EC2 availability zone (sub-region) to get spot history
+        from
+    in_gb : float
+        the total amount of input data for a particular job (in GB)
+    out_gb : float
+        the total amount of output data from a particular job (in GB)
+    out_gb_dl : float
+        the total amount of output data to download from EC2 (in GB)
+    up_rate : float
+        the average upload rate to transfer data to EC2 (in Mb/s)
+    down_rate : float
+        the average download rate to transfer data from EC2 (in Mb/s)
+
+    Returns
+    -------
+    total_cost : float
+        the total amount of dollars the job submission cost
+    instance_cost : float
+        cost for running the instances, includes master and all slave
+        nodes
+    storage_cost : float
+        cost associated with data storage
+    xfer_cost : float
+        cost associated with data transfer (out only as in is free)
+    total_time : float
+        the total amount of seconds for the entire job submission to
+        complete
+    run_time : float
+        returns the input parameter run_time for convenience
+    wait_time : float
+        returns the input parameter wait_time for convenience
+    xfer_up_time : float
+        the amount of time it took to transfer the input data up to
+        the master node (seconds)
+    xfer_down_time : float
+        the amount of time it took to transfer all of the output data
+        from the master node (seconds)
+    '''
+
+    # Import packages
+    import numpy as np
+
+    # Init variables
+    cpac_ami_gb = 30
+    secs_per_avg_month = (365/12.0)*24*3600
+    num_iter = np.ceil(num_jobs/float((jobs_per*num_nodes)))
+
+    # Get total execution time as sum of running and waiting times
+    exec_time = run_time + wait_time
+
+    ### Master runtime + storage time (EBS) + xfer time ###
+    up_gb_per_sec = up_rate/8.0/1024.0
+    down_gb_per_sec = down_rate/8.0/1024.0
+    xfer_up_time = num_jobs*(in_gb/up_gb_per_sec)
+
+    # Get the number of jobs ran through n-1 iterations
+    num_jobs_n1 = ((num_iter-1)*num_nodes*jobs_per)
+    # Calculate how long it takes to transfer down all of the jobs
+    # *This is modeled as happening as the jobs finish during the full run
+    xfer_down_time = num_jobs_n1*(out_gb_dl/down_gb_per_sec)
+
+    # End of download of master node
+    master_up_time = xfer_up_time + \
+                     first_iter_time + \
+                     np.max([exec_time-first_iter_time, xfer_down_time]) + \
+                     (num_jobs-num_jobs_n1)*(out_gb_dl/down_gb_per_sec)
+
+    ### Get EBS storage costs ###
+    ebs_ssd = get_ec2_costs(av_zone, 'ssd')
+    ebs_nfs_gb = num_jobs*(in_gb+out_gb)
+
+    # Get GB-months
+    master_gb_months = (ebs_nfs_gb+cpac_ami_gb)*\
+            (3600.0*np.ceil(master_up_time/3600.0)/secs_per_avg_month)
+    nodes_gb_months = num_nodes*cpac_ami_gb*(3600.0*np.ceil(run_time/3600.0)/secs_per_avg_month)
+    storage_cost = ebs_ssd*(master_gb_months + nodes_gb_months)
+
+    ### Get computation costs ###
+    # Add in master node costs - asssumed to be on-demand, t2.small
+    master_on_demand = get_ec2_costs(av_zone, 'master')
+    master_cost = master_on_demand*np.ceil(master_up_time/3600.0)
+    # Get cumulative cost for running N nodes per iteration
+    nodes_cost = node_cost*num_nodes
+    # Sum master and slave nodes for total computation cost
+    instance_cost = master_cost + nodes_cost
+
+    ### Data transfer costs ###
+    ec2_xfer_out = get_ec2_costs(av_zone, 'xfer')
+    xfer_cost = ec2_xfer_out*(num_jobs*out_gb_dl)
+
+    ### Total cost ###
+    total_cost = instance_cost + storage_cost + xfer_cost
+    ### Total time ###
+    total_time = master_up_time
+
+    # Return data frame entries
+    return total_cost, instance_cost, storage_cost, xfer_cost, \
+           total_time, run_time, wait_time, \
+           xfer_up_time, xfer_down_time
+
+
 # Calculate cost over interval
 def calculate_cost(start_time, uptime_seconds, interp_history, interrupted=False):
     '''
@@ -53,76 +182,6 @@ def calculate_cost(start_time, uptime_seconds, interp_history, interrupted=False
 
     # Return the total cost
     return total_cost
-
-
-# Print status of file progression in loop
-def print_loop_status(itr, full_len):
-    '''
-    Function to print the current percentage completed of a loop
-    Parameters
-    ----------
-    itr : integer
-        the current iteration of the loop
-    full_len : integer
-        the full length of the loop
-    Returns
-    -------
-    None
-        the function prints the loop status, but doesn't return a value
-    '''
-
-    # Print the percentage complete
-    per = 100*(float(itr)/full_len)
-    print '%d/%d\n%f%% complete' % (itr, full_len, per)
-
-
-# Setup log file
-def setup_logger(logger_name, log_file, level, to_screen=False):
-    '''
-    Function to initialize and configure a logger that can write to file
-    and (optionally) the screen.
-
-    Parameters
-    ----------
-    logger_name : string
-        name of the logger
-    log_file : string
-        file path to the log file on disk
-    level : integer
-        indicates the level at which the logger should log; this is
-        controlled by integers that come with the python logging
-        package. (e.g. logging.INFO=20, logging.DEBUG=10)
-    to_screen : boolean (optional)
-        flag to indicate whether to enable logging to the screen
-
-    Returns
-    -------
-    logger : logging.Logger object
-        Python logging.Logger object which is capable of logging run-
-        time information about the program to file and/or screen
-    '''
-
-    # Import packages
-    import logging
-
-    # Init logger, formatter, filehandler, streamhandler
-    logger = logging.getLogger(logger_name)
-    logger.setLevel(level)
-    formatter = logging.Formatter('%(asctime)s : %(message)s')
-
-    # Write logs to file
-    file_handler = logging.FileHandler(log_file)
-    file_handler.setFormatter(formatter)
-    logger.addHandler(file_handler)
-
-    # Write to screen, if desired
-    if to_screen:
-        stream_handler = logging.StreamHandler()
-        stream_handler.setFormatter(formatter)
-        logger.addHandler(stream_handler)
-
-    # Return the logger
-    return logger
 
 
 # Lookup tables for pricing for EBS
@@ -316,6 +375,76 @@ def get_s3_costs(av_zone, in_gb, out_gb, num_jobs):
     return s3_price
 
 
+# Print status of file progression in loop
+def print_loop_status(itr, full_len):
+    '''
+    Function to print the current percentage completed of a loop
+    Parameters
+    ----------
+    itr : integer
+        the current iteration of the loop
+    full_len : integer
+        the full length of the loop
+    Returns
+    -------
+    None
+        the function prints the loop status, but doesn't return a value
+    '''
+
+    # Print the percentage complete
+    per = 100*(float(itr)/full_len)
+    print '%d/%d\n%f%% complete' % (itr, full_len, per)
+
+
+# Setup log file
+def setup_logger(logger_name, log_file, level, to_screen=False):
+    '''
+    Function to initialize and configure a logger that can write to file
+    and (optionally) the screen.
+
+    Parameters
+    ----------
+    logger_name : string
+        name of the logger
+    log_file : string
+        file path to the log file on disk
+    level : integer
+        indicates the level at which the logger should log; this is
+        controlled by integers that come with the python logging
+        package. (e.g. logging.INFO=20, logging.DEBUG=10)
+    to_screen : boolean (optional)
+        flag to indicate whether to enable logging to the screen
+
+    Returns
+    -------
+    logger : logging.Logger object
+        Python logging.Logger object which is capable of logging run-
+        time information about the program to file and/or screen
+    '''
+
+    # Import packages
+    import logging
+
+    # Init logger, formatter, filehandler, streamhandler
+    logger = logging.getLogger(logger_name)
+    logger.setLevel(level)
+    formatter = logging.Formatter('%(asctime)s : %(message)s')
+
+    # Write logs to file
+    file_handler = logging.FileHandler(log_file)
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
+
+    # Write to screen, if desired
+    if to_screen:
+        stream_handler = logging.StreamHandler()
+        stream_handler.setFormatter(formatter)
+        logger.addHandler(stream_handler)
+
+    # Return the logger
+    return logger
+
+
 # Find how often a number of jobs fails and its total cost
 def simulate_market(start_time, spot_history, interp_history,
                     proc_time, num_iter, bid_price):
@@ -346,9 +475,12 @@ def simulate_market(start_time, spot_history, interp_history,
         the total number of seconds spent waiting for the spot price
         to come down below bid
     total_cost : float
-        the total number of dollars the entire job submission cost
+        the per-node running, or instance, cost
     num_interrupts : integer
         the number of times the job submission was interrupted
+    first_iter_time : float
+        the number of seconds the first job iteration took to complete;
+        this is used to model when outputs begin downloading from EC2
     '''
 
     # Import packages
@@ -384,10 +516,8 @@ def simulate_market(start_time, spot_history, interp_history,
         if start_price >= bid_price:
             uptime_seconds = 0
             interrupt_time = start_time
+        # Otherwise, start instances
         else:
-            # Otherwise, start instances and charge for launch
-            #total_cost += start_price
-
             # Find interrupts
             interrupt_condition = curr_spot_history >= bid_price
 
@@ -510,71 +640,6 @@ def spothistory_from_dataframe(csv_file, instance_type, product, av_zone):
 
     # Return time series
     return spot_history
-
-
-def calc_full_time_costs(run_time, wait_time, node_cost, first_iter_time,
-                         num_jobs, num_nodes, jobs_per, av_zone,
-                         in_gb, out_gb, out_gb_dl, up_rate, down_rate):
-    '''
-
-    '''
-
-    # Import packages
-    import numpy as np
-
-    # Init variables
-    cpac_ami_gb = 30
-    secs_per_avg_month = (365/12.0)*24*3600
-    num_iter = np.ceil(num_jobs/float((jobs_per*num_nodes)))
-
-    # Get total execution time as sum of running and waiting times
-    exec_time = run_time + wait_time
-
-    ### Get EBS storage costs ###
-    # Get GB-months
-    nodes_gb_months = num_nodes*cpac_ami_gb*(3600.0*np.ceil(run_time/3600.0)/secs_per_avg_month)
-    # Get nodes EBS SSD costs
-    ebs_ssd = get_ec2_costs(av_zone, 'ssd')
-    ebs_nfs_gb = num_jobs*(in_gb+out_gb)
-
-    ### Master runtime + storage time (EBS) + xfer time ###
-    up_gb_per_sec = up_rate/8.0/1024.0
-    down_gb_per_sec = down_rate/8.0/1024.0
-    xfer_up_time = num_jobs*(in_gb/up_gb_per_sec)
-
-    # 
-    num_jobs_n1 = ((num_iter-1)*num_nodes*jobs_per)
-    xfer_down_time = num_jobs_n1*(out_gb_dl/down_gb_per_sec)
-
-    # End of download of master node
-    master_up_time = xfer_up_time + first_iter_time + np.max([exec_time-first_iter_time, xfer_down_time]) + \
-               (num_jobs-num_jobs_n1)*(out_gb_dl/down_gb_per_sec)
-    
-    master_gb_months = (ebs_nfs_gb+cpac_ami_gb)*(3600.0*np.ceil(master_up_time/3600.0)/secs_per_avg_month)
-    storage_cost = ebs_ssd*(master_gb_months + nodes_gb_months)
-
-    ### Get computation costs ###
-    # Add in master node costs - asssumed to be on-demand, t2.small
-    master_on_demand = get_ec2_costs(av_zone, 'master')
-    master_cost = master_on_demand*np.ceil(master_up_time/3600.0)
-    # Get cumulative cost for running N nodes per iteration
-    nodes_cost = node_cost*num_nodes
-    # Sum master and slave nodes for total computation cost
-    instance_cost = master_cost + nodes_cost
-
-    ### Data transfer costs ###
-    ec2_xfer_out = get_ec2_costs(av_zone, 'xfer')
-    xfer_cost = ec2_xfer_out*(num_jobs*out_gb_dl)
-
-    ### Total cost ###
-    total_cost = instance_cost + storage_cost + xfer_cost
-    ### Total time ###
-    total_time = master_up_time
-
-    # Return data frame entries
-    return total_cost, instance_cost, storage_cost, xfer_cost, \
-           total_time, run_time, wait_time, \
-           xfer_up_time, xfer_down_time
 
 
 # Main routine
