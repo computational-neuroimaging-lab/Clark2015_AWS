@@ -11,6 +11,26 @@ for a job submission to an AWS EC2 SPOT cluster
 # Calculate cost over interval
 def calculate_cost(start_time, uptime_seconds, interp_history, interrupted=False):
     '''
+    Function to calculate the runtime spot cost associated with an
+    instance's spot history
+
+    Parameters
+    ----------
+    start_time : datetime.datetime object
+        start time of the spot history to calculate from
+    uptime_seconds : float
+        the number of seconds that the instance was running for
+    interp_history : pandas.Series object
+        the interpolated (second-resolution) spot history series,
+        where the index is a timestamp and the values are prices
+    interrupted : boolean (optional), default=False
+        indicator of whether the instance was interrupted before
+        terminating or not
+
+    Returns
+    -------
+    total_cost : float
+        the total amount of $ that the instance cost
     '''
 
     # Import packages
@@ -29,12 +49,31 @@ def calculate_cost(start_time, uptime_seconds, interp_history, interrupted=False
 
     # If the user ran residual time without interrupt after last hour
     if not interrupted:
-        #residual_time = end_time - hour_seq[-1]
-        #residual_hours = residual_time.total_seconds()/3600.0
         total_cost += hourly_series[-1]
 
     # Return the total cost
     return total_cost
+
+
+# Print status of file progression in loop
+def print_loop_status(itr, full_len):
+    '''
+    Function to print the current percentage completed of a loop
+    Parameters
+    ----------
+    itr : integer
+        the current iteration of the loop
+    full_len : integer
+        the full length of the loop
+    Returns
+    -------
+    None
+        the function prints the loop status, but doesn't return a value
+    '''
+
+    # Print the percentage complete
+    per = 100*(float(itr)/full_len)
+    print '%d/%d\n%f%% complete' % (itr, full_len, per)
 
 
 # Setup log file
@@ -86,30 +125,11 @@ def setup_logger(logger_name, log_file, level, to_screen=False):
     return logger
 
 
-# Print status of file progression in loop
-def print_loop_status(itr, full_len):
-    '''
-    Function to print the current percentage completed of a loop
-    Parameters
-    ----------
-    itr : integer
-        the current iteration of the loop
-    full_len : integer
-        the full length of the loop
-    Returns
-    -------
-    None
-        the function prints the loop status, but doesn't return a value
-    '''
-
-    # Print the percentage complete
-    per = 100*(float(itr)/full_len)
-    print '%d/%d\n%f%% complete' % (itr, full_len, per)
-
-
 # Lookup tables for pricing for EBS
 def get_ec2_costs(av_zone, cost_type):
     '''
+    Function to retrieve costs associated with using EC2
+
     Data transfer into EC2 from the internet is free (all regions)
 
     Region name - Location mapping
@@ -128,6 +148,22 @@ def get_ec2_costs(av_zone, cost_type):
     ----------
     EC2 pricing: http://aws.amazon.com/ec2/pricing/
     EBS pricing: http://aws.amazon.com/ebs/pricing/
+
+    Parameters
+    ----------
+    av_zone : string
+        the availability zone to get the pricing info for
+    cost_type : string
+        the type of cost to extract, supported types include:
+        'ssd' - ssd EC2 EBS storage
+        'mag' - magnetic EC2 EBS storage
+        'xfer' - download from EC2 transfer costs
+        'master' - t2.small hourly on-demand cost
+
+    Returns
+    -------
+    ec2_cost : float
+        the $ amount per unit of the cost type of interest
     '''
 
     # Init variables
@@ -199,6 +235,23 @@ def get_s3_costs(av_zone, in_gb, out_gb, num_jobs):
     '''
     Data transfer to S3 from anywhere is free (all regions)
     Data transfer from S3 to EC2 in same region is free (all regions)
+
+    Parameters
+    ----------
+    av_zone : string
+        the availability zone to get the pricing info for
+    in_gb : float
+        the amount of gigabytes to upload to S3
+    out_gb : float
+        the amount of gigabytes to upload to S3
+    num_jobs : integer
+        the number of jobs that will be used to gauge how many S3
+        requests that are made to return an accurate price
+
+    Returns
+    -------
+    s3_price : float
+        the $ amount per unit of the cost type of interest
 
     References
     ----------
@@ -412,6 +465,23 @@ def simulate_market(start_time, spot_history, interp_history,
 # Return a time series from csv data frame
 def spothistory_from_dataframe(csv_file, instance_type, product, av_zone):
     '''
+    Function to return a time and price series from a csv dataframe
+
+    Parameters
+    ----------
+    csv_file : string
+        file path to dataframe csv file
+    instance_type : string
+        the type of instance to gather spot history for
+    product : string
+        the type of OS product to gather spot history for
+    av_zone : string
+        the availability zone to get the pricing info for
+
+    Returns
+    -------
+    spot_history : pandas.Series
+        time series of spot history prices indexed by timestamp
     '''
 
     # Import packages
@@ -446,6 +516,7 @@ def calc_full_time_costs(run_time, wait_time, node_cost, first_iter_time,
                          num_jobs, num_nodes, jobs_per, av_zone,
                          in_gb, out_gb, out_gb_dl, up_rate, down_rate):
     '''
+
     '''
 
     # Import packages
@@ -504,6 +575,7 @@ def calc_full_time_costs(run_time, wait_time, node_cost, first_iter_time,
     return total_cost, instance_cost, storage_cost, xfer_cost, \
            total_time, run_time, wait_time, \
            xfer_up_time, xfer_down_time
+
 
 # Main routine
 def main(proc_time, num_jobs, jobs_per, in_gb, out_gb, out_gb_dl,
