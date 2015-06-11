@@ -1,66 +1,88 @@
+# build_big_df.py
+#
+# Author: Daniel Clark, 2015
 
-def build_big_df(av_zone, zone_dict):
+'''
+'''
+
+# Build data frame
+def build_big_df(av_zone_dir):
     '''
     '''
 
     # Import packages
     from spot_price_model import spothistory_from_dataframe
+    import glob
+    import numpy as np
+    import os
     import pandas as pd
 
     # Init variables
-    df_cols = ['sim_idx', 'av_zone', 'bid_ratio', 'bid_price', 'num_ds', 'sim_start_time', 'num_interrupts', 'first_itr_time', 'total_cost', 'instance_cost', 'stor_cost', 'xfer_cost', 'total_time', 'run_time', 'wait_time', 'xfer_up_time', 'xfer_down_time']
-    big_df = pd.DataFrame(columns=df_cols)
+    df_list = []
+    av_zone = av_zone_dir.split('/')[-1]
+    csvs = glob.glob(os.path.join(av_zone_dir, '*_stats.csv'))
 
     # Print av zone of interest being created
     print av_zone
     spot_history = spothistory_from_dataframe('spot_history/merged_dfs.csv', 'c3.8xlarge', 'Linux/UNIX', av_zone)
 
-    # Iterate through the bid-subs pairs and stat/sim dataframes
-    loc = 0
-    len_dict = len(zone_dict)
-    for idx, (kk, vv) in enumerate(zone_dict.items()):
-        print kk, idx/float(len_dict)
-        num_ds = int(kk.split('-jobs')[0].split('_')[1])
-        br = float(kk.split('-jobs_')[1].split('-bid')[0])
-        sim_df = pd.DataFrame.from_csv(vv['sim'])
-        stat_df = pd.DataFrame.from_csv(vv['stat'])
-        len_sim = len(sim_df)
-        for sim_idx in range(len_sim):
-            sim_entry = sim_df.iloc[sim_idx]
-            stat_entry = stat_df.iloc[sim_idx]
-            bp = br*spot_history.mean()
-            sim_start_time = sim_entry['Start time']
-            num_interr = sim_entry['Interrupts']
-            first_itr_time = sim_entry['First Iter Time']
-            total_cost = stat_entry['Total cost']
-            instance_cost = stat_entry['Instance cost']
-            stor_cost = stat_entry['Storage cost']
-            xfer_cost = stat_entry['Tranfer cost']
-            total_time = stat_entry['Total time']
-            run_time = stat_entry['Run time']
-            wait_time = stat_entry['Wait time']
-            xfer_up_time = stat_entry['Upload time']
-            xfer_down_time = stat_entry['Download time']
-            #df_entry = {'sim_idx' : sim_idx, 'av_zone' : av_zone,
-            #            'bid_ratio' : br, 'bid_price' : bp, 'num_ds' : num_ds,
-            #            'sim_start_time' : sim_start_time,
-            #            'num_interrupts' : num_interr,
-            #            'first_itr_time' : first_itr_time,
-            #            'total_cost' : total_cost, 'instance_cost' : instance_cost,
-            #            'stor_cost' : stor_cost, 'xfer_cost' : xfer_cost,
-            #            'total_time' : total_time, 'run_time' : run_time,
-            #            'wait_time' : wait_time, 'xfer_up_time' : xfer_up_time,
-            #            'xfer_down_time' : xfer_down_time}
-            #big_df = big_df.append(df_entry, ignore_index=True)
-            big_df.loc[loc] = [sim_idx, av_zone, br, bp, num_ds, sim_start_time, num_interr, first_itr_time, total_cost, instance_cost, stor_cost, xfer_cost, total_time, run_time, wait_time, xfer_up_time, xfer_down_time]
-            loc += 1
-    print 'done!'
+    # Iterate through csvs
+    for stat_csv in csvs:
+        # Get pattern to find sim dataframe
+        csv_pattern = stat_csv.split('_stats.csv')[0]
+        sim_csv = csv_pattern + '_sim.csv'
+        stat_df = pd.DataFrame.from_csv(stat_csv)
+        sim_df = pd.DataFrame.from_csv(sim_csv)
 
-    big_df.to_csv('./new/%s.csv' % av_zone)
+        # Extract params from filename
+        fp_split = csv_pattern.split('-jobs')
+        bid_ratio = float(fp_split[1][1:].split('-bid')[0])
+        bid_price = bid_ratio*spot_history.mean()
 
+        ### Download time fix ###
+        # CPAC pipeline params
+        jobs_per = 3
+        down_rate = 20
+        out_gb_dl = 2.3
+        down_gb_per_sec = down_rate/8.0/1024.0
+        # Variables for download time fix
+        num_ds = int(fp_split[0].split('/')[-1].split('_')[-1])
+        num_nodes = min(np.ceil(float(num_ds)/jobs_per), 20)
+        num_iter = np.ceil(num_ds/float((jobs_per*num_nodes)))
+        num_jobs_n1 = ((num_iter-1)*num_nodes*jobs_per)
+        res_xfer_out = (num_ds-num_jobs_n1)*(out_gb_dl/down_gb_per_sec)
+        # Fix download time
+        stat_df['Download time'] += res_xfer_out/60.0
+
+        # Add to stat df
+        len_df = len(stat_df)
+        stat_df['Sim index'] = sim_df.index
+        stat_df['Av zone'] = pd.Series([av_zone]*len_df, index=stat_df.index)
+        stat_df['Bid ratio'] = pd.Series([bid_ratio]*len_df, index=stat_df.index)
+        stat_df['Bid price'] = pd.Series([bid_price]*len_df, index=stat_df.index)
+        stat_df['Num datasets'] = pd.Series([num_ds]*len_df, index=stat_df.index)
+        stat_df['Start time'] = sim_df['Start time']
+        stat_df['Interrupts'] = sim_df['Interrupts']
+        stat_df['First Iter Time'] = sim_df['First Iter Time']
+
+        # Add to dataframe list
+        df_list.append(stat_df)
+
+    # Status update
+    print 'done making df list, now concat to big df...'
+    big_df = pd.concat(df_list, ignore_index=True)
+
+    # Write to disk as csv
+    print 'Saving to disk...'
+    big_df.to_csv('./%s.csv' % av_zone)
     print 'done writing!'
 
-def main():
+    # Return dataframe
+    return big_df
+
+
+# Build list of processes to use in multi-proc
+def build_proc_list(zones_basedir):
     '''
     '''
 
@@ -70,24 +92,56 @@ def main():
     from multiprocessing import Process
 
     # Init variables
-    fp_pattern = './cpac/*/*.csv'
-    csvs = glob.glob(fp_pattern)
-    var_dict = {}
-
-    # Build variable dictionary
-    for csv in csvs:
-        csv_sp = csv.split('/')[-1].split('.csv')[0].split('_s')[0]
-        zone = csv.split('/')[-2]
-        if not var_dict.has_key(zone):
-            var_dict[zone] = {}
-        if not var_dict[zone].has_key(csv_sp):
-            var_dict[zone][csv_sp] = {}
-        if 'stat' in csv:
-            var_dict[zone][csv_sp]['stat'] = csv
-        else:
-            var_dict[zone][csv_sp]['sim'] = csv
+    av_zone_fp = zones_basedir + '*'
+    av_zones_dirs = glob.glob(av_zone_fp)
 
     # Build big dictionary
-    p_list = [Process(target=build_big_df, args=(k, v)) for k, v in var_dict.items()]
+    proc_list = [Process(target=build_big_df, args=(av_zone_dir,)) \
+              for av_zone_dir in av_zones_dirs]
 
-    return p_list
+    return proc_list
+
+
+# Run jobs in parallel
+def run_in_parallel(proc_list, num_cores):
+    '''
+    '''
+
+    # Import packages
+    import time
+
+    # Init variables
+    idx = 0
+    job_queue = []
+
+    # While loop for when jobs are still running
+    while idx < len(proc_list):
+        if len(job_queue) == 0 and idx == 0:
+            idc = idx
+            for p in proc_list[idc:idc+num_cores]:
+                p.start()
+                job_queue.append(p)
+                idx += 1
+        else:
+            for job in job_queue:
+                if not job.is_alive():
+                    print 'found dead job', job
+                    loc = job_queue.index(job)
+                    del job_queue[loc]
+                    proc_list[idx].start()
+                    job_queue.append(proc_list[idx])
+                    idx += 1
+            time.sleep(2)
+
+
+# Make executable
+if __name__ == '__main__':
+
+    # Grab az_zone folders base
+    zones_basedir = '/home/dclark/Documents/projects/Clark2015_AWS/spot-model/cpac/'
+
+    # Call main
+    proc_list = build_proc_list(zones_basedir)
+
+    # Run in parallel
+    run_in_parallel(proc_list, 6)
