@@ -95,13 +95,18 @@ def calc_full_time_costs(run_time, wait_time, node_cost, first_iter_time,
     num_jobs_n1 = ((num_iter-1)*num_nodes*jobs_per)
     # Calculate how long it takes to transfer down all of the jobs
     # *This is modeled as happening as the jobs finish during the full run
-    xfer_down_time = num_jobs_n1*(out_gb_dl/down_gb_per_sec)
+    xfer_down_time_n1 = num_jobs_n1*(out_gb_dl/down_gb_per_sec)
+    exec_time_n1 = exec_time - first_iter_time
+    residual_jobs = num_jobs - num_jobs_n1
 
     # End of download of master node
     master_up_time = xfer_up_time + \
                      first_iter_time + \
-                     np.max([exec_time-first_iter_time, xfer_down_time]) + \
-                     (num_jobs-num_jobs_n1)*(out_gb_dl/down_gb_per_sec)
+                     np.max([exec_time_n1, xfer_down_time_n1]) + \
+                     residual_jobs*(out_gb_dl/down_gb_per_sec)
+
+    # Get total transfer down time
+    xfer_down_time = xfer_down_time_n1 + residual_jobs*(out_gb_dl/down_gb_per_sec)
 
     ### Get EBS storage costs ###
     ebs_ssd = get_ec2_costs(av_zone, 'ssd')
