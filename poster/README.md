@@ -1,4 +1,4 @@
-RSW2014_poster
+AWS_OHBM2015_poster
 ==============
 
-RTDMN poster for 2014 Resting State Conference
+NDAR/AWS poster for the 2015 OHBM conference

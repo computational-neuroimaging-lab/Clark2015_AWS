@@ -138,7 +138,7 @@ def run_in_parallel(proc_list, num_cores):
 if __name__ == '__main__':
 
     # Grab az_zone folders base
-    zones_basedir = '/home/dclark/Documents/projects/Clark2015_AWS/spot-model/cpac/'
+    zones_basedir = '/home/dclark/Documents/projects/Clark2015_AWS/spot-model/fs/'
 
     # Call main
     proc_list = build_proc_list(zones_basedir)

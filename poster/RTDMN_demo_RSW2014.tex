@@ -36,6 +36,9 @@
 \mode<presentation>{\usetheme{CMINKI}}
 \newcolumntype{Z}{>{\centering\arraybackslash}X} % centered tabularx columns
 \newcommand{\pphantom}{\textcolor{ta3aluminium}} % phantom introduces a vertical space in p formatted table columns??!!
+% Column sizing
+\newlength{\columnheight}
+\setlength{\columnheight}{72cm}
 
 %\graphicspath{{figures/}}
 \listfiles
@@ -54,11 +57,9 @@
 \posternum{\Large 3535 Thursday 12:45}
 \date[June 18th, 2015]{June 18th, 2015}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\newlength{\columnheight}
-\setlength{\columnheight}{72cm}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%----------------------------------------------------------------------
+% Poster content
+%----------------------------------------------------------------------
 \begin{document}
 \begin{frame}
     \begin{columns}
@@ -69,19 +70,23 @@
         %\begin{minipage}[T]{.98\textwidth}  % tweaks the width, makes a new \textwidth
           \parbox[t][\columnheight]{\textwidth}{ % must be some better way to set the the height, width and textwidth simultaneously
             % Since all columns are the same length, it is all nice and tidy.  You have to get the height empirically
-            % ---------------------------------------------------------%
-            % fill each column with content       
+            %----------------------------------------------------------------------
+            % Introduction
+            %----------------------------------------------------------------------
             \begin{block}{Introduction}
               \begin{itemize}
                   \item The National Database for Autism Research (NDAR) hosts a vast collection of neuroimaging datasets that can be processed and utilized to yield significant scientific discoveries.
-                  \item This amount of resources necessitates a high-performance computing infrastructure
-
+                  \item This amount of resources necessitates a high-performance computing (HPC) infrastructure, which is not always readily available for researchers in-house.
+                  \item Amazon Web Services (AWS) Elastic Compute Cloud (EC2) computing service offers a ``pay as you go" model that allows researchers to utilize HPC performance without the up-front captial costs and maintenance of an in-house solution.
+                  \item The developers of the Laboratory of Neuro Imaging (LONI) Pipeline, the Neuroimaging Informatics Tools and Resources Clearinghouse (NITRC) Computational Environment (CE) and the Configurable Pipeline for the Analysis of Connectomes (C-PAC) have implemented pipelines in EC2 that interface with NDAR
               \end{itemize}
-            \vfill              
+            \vfill
             \end{block}
+            %----------------------------------------------------------------------
+            % Methods
+            %----------------------------------------------------------------------
             \begin{block}{Methods}
                 \vskip1ex
-            
                 \begin{column}{.47\textwidth}
                     \begin{figure}
                         \begin{center}
