@@ -122,29 +122,21 @@
 					\item The resulting pipeline was used to process 780 T1-weighted structural images and return the results to NDAR
                 \end{itemize}
                 \vskip1ex
-
-                \vskip1ex
-                
-                \begin{column}{.48\textwidth}
-                {\bf Online Preprocessing}
-                \begin{itemize}
-                    \item RT denoising implemented in AFNI$^{10}$ to remove contributions of confounds (intensity modulations induced by head motion, physiological noise, scanner drift, \dots)
+                \begin{column}{.47\textwidth}
                     \begin{itemize}
-                        \item $N^{th}$ order polynomial
-                        \item Global mean
-                        \item Mask average time series (i.e. WM, CSF)
-                        \item Motion parameters (6 or 24 regressor models)
-                        \item Spatial smoothing
+                        \item Launched an AWS-hosted miNDAR database by querying NDAR website for the data of interest (e.g. from a particular study)
+                        \item Built a subject list by querying the database for subjects of interest to pass to our pipeline
+                        \item Launch an AWS EC2 HPC cluster using Starcluster
+                        \item Log into the cluster and submit a Sun Grid Engine job using our pipeline software and the subject list
+                        \item The pipeline software will process the data, store raw outputs in an AWS S3 bucket and insert S3 filepaths and output measures into miNDAR database
                     \end{itemize}
-                   \item Adds $<$ 5 ms of delay
-                \end{itemize}
                 \end{column}
-                \begin{column}{.50\textwidth}
+                \begin{column}{.47\textwidth}
                     \begin{figure}
                         \begin{center}
-                            \includegraphics[width=.9\textwidth]{afni_denoise.eps}
+                            \includegraphics[width=.9\textwidth]{mindar.png}
                         \end{center}
-                        \caption{\label{fig:afni_denoise}AFNI interface for online denoising.}
+                        \caption{\label{fig:mindar}miNDAR database}
                     \end{figure}
                 \end{column}
             \begin{figure}
