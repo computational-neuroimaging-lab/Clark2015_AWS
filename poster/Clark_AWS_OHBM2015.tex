@@ -51,7 +51,7 @@
 
 %% Author
 \author{\Large Daniel Clark$^1$, Christian Haselgrove$^2$, David Kennedy$^2$, Zhizhong Liu$^3$,\\[.5ex]Michael Milham$^1$, Petros Petrosyan$^4$, Carinna Torgerson$^3$, John Van Horn$^3$, Cameron Craddock$^1$}
-\institute[NKI]{$^1$Child Mind Institute, New York, NY, $^2$ University of Massachuttes Medical School, Worcester, MA, $^3$University of Souther California, Los Angeles, CA, $^4$UCLA, Los Angeles, CA, $^5$Nathan S. Kline Institute for Psychiatric Research, Orangeburg, NY}
+\institute[NKI]{$^1$Child Mind Institute, New York, NY, $^2$ University of Massachuttes Medical School, Worcester, MA, $^3$University of Southern California, Los Angeles, CA, $^4$UCLA, Los Angeles, CA, $^5$Nathan S. Kline Institute for Psychiatric Research, Orangeburg, NY}
 
 %% Poster info
 \posternum{\Large 3535 Thursday 12:45}
@@ -86,36 +86,43 @@
             % Methods
             %----------------------------------------------------------------------
             \begin{block}{Methods}
-                \vskip1ex
-                \begin{column}{.47\textwidth}
+                \begin{column}{.5\textwidth}
+                    {\bf LONI Pipeline} 
+                    \begin{itemize}
+					    \item The LONI Pipeline software was extended to include new pipeline modules to access data from the NDAR database, transfer input data out of Amazon S3 (Simple Storage Service), and to load results back into S3$^{1}$
+						\item A pipeline was constructed to extract cortical thickness and subcortical region volume data from structural MRI images in the NDAR database, which included:
+						\begin{enumerate}
+							\item Reorient images to standard orientation using FSL's reorient2std module
+							\item Extract cortical thickness using FreeSurfer recon-all
+							\item Calculate volumes of subcortical regions using FSL's BET and FIRST all
+						\end{enumerate}
+						\item The resulting pipeline was used to process 780 T1-weighted structural images and return the results to NDAR
+                    \end{itemize}
+                    \vskip1ex
+                \end{column}
+                %\vskip1ex
+                \begin{column}{.5\textwidth}
                     \begin{figure}
                         \begin{center}
-                            \includegraphics[width=.9\textwidth]{neurofeedback.eps}
+                            \includegraphics[width=.9\textwidth]{loni_pipeline.eps}
                         \end{center}
-                        \caption{\label{fig:roi_metrics}Neurofeedback experiment, adapted from S. LaConte$^{8,9}$}
+                        \caption{\label{fig:roi_metrics}Graphical layout of the constructed pipeline}
                     \end{figure}
                 \end{column}
-                \begin{column}{.47\textwidth}
-                {\bf Subjects} 
+				
+                {\bf Configurable Pipeline For the Analysis of Connectoms (C-PAC)} 
                 \begin{itemize}
-                  \item 13 volunteers participated in accordance with IRB Policy.
+				    \item C-PAC modules were written in Python to build input data lists by querying NDAR, read input data from S3, write processed results to S3 and write values back to the NDAR database$^{2}$
+					\item New pipelines were created to perform the ANTS cortical thickness$^{3}$ procedure and the Preprocessed Connectomes Project's Quality Assessment Protocol (\url{http://preprocessed-connectomes-project.github.io/quality-assessment-pipeline})$^{4}$
+					\begin{enumerate}
+						\item Reorient images to standard orientation using FSL's reorient2std module
+						\item Extract cortical thickness using FreeSurfer recon-all
+						\item Calculate volumes of subcortical regions using FSL's BET and FIRST all
+					\end{enumerate}
+					\item The resulting pipeline was used to process 780 T1-weighted structural images and return the results to NDAR
                 \end{itemize}
                 \vskip1ex
-                
-                {\bf Scanning}
-                \begin{itemize}
-                   \item 3.0T Siemens Magnetom TIM Trio using 12-channel head matrix.
-                   \begin{itemize}
-                      \item T1 weighted 3D MPRAGE anatomical scan (FA=8$^\circ$, TI=900ms, TR=2600ms, TE=3.02ms, GRAPPA $\times2$)
-                      \item Realtime fMRI experiments were performed using an EPI seqeunce that has been customised to export
-                        reconstructed image volumes, over a network connection, as they are connected$^{8,9}$
-                      \begin{itemize}
-                          \item TR/TE/FA/FOV = 2000 ms/30 ms/90$^\circ$/220 mm, in plane resolution 3.44 $\times$ 3.44 $\times$ 4 mm$^3$
-                      \end{itemize}
-                   \end{itemize}
-                   \vskip1ex
-                \end{itemize}
-                \end{column}
+
                 \vskip1ex
                 
                 \begin{column}{.48\textwidth}
@@ -165,16 +172,36 @@
             % ---------------------------------------------------------%
             % fill each column with content
             \begin{block}{Results}
+				\begin{center}
+			
+			\begin{table}
+			  \caption{Processing completed as a part of the effort. Nodes corresponds to the number of hosts used in the calculation. PF is parallelization factor and corresponds to the number of jobs ran in parallel on each node. On demand instances were used for the master node and spot instances were used for all computation nodes in the cluster. CPU Time is the total amount of time required to perform the computation and Wall Time is the amount of time that passed. \# DS: Number of datasets. CPD: Cost Per Dataset. C-PAC: Configurable Pipeline for the Analysis of Connectomes. NITRC-CE: NITRC Computational Environment}
+			  \begin{tabular}{lrl*{6}{r}}
+				  {\bf Processing} & {\bf \# DS} & {\bf Platform} & {\bf Nodes} & {\bf PF} & {\bf CPU Time} & {\bf Wall Time} & {\bf Cost} & {\bf CPD}\\
+			      \hline
+				  ANTS Cortical Thickness & 3197 &  & 20 & 8 & 23,018 & 147 & \$760.24 & \$0.24\\
+			 	  Resting state fMRI processing w/ 4 strategies & 1112 & C-PAC  & 20 & 3 & 834 & 22 & \$80.54 & \$0.07 \\
+				  Quality Assessment Protocol & 1112 & & 20 & 4 & 380 & 14 & \$19.02 & \$0.02 \\
+				  \hline
+				  Freesurfer recon-all & 986 &  & 4 & 32 & 23,664 & 193 & \$211.44 & \$0.21 \\
+				  FSL FIRST & 1247 & NITRC-CE & 4 & 32 & 208 & 3 & \$2.19 & $>$ \$0.01 \\
+				  Temporal QA & 1349 &  & 4 & 32 & 450 & 13 & \$4.69 & $>$ \$0.01 \\
+				  \hline
+				  Freesurfer recon-all and FSL FIRST & 780 & LONI Pipeline & 20 & 32 & 18,720 & 49 & \$252.36 & \$0.32 \\
+			 \end{tabular}
+			\end{table}
+			 \end{center}
               \begin{column}{.47\textwidth}
-                  \begin{figure}
-                      \includegraphics[width=.99\textwidth]{br_vs_time_fs.eps}
-                      \caption{\label{fig:best_worst}Bid ratio vs Computation time in minutes for the Freesurfer pipeline}
-                  \end{figure}
-                  \vskip2ex
-                  \begin{figure}
-                      \includegraphics[width=.99\textwidth]{inter_subject.eps}
-                      \caption{\label{fig:inter_subject} Performance across particpants (A) differs between feedback and neurofeedback scans as determined by their order (B).}
-                  \end{figure}
+
+                  %\begin{figure}
+                  %    \includegraphics[width=.99\textwidth]{br_vs_time_fs.eps}
+                  %    \caption{\label{fig:best_worst}Bid ratio vs Computation time in minutes for the Freesurfer pipeline}
+                  %\end{figure}
+                  %\vskip2ex
+                  %\begin{figure}
+                  %    \includegraphics[width=.99\textwidth]{inter_subject.eps}
+                  %    \caption{\label{fig:inter_subject} Performance across particpants (A) differs between feedback and neurofeedback scans as determined by their order (B).}
+                  %\end{figure}
                   \end{column}
                   \begin{column}{.49\textwidth}
                       \vskip4ex
