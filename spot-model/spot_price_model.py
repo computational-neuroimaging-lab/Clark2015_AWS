@@ -650,7 +650,7 @@ def spothistory_from_dataframe(csv_file, instance_type, product, av_zone):
 # Main routine
 def main(proc_time, num_jobs, jobs_per, in_gb, out_gb, out_gb_dl,
          up_rate, down_rate, bid_ratio, instance_type, av_zone, product,
-         csv_file=None):
+         csv_file=None, toy_data=None):
     '''
     Function to calculate spot instance run statistics based on job
     submission parameters; this function will save the statistics and
@@ -687,6 +687,9 @@ def main(proc_time, num_jobs, jobs_per, in_gb, out_gb, out_gb_dl,
         the filepath to a csv dataframe to get spot history from;
         if not specified, the function will just get the most recent 90
         days worth of spot price history
+    toy_data : boolean
+        flag indicating whether to only run the simulation once
+        since the data is the same across time anyway
 
     Returns
     -------
@@ -825,8 +828,11 @@ def main(proc_time, num_jobs, jobs_per, in_gb, out_gb, out_gb_dl,
         stat_log.info('wait time (minutes): %.3f' % (wait_time/60.0))
 
         # Print loop status
-        sim_idx += 1
-        print_loop_status(sim_idx, sim_length)
+        if toy_data:
+            break
+        else:
+            sim_idx += 1
+            print_loop_status(sim_idx, sim_length)
 
     # Write simulation dataframe to disk
     sim_csv = os.path.join(base_dir, '%s_%d-jobs_%.3f-bid_sim.csv' % \
@@ -923,6 +929,8 @@ if __name__ == '__main__':
                              'default is \'Linux/Unix\'')
     parser.add_argument('-c', '--csv_file', nargs=1, required=False, type=str,
                         help='Specify csv dataframe to parse histories')
+    parser.add_argument('-td', '--toy_data', required=False, action='store_true',
+                        help='Specify if the data is toy (fixed price) or not')
 
     # Parse arguments
     args = parser.parse_args()
@@ -960,7 +968,13 @@ if __name__ == '__main__':
     except TypeError as exc:
         csv_file = None
         print 'No csv dataframe specified, only using latest history...'
+    try:
+        toy_data = args.toy_data
+    except TypeError as exc:
+        toy_data = None
+        print 'Not toy data, assuming real spot history data...'
 
     # Call main routine
     main(proc_time, num_jobs, jobs_per, in_gb, out_gb, out_gb_dl,
-         up_rate, down_rate, bid_ratio, instance_type, av_zone, product, csv_file)
+         up_rate, down_rate, bid_ratio, instance_type, av_zone, product,
+         csv_file, toy_data)

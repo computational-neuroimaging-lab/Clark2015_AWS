@@ -88,33 +88,21 @@
             \begin{block}{Methods}
                 \vskip1ex
                 \begin{column}{.47\textwidth}
-                    \begin{figure}
-                        \begin{center}
-                            \includegraphics[width=.9\textwidth]{neurofeedback.eps}
-                        \end{center}
-                        \caption{\label{fig:roi_metrics}Neurofeedback experiment, adapted from S. LaConte$^{8,9}$}
-                    \end{figure}
+                    \begin{itemize}
+                        \item Launched an AWS-hosted miNDAR database by querying NDAR website for the data of interest (e.g. from a particular study)
+                        \item Built a subject list by querying the database for subjects of interest to pass to our pipeline
+                        \item Launch an AWS EC2 HPC cluster using Starcluster
+                        \item Log into the cluster and submit a Sun Grid Engine job using our pipeline software and the subject list
+                        \item The pipeline software will process the data, store raw outputs in an AWS S3 bucket and insert S3 filepaths and output measures into miNDAR database
+                    \end{itemize}
                 \end{column}
                 \begin{column}{.47\textwidth}
-                {\bf Subjects} 
-                \begin{itemize}
-                  \item 13 volunteers participated in accordance with IRB Policy.
-                \end{itemize}
-                \vskip1ex
-                
-                {\bf Scanning}
-                \begin{itemize}
-                   \item 3.0T Siemens Magnetom TIM Trio using 12-channel head matrix.
-                   \begin{itemize}
-                      \item T1 weighted 3D MPRAGE anatomical scan (FA=8$^\circ$, TI=900ms, TR=2600ms, TE=3.02ms, GRAPPA $\times2$)
-                      \item Realtime fMRI experiments were performed using an EPI seqeunce that has been customised to export
-                        reconstructed image volumes, over a network connection, as they are connected$^{8,9}$
-                      \begin{itemize}
-                          \item TR/TE/FA/FOV = 2000 ms/30 ms/90$^\circ$/220 mm, in plane resolution 3.44 $\times$ 3.44 $\times$ 4 mm$^3$
-                      \end{itemize}
-                   \end{itemize}
-                   \vskip1ex
-                \end{itemize}
+                    \begin{figure}
+                        \begin{center}
+                            \includegraphics[width=.9\textwidth]{mindar.png}
+                        \end{center}
+                        \caption{\label{fig:mindar}miNDAR database}
+                    \end{figure}
                 \end{column}
                 \vskip1ex
                 

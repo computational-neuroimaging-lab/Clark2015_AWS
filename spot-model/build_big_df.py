@@ -52,7 +52,7 @@ def build_big_df(av_zone_dir):
         num_jobs_n1 = ((num_iter-1)*num_nodes*jobs_per)
         res_xfer_out = (num_ds-num_jobs_n1)*(out_gb_dl/down_gb_per_sec)
         # Fix download time
-        stat_df['Download time'] += res_xfer_out/60.0
+        #stat_df['Download time'] += res_xfer_out/60.0
 
         # Add to stat df
         len_df = len(stat_df)
@@ -138,10 +138,11 @@ def run_in_parallel(proc_list, num_cores):
 if __name__ == '__main__':
 
     # Grab az_zone folders base
-    zones_basedir = '/home/dclark/Documents/projects/Clark2015_AWS/spot-model/fs/'
+    zones_basedir = '/home/dclark/Documents/projects/Clark2015_AWS/spot-model/out/'
 
     # Call main
     proc_list = build_proc_list(zones_basedir)
 
+    #build_big_df('/home/dclark/Documents/projects/Clark2015_AWS/spot-model/out/us-east-1a')
     # Run in parallel
     run_in_parallel(proc_list, 6)
