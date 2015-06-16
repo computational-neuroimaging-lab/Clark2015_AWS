@@ -787,20 +787,26 @@ def main(proc_time, num_jobs, jobs_per, in_gb, out_gb, out_gb_dl,
 
     # Iterate through the interpolated timeseries
     for start_time, start_price in sim_series.iteritems():
-        # First see if there's enough time to run jobs
-        time_window = (end_time-start_time).total_seconds()
-        if time_needed > time_window:
-            stat_log.info('Total runtime exceeds time window, ending simulation...')
-            break
+        if not toy_data:
+            # First see if there's enough time to run jobs
+            time_window = (end_time-start_time).total_seconds()
+            if time_needed > time_window:
+                stat_log.info('Total runtime exceeds time window, ending simulation...')
 
-        # Simulate running job and get stats from that start time
-        try:
-            run_time, wait_time, pernode_cost, num_interrupts, first_iter_time = \
-                    simulate_market(start_time, spot_history, interp_history,
-                                    proc_time, num_iter, bid_price)
-        except Exception as exc:
-            stat_log.info('Could not run full simulation because of:\n%s' % exc)
-            continue
+            # Simulate running job and get stats from that start time
+            try:
+                run_time, wait_time, pernode_cost, num_interrupts, first_iter_time = \
+                        simulate_market(start_time, spot_history, interp_history,
+                                        proc_time, num_iter, bid_price)
+            except Exception as exc:
+                stat_log.info('Could not run full simulation because of:\n%s' % exc)
+                continue
+        else:
+            run_time = num_iter*proc_time
+            wait_time = 0
+            pernode_cost = 
+            num_interrupts = 0
+            first_iter_time = proc_time
 
         # Write simulate market output to dataframe
         sim_df.loc[sim_idx] = [start_time, run_time, wait_time, pernode_cost,

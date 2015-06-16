@@ -71,20 +71,20 @@ calc_costs_cap <- function(num_datasets, jobs_per, num_mins){
 # Calculate capital time
 calc_time_cap <- function(num_datasets, jobs_per, num_mins){
 
-  # Comput hours from minutes
-  num_hours <- num_mins/60.0
+    # Comput hours from minutes
+    num_hours <- num_mins/60.0
 
-  # Calculate the number of hours
-  num_iters <- max(ceiling(num_datasets/jobs_per), 1)
-  num_hours <- ceiling(num_hours * num_iters)
+    # Calculate the number of hours
+    num_iters <- max(ceiling(num_datasets/jobs_per), 1)
+    num_hours <- ceiling(num_hours * num_iters)
 
-  # Return total time
-  return(num_hours)
+    # Return total time
+    return(num_hours)
 }
 
 
 # Costs dataframe and plots
-costs_df_plots <- function(df, max_num, costs_compare) {
+costs_df_plots <- function(df, max_num, costs_compare){
 
     # Reshape data
     costs_df <- melt(df, id=c('X', 'Download.time', 'Upload.time', 'Wait.time',
@@ -119,9 +119,9 @@ costs_df_plots <- function(df, max_num, costs_compare) {
     p0_format <- p0 +
       xlab("Number of Datasets")+
       ylab("Cost ($)")+
-      guides(col = guide_legend(ncol = 3, byrow = FALSE))+
+      guides(col = guide_legend(ncol = 3, byrow=FALSE)) +
       scale_fill_discrete(labels=c('Instance Cost   ', 'Storage Cost   ', 'Transfer Cost   ')) +
-      scale_x_discrete(breaks=c(100, 500, seq(0, 21000, 2000))) +
+      scale_x_discrete(breaks=c(100, 2000, seq(0, max_num, 5000))) +
       theme_bw()+
       theme(axis.title.x = element_text(size=12,colour="black", vjust=-.8),
             axis.title.y = element_text(size=12,colour="black"),
@@ -138,62 +138,55 @@ costs_df_plots <- function(df, max_num, costs_compare) {
             legend.text = element_text(size=10))
 
     # Add percentages (optional)
-    p0_perc <- p0_format + geom_text(data=subset(costs_maxnum, Num.datasets >= 7000),
-                                     aes(x=factor(Num.datasets), y=pos, label=label), size=2)
+#     p0_perc <- p0_format + geom_text(data=subset(costs_maxnum, Num.datasets >= 7000),
+#                                      aes(x=factor(Num.datasets), y=pos, label=label), size=2)
 
     # Add other line over the top (this isnt working, verrry hard to figure out)
-    p0_capline <- p0_perc + geom_line(data=costs_compare, aes(x=as.numeric(factor(num_datasets)), y=cap_costs))
-                  
-
-    # Give plots back as a list
-    plots <- list(p0_format, p0_perc, p0_capline)
+    p0_withline <- p0_format + geom_line(data=costs_compare, aes(x=as.numeric(factor(num_datasets)), y=cap_costs))
 
     # Return plots
-    return(plots)
+    return(p0_withline)
 }
 
 
 # Times dataframe and plots
-times_df_plots <- function(df, max_num, times_compare) {
-  
-  # Reshape data
-  times_df <- melt(df, id=c('X', 'Tranfer.cost', 'Storage.cost', 'Instance.cost', 'Wait.time',
-                            'Total.cost', 'Total.time', 'Sim.index',
+times_df_plots <- function(df, max_num, times_compare){
+
+    # Add total_time difference to df
+    df$total_diff <- df$Total.time - df$Download.time
+
+    # Reshape data
+    times_df <- melt(df, id=c('X', 'Tranfer.cost', 'Storage.cost', 'Instance.cost', 'Wait.time',
+                            'Total.cost', 'Total.time', 'Upload.time', 'Run.time', 'Sim.index',
                             'Av.zone', 'Bid.ratio', 'Bid.price', 'Num.datasets',
                             'Start.time', 'Interrupts', 'First.Iter.Time'))
-  
-  # Get the levels for variable in required order
-  times_df$variable <- factor(times_df$variable, levels=c('Download.time', 'Run.time', 'Upload.time'))
-  times_df <- arrange(times_df, Num.datasets, variable)
-  
-  # Calculate the percentages
-  times_df <- ddply(times_df, .(Num.datasets), transform, percent=value/Total.time*100)
-  
-  # Calculate captial costs
-  #costs_df$cap_costs <- apply(costs_df[12], 1, jobs_per=jobs_per, num_mins=num_mins, calc_costs_cap)
-  
-  # Format the labels and calculate their positions
-  times_df <- ddply(times_df, .(Num.datasets), transform, pos=(value - 0.5*value))
-  times_df$label <- paste0(sprintf("%.0f", times_df$percent), "%")
-  
-  # Get all data under maxnum datasets
-  times_maxnum <- subset(times_df, Num.datasets <= max_num)
-  
-  # Initial plot
-  p0 <- ggplot(data=times_maxnum,
-               aes(x=factor(Num.datasets), y=value, fill=variable)) +
-        geom_bar(stat='identity', width=1, position='dodge')
-  p0_alt <- ggplot() + geom_bar(data=times_maxnum,
-                                aes(x=factor(Num.datasets), y=value/60.0, fill=variable),
-                                stat='identity', width=1, position='dodge')
 
-  # Format plot
-  p0_format <- p0_alt +
+    # Get the levels for variable in required order
+    times_df$variable <- factor(times_df$variable, levels=c('Download.time', 'total_diff'))
+    times_df <- arrange(times_df, Num.datasets, variable)
+
+    # Calculate the percentages
+    times_df <- ddply(times_df, .(Num.datasets), transform, percent=value/Total.time*100)
+
+    # Format the labels and calculate their positions
+    times_df <- ddply(times_df, .(Num.datasets), transform, pos=(value - 0.5*value))
+    times_df$label <- paste0(sprintf("%.0f", times_df$percent), "%")
+
+    # Get all data under maxnum datasets
+    times_maxnum <- subset(times_df, Num.datasets <= max_num)
+
+    # Initial plot
+    p0 <- ggplot() + geom_bar(data=times_maxnum,
+                                aes(x=factor(Num.datasets), y=value/60.0, fill=variable),
+                                stat='identity', width=1)
+
+    # Format plot
+    p0_format <- p0 +
     xlab("Number of Datasets")+
     ylab("Time (hours)")+
     guides(col = guide_legend(ncol = 3, byrow = FALSE))+
-    scale_fill_discrete(labels=c('Download Time   ', 'Run Time   ', 'Upload Time   ')) +
-    scale_x_discrete(breaks=c(100, 500, seq(0, 21000, 2000))) +
+    scale_fill_discrete(labels=c('Download Time   ', 'Total Run Time   ')) +
+    scale_x_discrete(breaks=c(100, 2000, seq(0, max_num, 5000))) +
     theme_bw()+
     theme(axis.title.x = element_text(size=12,colour="black", vjust=-.8),
           axis.title.y = element_text(size=12,colour="black"),
@@ -208,34 +201,33 @@ times_df_plots <- function(df, max_num, times_compare) {
           legend.key.width=unit(3,"mm"),
           panel.margin=unit(20,"mm"),
           legend.text = element_text(size=10))
-  
-  # Add percentages (optional)
-  p0_perc <- p0_format +
-             geom_text(data=subset(times_maxnum, Num.datasets >=2000),
-                       aes(x=factor(Num.datasets), label=label, y=pos/60), position=position_dodge(width=1),
-                       size=3)
-  
-  # Add trendline
-  p0_line <- p0_format + geom_line(data=times_compare, aes(x=as.numeric(factor(num_datasets)), y=cap_time))
-  
-  # Give plots back as a list
-  plots <- list(p0_format, p0_perc, p0_line)
-  
-  # Return plots
-  return(plots)
+
+    # Add percentages (optional)
+#     p0_perc <- p0_format +
+#                geom_text(data=subset(times_maxnum, Num.datasets >=2000),
+#                          aes(x=factor(Num.datasets), label=label, y=pos/60), position=position_dodge(width=1),
+#                          size=3)
+
+    # Add trendline
+    p0_withline <- p0_format + geom_line(data=times_compare, aes(x=as.numeric(factor(num_datasets)), y=cap_time))
+
+    # Return plots
+    return(p0_withline)
 }
 
 # Fixed plots
 cpac_csv <- '~/Documents/projects/Clark2015_AWS/spot-model/fixed-outs/cpac-abide_smallout.csv'
+ants_csv <- '~/Documents/projects/Clark2015_AWS/spot-model/fixed-outs/ants.csv'
+
 
 # Init variables
-jobs_per = 3
-num_mins = 45
+jobs_per = 1
+num_mins = 510
 # Number of datasets
-max_num = 21000
+max_num = 50000
 
 # Read in dataframe
-df <- read.csv(cpac_csv)
+df <- read.csv(ants_csv)
 
 # Create capital costs dataframe
 costs_compare <- data.frame(num_datasets=df$Num.datasets[df$Num.datasets <= max_num])
@@ -246,36 +238,20 @@ costs_compare$cap_costs <- apply(costs_compare[1], 1, jobs_per=jobs_per, num_min
 times_compare$cap_time <- apply(times_compare[1], 1, jobs_per=jobs_per, num_mins=num_mins, calc_time_cap)
 
 # Get plots
-costs_plots <- costs_df_plots(df, max_num, costs_compare)
-costs_stacked <- costs_plots[1]
-costs_perc <- costs_plots[2]
-costs_line <- costs_plots[3]
-
+costs_plot <- costs_df_plots(df, max_num, costs_compare)
 # Without percentages
-print(costs_stacked)
-# With percentages
-print(costs_perc)
-# Print with capital trend line over
-print(costs_line)
+print(costs_plot)
 
 # Get plots
-times_plots <- times_df_plots(df, max_num, times_compare)
-times_stacked <- times_plots[1]
-times_perc <- times_plots[2]
-times_line <- times_plots[3]
-
+times_plot <- times_df_plots(df, max_num, times_compare)
 # Without percentages
-print(times_stacked)
-# With percentages
-print(times_perc)
-# Print with capital trend line over
-print(times_line)
+print(times_plot)
 
 # Save pdfs
 pdf(file = "~/Documents/projects/Clark2015_AWS/poster/costs.pdf", width=5, height = 5)
-print(costs_line)
+print(costs_plot)
 dev.off()
 
 pdf(file = "~/Documents/projects/Clark2015_AWS/poster/times.pdf", width=5, height = 5)
-print(times_line)
+print(times_plot)
 dev.off()
