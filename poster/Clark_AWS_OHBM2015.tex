@@ -24,7 +24,7 @@
 \usepackage{graphicx}
 \usepackage{enumerate}
 %\usepackage[orientation=portrait,size=custom,width=83.96,height=101,scale=1]{beamerposter}
-\usepackage[orientation=portrait,size=custom,width=141,height=242,scale=1]{beamerposter}
+\usepackage[orientation=portrait,size=custom,width=141,height=140,scale=1]{beamerposter}
 %\usepackage[orientation=portrait,width=89,height=102,scale=1.1,debug]{beamerposter}
 %\usepackage[orientation=portrait,size=a0,scale=1.4,debug]{beamerposter}
 % change list indention level
@@ -102,19 +102,6 @@
                     \item The resulting pipeline was used to process 780 T1-weighted structural images and return the results to NDAR
                 \end{itemize}
                 \vskip1ex
-            \end{column}
-            \begin{column}{.5\textwidth}
-                %% LONI pipeline figure
-                \begin{figure}
-                    \begin{center}
-                        \includegraphics[width=.9\textwidth]{loni_pipeline.eps}
-                    \end{center}
-                    \caption{\label{fig:loni_pipe}Graphical layout of the constructed pipeline}
-                \end{figure}
-            \end{column}
-            \vskip1ex
-            %% C-PAC pipeline
-            \begin{column}{.5\textwidth}
                 {\bf Configurable Pipeline For the Analysis of Connectomes (C-PAC)$^{3}$}
                 \begin{itemize}
                     \item C-PAC modules were written in Python to build input data lists by querying NDAR, read input data from S3, write processed results to S3 and write values back to the NDAR database
@@ -126,18 +113,7 @@
                             \item Automated quality asssessment of 1,112 datasets from ABIDE
                         \end{enumerate}
                 \end{itemize}
-            \end{column}
-            \begin{column}{.5\textwidth}
-                %% LONI pipeline figure
-                \begin{figure}
-                    \begin{center}
-                        \includegraphics[width=.9\textwidth]{loni_pipeline.eps}
-                    \end{center}
-                    \caption{\label{fig:loni_pipe}Graphical layout of the constructed pipeline}
-                \end{figure}
-            \end{column}
-            \vskip1ex
-            \begin{column}{.5\textwidth}
+				\vskip1ex
                 %% NITRC-CE pipeline
                 {\bf Neuroimaging Informatics Tools and Resources Clearinghouse Computational Environment (NITRC-CE)$^{6}$}
                 \begin{itemize}
@@ -150,61 +126,53 @@
                     \item Python modules were created to query and download data from NDAR as well as to store results back to their database
                     \item The recon-all and FIRST tools processed 986 and 1,247 T1-weighted anatomical scans, respectively; the fmriqa\_generate QA measures were generated from 1,349 functional scans.
                 \end{itemize}
+				\vskip1ex
+	            {\bf Interacting with the NDAR database}
+	                \begin{itemize}
+	                    \item Launched an AWS-hosted miNDAR database by querying NDAR website for the data of interest (e.g. from a particular study)
+	                    \item Built a subject list by querying the database for subjects of interest to pass to our pipeline
+	                    \item Launch an AWS EC2 HPC cluster using Starcluster$^{7}$
+	                    \item Log into the cluster and submit a Sun Grid Engine job using our pipeline software and the subject list
+	                    \item The pipeline software will process the data, store raw outputs in an AWS S3 bucket and insert S3 filepaths and output measures into miNDAR database
+	                \end{itemize}
+					\vskip1ex
+	              %% EC2 Spot pricing
+	              {\bf EC2 Spot Pricing}
+	              \begin{itemize}
+	                  \item In addition to the ``pay as you go" compute pricing model, AWS offers users to bid on instances that are not being used
+	                  \item As opposed to paying an ``on-demand" fixed price, the hourly charge for the instances will vary over time based on what people in different regions are willing to pay
+	                  \item If the spot market price goes above what the user bids, their instance will be terminated by Amazon and all of their processes will be stopped and their data lost
+	                  \item Typically, one can expect to pay one-eighth of the hourly price of a standard on-demand instance when using spot-pricing
+	                  \item AWS offers cloud solutions based on geographic region, where the price for services vary
+	                  \item Some regions fluxuate on spot price more than others, but there are ways to minimize process interruptions and lost data in how one configures their cluster and pipelines
+	              \end{itemize}
+				
             \end{column}
-            \vskip1ex
-            \begin{column}{.47\textwidth}
-            %% miNDAR
-            {\bf Interacting with the NDAR database}
-                \begin{itemize}
-                    \item Launched an AWS-hosted miNDAR database by querying NDAR website for the data of interest (e.g. from a particular study)
-                    \item Built a subject list by querying the database for subjects of interest to pass to our pipeline
-                    \item Launch an AWS EC2 HPC cluster using Starcluster$^{7}$
-                    \item Log into the cluster and submit a Sun Grid Engine job using our pipeline software and the subject list
-                    \item The pipeline software will process the data, store raw outputs in an AWS S3 bucket and insert S3 filepaths and output measures into miNDAR database
-                \end{itemize}
-              %% EC2 Spot pricing
-              {\bf EC2 Spot Pricing}
-              \begin{itemize}
-                  \item In addition to the ``pay as you go" compute pricing model, AWS offers users to bid on instances that are not being used
-                  \item As opposed to paying an ``on-demand" fixed price, the hourly charge for the instances will vary over time based on what people in different regions are willing to pay
-                  \item If the spot market price goes above what the user bids, their instance will be terminated by Amazon and all of their processes will be stopped and their data lost
-                  \item Typically, one can expect to pay one-eighth of the hourly price of a standard on-demand instance when using spot-pricing
-                  \item AWS offers cloud solutions based on geographic region, where the price for services vary
-                  \item Some regions fluxuate on spot price more than others, but there are ways to minimize process interruptions and lost data in how one configures their cluster and pipelines
-              \end{itemize}
-            \end{column}
-            %%
-            \begin{column}{.47\textwidth}
-                % miNDAR database screenshot
+            \begin{column}{.5\textwidth}
+                %% LONI pipeline figure
                 \begin{figure}
                     \begin{center}
-                        \includegraphics[width=.9\textwidth]{mindar.png}
+                        \includegraphics[width=.9\textwidth]{loni_pipeline.eps}
                     \end{center}
-                    \caption{\label{fig:mindar}miNDAR database}
+                    \caption{\label{fig:loni_pipe}Graphical layout of the constructed pipeline}
                 \end{figure}
-              %% Spot history figure
-              \begin{figure}
-                  \includegraphics[width=.99\textwidth]{spot_history.png}
-                  \caption{\label{fig:spot_history}Spot price history for the c3.8xlarge instance in the us-east-1 region on AWS across the four different availability zones for the past three months}
-              \end{figure}
+                \vskip1ex			
+                  \begin{figure}
+                      \begin{center}
+                          \includegraphics[width=.9\textwidth]{mindar.png}
+                      \end{center}
+                      \caption{\label{fig:mindar}miNDAR database}
+                  \end{figure}
+                %% Spot history figure
+                \begin{figure}
+                    \includegraphics[width=.99\textwidth]{spot_history.png}
+                    \caption{\label{fig:spot_history}Spot price history for the c3.8xlarge instance in the us-east-1 region on AWS across the four different availability zones for the past three months}
+                \end{figure}
+					
+				
             \end{column}
         \vfill
         \end{block}
-          }
-        %\end{minipage}
-      %\end{beamercolorbox}
-    \end{column}
-    %----------------------------------------------------------------------
-    % Right column of poster
-    %----------------------------------------------------------------------
-    % Set up a column
-    \begin{column}{.5\textwidth}
-    %\begin{beamercolorbox}[center,wd=\textwidth]{postercolumn}
-    %\begin{minipage}[T]{.98\textwidth} % tweaks the width, makes a new \textwidth
-        \parbox[t][\columnheight]{\textwidth}{ % must be some better way to set the the height, width and textwidth simultaneously
-        %----------------------------------------------------------------------
-        % Results
-        %----------------------------------------------------------------------
         \begin{block}{Results}
             \begin{center}
                 %% Preprocessing results table
@@ -225,26 +193,45 @@
                     \end{tabularx}
                 \end{table}
             \end{center}
+			\vskip1ex
+            {\bf Benefits of the cloud}
+            \begin{itemize}
+                \item The scalability and payment model for processing this data on a cloud platform allowed for an efficient processing of the NDAR datasets, both in time and cost
+                \item Additionally, there was no need to install, configure, and maintain machines locally, saving on overhead
+                \item Competition for computing resources was controlled as every cluster launch was done by the user doing the processing; no fellow researchers needed to login and use additional computing power
+                \item Cost and time models were produced to demonstrate the benefits of using cloud computing for increasingly large datasets
+            \end{itemize}
+	        \vfill
+	        \end{block}
+			
+          }
+        %\end{minipage}
+      %\end{beamercolorbox}
+    \end{column}
+    %----------------------------------------------------------------------
+    % Right column of poster
+    %----------------------------------------------------------------------
+    % Set up a column
+    \begin{column}{.5\textwidth}
+    %\begin{beamercolorbox}[center,wd=\textwidth]{postercolumn}
+    %\begin{minipage}[T]{.98\textwidth} % tweaks the width, makes a new \textwidth
+        \parbox[t][\columnheight]{\textwidth}{ % must be some better way to set the the height, width and textwidth simultaneously
+        %----------------------------------------------------------------------
+        % Results
+        %----------------------------------------------------------------------
+        \begin{block}{Results cont.}
+            %\vskip4ex
+            %% Costs and run time models
+            {\bf Costs and run time models}
+            \begin{itemize}
+                \item Models assume user uploads their input data to the cloud, runs their pipelines and (optionally) downloads their outputs as they become available.
+                \item Outputs are stored on an AWS Elastic Block Store (EBS) hard drive mounted to the master node and is NFS-shared across all of the slave nodes.
+                \item Users can also upload their processed outputs to a cloud storage solution, like AWS Simple Storage Service (S3) directly from the cluster - this is the approach that was taken in processing data for NDAR.
+                \item Storing results in AWS S3 avoids costly download time and provides for a viable solution for backing up data; however this does incur additional storage costs.
+            \end{itemize}
+		 \vskip4ex
           %% Left column
           \begin{column}{.47\textwidth}
-              %% Benefits of the cloud
-              {\bf Benefits of the cloud}
-              \begin{itemize}
-                  \item The scalability and payment model for processing this data on a cloud platform allowed for an efficient processing of the NDAR datasets, both in time and cost
-                  \item Additionally, there was no need to install, configure, and maintain machines locally, saving on overhead
-                  \item Competition for computing resources was controlled as every cluster launch was done by the user doing the processing; no fellow researchers needed to login and use additional computing power
-                  \item Cost and time models were produced to demonstrate the benefits of using cloud computing for increasingly large datasets
-              \end{itemize}
-              %\begin{figure}
-              %    \includegraphics[width=.99\textwidth]{br_vs_time_fs.eps}
-              %    \caption{\label{fig:best_worst}Bid ratio vs Computation time in minutes for the Freesurfer pipeline}
-              %\end{figure}
-              %\vskip2ex
-              %\begin{figure}
-              %    \includegraphics[width=.99\textwidth]{inter_subject.eps}
-              %    \caption{\label{fig:inter_subject} Performance across particpants (A) differs between feedback and neurofeedback scans as determined by their order (B).}
-              %\end{figure}
-              %% C-PAC costs figure
               \begin{figure}
                   \includegraphics[width=.99\textwidth]{cpac-costs.pdf}
                   \caption{\label{fig:cpac-costs}AWS EC2 costs, grouped by cost type, for a typical C-PAC pipeline for different sized datasets versus owning and maintaining own server; costs are based on using the cluster configuration shown in Table 1 for the cloud, and a single compute node locally}
@@ -257,15 +244,7 @@
               \end{column}
           %% Right column
           \begin{column}{.47\textwidth}
-              %\vskip4ex
-              %% Costs and run time models
-              {\bf Costs and run time models}
-              \begin{itemize}
-                  \item Models assume user uploads their input data to the cloud, runs their pipelines and (optionally) downloads their outputs as they become available.
-                  \item Outputs are stored on an AWS Elastic Block Store (EBS) hard drive mounted to the master node and is NFS-shared across all of the slave nodes.
-                  \item Users can also upload their processed outputs to a cloud storage solution, like AWS Simple Storage Service (S3) directly from the cluster - this is the approach that was taken in processing data for NDAR.
-                  \item Storing results in AWS S3 avoids costly download time and provides for a viable solution for backing up data; however this does incur additional storage costs.
-              \end{itemize}
+
               %% C-PAC times figure
               \begin{figure}
                   \includegraphics[width=.99\textwidth]{cpac-times.pdf}
