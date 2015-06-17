@@ -82,7 +82,7 @@
                 \item The National Database for Autism Research (NDAR)$^{1}$ hosts a vast collection of neuroimaging datasets that can be processed and utilized to yield significant scientific discoveries.
                 \item This amount of resources necessitates a high-performance computing (HPC) infrastructure, which is not always readily available for researchers in-house.
                 \item Amazon Web Services (AWS) Elastic Compute Cloud (EC2) computing service offers a ``pay as you go" model that allows researchers to utilize HPC performance without the up-front captial costs and maintenance of an in-house solution.
-                \item The developers of the Laboratory of Neuro Imaging (LONI) Pipeline, the Neuroimaging Informatics Tools and Resources Clearinghouse (NITRC) Computational Environment (CE) and the Configurable Pipeline for the Analysis of Connectomes (C-PAC) have implemented pipelines in EC2 that interface with NDAR
+                \item The developers of the Laboratory of Neuro Imaging (LONI) Pipeline, the Neuroimaging Informatics Tools and Resources Clearinghouse (NITRC) Computational Environment (CE) and the Configurable Pipeline for the Analysis of Connectomes (C-PAC) have implemented pipelines in EC2 that interface with NDAR.
             \end{itemize}
         \vfill
         \end{block}
@@ -95,21 +95,21 @@
             \begin{column}{.5\textwidth}
                 {\bf LONI Pipeline}
                 \begin{itemize}
-                    \item The LONI Pipeline software was extended to include new pipeline modules to access data from the NDAR database, transfer input data out of Amazon S3 (Simple Storage Service), and to load results back into S3$^{2}$
+                    \item The LONI Pipeline software was extended to include new pipeline modules to access data from the NDAR database, transfer input data out of Amazon S3 (Simple Storage Service), and to load results back into S3$^{2}$.
                     \item A pipeline was constructed to extract cortical thickness and subcortical region volume data from structural MRI images in the NDAR database, which included:
                     \begin{enumerate}
                         \item Reorient images to standard orientation using FSL's reorient2std module
                         \item Extract cortical thickness using FreeSurfer recon-all
                         \item Calculate volumes of subcortical regions using FSL's BET and FIRST all
                     \end{enumerate}
-                    \item The resulting pipeline was used to process 780 T1-weighted structural images and return the results to NDAR
+                    \item The resulting pipeline was used to process 780 T1-weighted structural images and return the results to NDAR.
                 \end{itemize}
                 \vskip3ex
                 {\bf Configurable Pipeline For the Analysis of Connectomes (C-PAC)$^{3}$}
                 \begin{itemize}
-                    \item C-PAC modules were written in Python to build input data lists by querying NDAR, read input data from S3, write processed results to S3 and write values back to the NDAR database
-                    \item New pipelines were created to perform the ANTS cortical thickness$^{4}$ procedure and the Preprocessed Connectomes Project's Quality Assessment Protocol (\url{http://preprocessed-connectomes-project.github.io/quality-assessment-pipeline})$^{5}$
-                    \item The resulting pipelines and modules were used to process several datasets and return the results to NDAR
+                    \item C-PAC modules were written in Python to build input data lists by querying NDAR, read input data from S3, write processed results to S3, and write values back to the NDAR database.
+                    \item New pipelines were created to perform the ANTS cortical thickness$^{4}$ procedure and the Preprocessed Connectomes Project's Quality Assessment Protocol (\url{http://preprocessed-connectomes-project.github.io/quality-assessment-pipeline})$^{5}$.
+                    \item The resulting pipelines and modules were used to process several datasets and return the results to NDAR, including:
                         \begin{enumerate}
                             \item Cortical extraction from 3,197 T1-weighted structural images
                             \item Structural and functional processing for 1,112 datasets from ABIDE
@@ -120,34 +120,34 @@
                 %% NITRC-CE pipeline
                 {\bf Neuroimaging Informatics Tools and Resources Clearinghouse Computational Environment (NITRC-CE)$^{6}$}
                 \begin{itemize}
-                    \item The NITRC pipeline processed data using three primary utilities
+                    \item The NITRC pipeline processed data using three primary utilities:
                         \begin{enumerate}
-                            \item Extract anatomical and surface-base measures with Freesurfer recon-all
+                            \item Extract anatomical and surface-based measures with Freesurfer recon-all
                             \item Segment subcortical structures using FSL's FIRST to produce volumetric and mesh outputs
-                            \item Time series QA measures using the fmriqa\_generate.pl utility from the BXH/XCEDE Tools suite, including mean intensty, center of mass, per-slice variation, and others
+                            \item Assess time series QA measures using the fmriqa\_generate.pl utility from the BXH/XCEDE Tools suite, including mean intensty, center of mass, per-slice variation, and others
                         \end{enumerate}
-                    \item Python modules were created to query and download data from NDAR as well as to store results back to their database
+                    \item Python modules were created to query and download data from NDAR as well as to store results back to their database.
                     \item The recon-all and FIRST tools processed 986 and 1,247 T1-weighted anatomical scans, respectively; the fmriqa\_generate QA measures were generated from 1,349 functional scans.
                 \end{itemize}
 				\vskip3ex
 	            {\bf Interacting with the NDAR database}
 	                \begin{itemize}
-	                    \item Launched an AWS-hosted miNDAR database by querying NDAR website for the data of interest (e.g. from a particular study)
-	                    \item Built a subject list by querying the database for subjects of interest to pass to our pipeline
-	                    \item Launch an AWS EC2 HPC cluster using Starcluster (\url{http://star.mit.edu/cluster/})
-	                    \item Log into the cluster and submit a Sun Grid Engine job using our pipeline software and the subject list
-	                    \item The pipeline software will process the data, store raw outputs in an AWS S3 bucket and insert S3 filepaths and output measures into miNDAR database
+	                    \item An AWS-hosted miNDAR database was created by querying the NDAR website for the data of interest (e.g. from a particular study).
+	                    \item The developed modules were then used to build a subject list by querying the database for subjects of interest to pass to the pipeline.
+	                    \item The launch and configuration of an AWS EC2 HPC cluster was handled using Starcluster (\url{http://star.mit.edu/cluster/}).
+	                    \item A process run was submitted from the cluster head node as a Sun Grid Engine job using our pipeline software and the subject list.
+	                    \item The pipeline software then processed the data, stored raw outputs in an S3 bucket, and inserted the S3 filepaths and output measures into the miNDAR database.
 	                \end{itemize}
 					\vskip3ex
 	              %% EC2 Spot pricing
 	              {\bf EC2 Spot Pricing}
 	              \begin{itemize}
-	                  \item In addition to the ``pay as you go" compute pricing model, AWS offers users to bid on instances that are not being used
-	                  \item As opposed to paying an ``on-demand" fixed price, the hourly charge for the instances will vary over time based on what people in different regions are willing to pay
-	                  \item If the spot market price goes above what the user bids, their instance will be terminated by Amazon and all of their processes will be stopped and their data lost
-	                  \item Typically, one can expect to pay one-eighth of the hourly price of a standard on-demand instance when using spot-pricing
-	                  \item AWS offers cloud solutions based on geographic region, where the price for services vary
-	                  \item Some regions fluxuate on spot price more than others, but there are ways to minimize process interruptions and lost data in how one configures their cluster and pipelines
+	                  \item In addition to the ``pay as you go" compute pricing model, AWS offers users to bid on instances that are not being used.
+	                  \item As opposed to paying an ``on-demand" fixed price, the hourly charge for the instances will vary over time based on what people in different regions are willing to pay.
+	                  \item If the spot market price goes above what the user bids, their instance will be terminated by Amazon and all of their processes will be stopped and their data lost.
+	                  \item Typically, one can expect to pay one-eighth of the hourly price of a standard on-demand instance when using spot-pricing.
+	                  \item AWS offers cloud solutions based on geographic region, where the price for services vary.
+	                  \item Some regions fluxuate on spot price more than others, but there are ways to minimize process interruptions and lost data in how one configures their cluster and pipelines.
 	              \end{itemize}
 				
             \end{column}
@@ -201,10 +201,10 @@
 			\vskip2ex
             {\bf Benefits of the cloud}
             \begin{itemize}
-                \item The scalability and payment model for processing this data on a cloud platform allowed for an efficient processing of the NDAR datasets, both in time and cost
-                \item Additionally, there was no need to install, configure, and maintain machines locally, saving on overhead
-                \item Competition for computing resources was controlled as every cluster launch was done by the user doing the processing; no fellow researchers needed to login and use additional computing power
-                \item Cost and time models were produced to demonstrate the benefits of using cloud computing for increasingly large datasets
+                \item The scalability and payment model for processing this data on a cloud platform allowed for an efficient processing of the NDAR datasets, both in time and cost.
+                \item Additionally, there was no need to install, configure, and maintain machines locally, saving on overhead.
+                \item Competition for computing resources was controlled as every cluster launch was done by the user doing the processing; no fellow researchers needed to login and use additional computing power.
+                \item Cost and time models were produced to demonstrate the benefits of using cloud computing for increasingly large datasets.
             \end{itemize}
 	        \vfill
 	        \end{block}
@@ -229,10 +229,10 @@
             %% Costs and run time models
             {\bf Costs and run time models}
             \begin{itemize}
-                \item Models assume that users upload their input data to the cloud, run their pipelines and (optionally) downloads their outputs as they become available.
+                \item Models assume that users upload their input data to the cloud, run their pipelines and (optionally) download their outputs as they become available.
                 \item Outputs are stored on an AWS Elastic Block Store (EBS) hard drive mounted to the master node and is NFS-shared across all of the slave nodes.
-                \item Users can also upload their processed outputs to a cloud storage solution, like AWS Simple Storage Service (S3) directly from the cluster - this is the approach that was taken in processing data for NDAR.
-                \item Storing results in AWS S3 avoids costly download time and provides for a viable solution for backing up data; however this does incur additional storage costs.
+                \item Users can also upload their processed outputs to a cloud storage solution, like AWS S3, directly from the cluster - this was the approach taken in processing data for NDAR.
+                \item Storing results in S3 avoids costly download time and provides for a viable solution for backing up data; however this does incur additional storage costs.
             \end{itemize}
 		 \vskip3ex
           %% Left column
@@ -253,12 +253,12 @@
               %% C-PAC times figure
               \begin{figure}
                   \includegraphics[width=.99\textwidth]{cpac-times.pdf}
-                  \caption{\label{fig:cpac-times}Run times using the C-PAC pipeline, grouped by downloading vs non-downoading output data, for different sized datasets versus running locally; times are based on using the cluster configuration shown in Table 1 for the cloud, and a single compute node locally}
+                  \caption{\label{fig:cpac-times}Run times using the C-PAC pipeline, grouped by downloading output data or not, for different sized datasets versus running locally; times are based on using the cluster configuration shown in Table 1 for the cloud, and a single compute node locally}
               \end{figure}
               %% Freesurfer times figure
               \begin{figure}
                   \includegraphics[width=.99\textwidth]{fs-times.pdf}
-                  \caption{\label{fig:fs-times}Run times using the Freesurfer pipeline, grouped by downloading vs non-downoading output data, for different sized datasets versus running locally}
+                  \caption{\label{fig:fs-times}Run times using the Freesurfer pipeline, grouped by downloading output data or not, for different sized datasets versus running locally}
               \end{figure}
               %\begin{itemize}
               %     \item As shown in figure \ref{fig:best_worst} models learned for the best and worst performing participants match
@@ -277,9 +277,9 @@
         %----------------------------------------------------------------------
         \begin{block}{Conclusion}
             \begin{itemize}
-                \item NDAR provides a wealth of heterogenous data for studying the effects of autism and an excellent framework for the querying and storing of processed data
-                \item Cloud computing services like AWS EC2 are viable solutions for the processing and analysis of large amounts of data
-                \item A time and cost analysis argues for the benefits of using cloud computing over buying and maintaining one's own computing resource
+                \item NDAR provides a wealth of heterogenous data for studying the effects of autism and an excellent framework for the querying and storing of scientific results.
+                \item Cloud computing services, like AWS EC2, are viable solutions for the processing and analysis of large amounts of data.
+                \item A time and cost analysis argues for the benefits of using cloud computing over purchasing and maintaining one's own computing resource.
             \end{itemize}
         \end{block}
         %----------------------------------------------------------------------
