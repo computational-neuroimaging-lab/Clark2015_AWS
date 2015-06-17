@@ -111,40 +111,46 @@
                     \end{center}
                     \caption{\label{fig:loni_pipe}Graphical layout of the constructed pipeline}
                 \end{figure}
-                %% C-PAC pipeline figure
-                \begin{figure}
-                    \begin{center}
-                        \includegraphics[width=.9\textwidth]{cpac_pipeline.png}
-                    \end{center}
-                    \caption{\label{fig:cpac_pipe}C-PAC preprocessing stages}
-                \end{figure}
             \end{column}
             \vskip1ex
             %% C-PAC pipeline
-            {\bf Configurable Pipeline For the Analysis of Connectomes (C-PAC)$^{3}$}
-            \begin{itemize}
-                \item C-PAC modules were written in Python to build input data lists by querying NDAR, read input data from S3, write processed results to S3 and write values back to the NDAR database
-                \item New pipelines were created to perform the ANTS cortical thickness$^{4}$ procedure and the Preprocessed Connectomes Project's Quality Assessment Protocol (\url{http://preprocessed-connectomes-project.github.io/quality-assessment-pipeline})$^{5}$
-                \item The resulting pipelines and modules were used to process several datasets and return the results to NDAR
-                    \begin{enumerate}
-                        \item Cortical extraction from 3,197 T1-weighted structural images
-						\item Structural and functional processing for 1,112 datasets from ABIDE
-						\item Automated quality asssessment of 1,112 datasets from ABIDE
-                    \end{enumerate}
-            \end{itemize}
+            \begin{column}{.5\textwidth}
+                {\bf Configurable Pipeline For the Analysis of Connectomes (C-PAC)$^{3}$}
+                \begin{itemize}
+                    \item C-PAC modules were written in Python to build input data lists by querying NDAR, read input data from S3, write processed results to S3 and write values back to the NDAR database
+                    \item New pipelines were created to perform the ANTS cortical thickness$^{4}$ procedure and the Preprocessed Connectomes Project's Quality Assessment Protocol (\url{http://preprocessed-connectomes-project.github.io/quality-assessment-pipeline})$^{5}$
+                    \item The resulting pipelines and modules were used to process several datasets and return the results to NDAR
+                        \begin{enumerate}
+                            \item Cortical extraction from 3,197 T1-weighted structural images
+                            \item Structural and functional processing for 1,112 datasets from ABIDE
+                            \item Automated quality asssessment of 1,112 datasets from ABIDE
+                        \end{enumerate}
+                \end{itemize}
+            \end{column}
+            \begin{column}{.5\textwidth}
+                %% LONI pipeline figure
+                \begin{figure}
+                    \begin{center}
+                        \includegraphics[width=.9\textwidth]{loni_pipeline.eps}
+                    \end{center}
+                    \caption{\label{fig:loni_pipe}Graphical layout of the constructed pipeline}
+                \end{figure}
+            \end{column}
             \vskip1ex
-            %% NITRC-CE pipeline
-            {\bf Neuroimaging Informatics Tools and Resources Clearinghouse Computational Environment (NITRC-CE)$^{6}$}
-            \begin{itemize}
-                \item The NITRC pipeline processed data using three primary utilities
-                    \begin{enumerate}
-                        \item Extract anatomical and surface-base measures with Freesurfer recon-all
-                        \item Segment subcortical structures using FSL's FIRST to produce volumetric and mesh outputs
-                        \item Time series QA measures using the fmriqa\_generate.pl utility from the BXH/XCEDE Tools suite, including mean intensty, center of mass, per-slice variation, and others
-                    \end{enumerate}
-                \item Python modules were created to query and download data from NDAR as well as to store results back to their database
-                \item The recon-all and FIRST tools processed 986 and 1,247 T1-weighted anatomical scans, respectively; the fmriqa\_generate QA measures were generated from 1,349 functional scans.
-            \end{itemize}
+            \begin{column}{.5\textwidth}
+                %% NITRC-CE pipeline
+                {\bf Neuroimaging Informatics Tools and Resources Clearinghouse Computational Environment (NITRC-CE)$^{6}$}
+                \begin{itemize}
+                    \item The NITRC pipeline processed data using three primary utilities
+                        \begin{enumerate}
+                            \item Extract anatomical and surface-base measures with Freesurfer recon-all
+                            \item Segment subcortical structures using FSL's FIRST to produce volumetric and mesh outputs
+                            \item Time series QA measures using the fmriqa\_generate.pl utility from the BXH/XCEDE Tools suite, including mean intensty, center of mass, per-slice variation, and others
+                        \end{enumerate}
+                    \item Python modules were created to query and download data from NDAR as well as to store results back to their database
+                    \item The recon-all and FIRST tools processed 986 and 1,247 T1-weighted anatomical scans, respectively; the fmriqa\_generate QA measures were generated from 1,349 functional scans.
+                \end{itemize}
+            \end{column}
             \vskip1ex
             \begin{column}{.47\textwidth}
             %% miNDAR
