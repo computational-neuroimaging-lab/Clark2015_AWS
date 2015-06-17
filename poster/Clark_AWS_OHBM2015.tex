@@ -21,9 +21,10 @@
 %\usepackage{times}\usefonttheme{professionalfonts}  % obsolete
 %\usefonttheme[onlymath]{serif}
 %\boldmath
+\usepackage{graphicx}
 \usepackage{enumerate}
 %\usepackage[orientation=portrait,size=custom,width=83.96,height=101,scale=1]{beamerposter}
-\usepackage[orientation=portrait,size=custom,width=96,height=70,scale=1]{beamerposter}
+\usepackage[orientation=portrait,size=custom,width=141,height=242,scale=1]{beamerposter}
 %\usepackage[orientation=portrait,width=89,height=102,scale=1.1,debug]{beamerposter}
 %\usepackage[orientation=portrait,size=a0,scale=1.4,debug]{beamerposter}
 % change list indention level
@@ -63,200 +64,238 @@
 \begin{document}
 \begin{frame}
     \begin{columns}
-    % ---------------------------------------------------------%
-    % Set up a column 
+    %----------------------------------------------------------------------
+    % Right column of poster
+    %----------------------------------------------------------------------
+    % Set up a column
     \begin{column}{.5\textwidth}
-      %\begin{beamercolorbox}[center,wd=\textwidth]{postercolumn}
-        %\begin{minipage}[T]{.98\textwidth}  % tweaks the width, makes a new \textwidth
-          \parbox[t][\columnheight]{\textwidth}{ % must be some better way to set the the height, width and textwidth simultaneously
-            %----------------------------------------------------------------------
-            % Introduction
-            %----------------------------------------------------------------------
-            \begin{block}{Introduction}
-              \begin{itemize}
-                  \item The National Database for Autism Research (NDAR) hosts a vast collection of neuroimaging datasets that can be processed and utilized to yield significant scientific discoveries.
-                  \item This amount of resources necessitates a high-performance computing (HPC) infrastructure, which is not always readily available for researchers in-house.
-                  \item Amazon Web Services (AWS) Elastic Compute Cloud (EC2) computing service offers a ``pay as you go" model that allows researchers to utilize HPC performance without the up-front captial costs and maintenance of an in-house solution.
-                  \item The developers of the Laboratory of Neuro Imaging (LONI) Pipeline, the Neuroimaging Informatics Tools and Resources Clearinghouse (NITRC) Computational Environment (CE) and the Configurable Pipeline for the Analysis of Connectomes (C-PAC) have implemented pipelines in EC2 that interface with NDAR
-              \end{itemize}
-            \vfill
-            \end{block}
-            %----------------------------------------------------------------------
-            % Methods
-            %----------------------------------------------------------------------
-            \begin{block}{Methods}
-                %% LONI pipeline
-                \begin{column}{.5\textwidth}
-                    {\bf LONI Pipeline}
-                    \begin{itemize}
-                        \item The LONI Pipeline software was extended to include new pipeline modules to access data from the NDAR database, transfer input data out of Amazon S3 (Simple Storage Service), and to load results back into S3$^{1}$
-                        \item A pipeline was constructed to extract cortical thickness and subcortical region volume data from structural MRI images in the NDAR database, which included:
-                        \begin{enumerate}
-                            \item Reorient images to standard orientation using FSL's reorient2std module
-                            \item Extract cortical thickness using FreeSurfer recon-all
-                            \item Calculate volumes of subcortical regions using FSL's BET and FIRST all
-                        \end{enumerate}
-                        \item The resulting pipeline was used to process 780 T1-weighted structural images and return the results to NDAR
-                    \end{itemize}
-                    \vskip1ex
-                \end{column}
-                %% LONI pipeline figure
-                \begin{column}{.5\textwidth}
-                    \begin{figure}
-                        \begin{center}
-                            \includegraphics[width=.9\textwidth]{loni_pipeline.eps}
-                        \end{center}
-                        \caption{\label{fig:roi_metrics}Graphical layout of the constructed pipeline}
-                    \end{figure}
-                \end{column}
-                \vskip1ex
-                %% C-PAC pipeline
-                {\bf Configurable Pipeline For the Analysis of Connectomes (C-PAC)}
+    %\begin{beamercolorbox}[center,wd=\textwidth]{postercolumn}
+    %\begin{minipage}[T]{.98\textwidth}  % tweaks the width, makes a new \textwidth
+        \parbox[t][\columnheight]{\textwidth}{ % must be some better way to set the the height, width and textwidth simultaneously
+        %----------------------------------------------------------------------
+        % Introduction
+        %----------------------------------------------------------------------
+        \begin{block}{Introduction}
+            \begin{itemize}
+                \item The National Database for Autism Research (NDAR) hosts a vast collection of neuroimaging datasets that can be processed and utilized to yield significant scientific discoveries.
+                \item This amount of resources necessitates a high-performance computing (HPC) infrastructure, which is not always readily available for researchers in-house.
+                \item Amazon Web Services (AWS) Elastic Compute Cloud (EC2) computing service offers a ``pay as you go" model that allows researchers to utilize HPC performance without the up-front captial costs and maintenance of an in-house solution.
+                \item The developers of the Laboratory of Neuro Imaging (LONI) Pipeline, the Neuroimaging Informatics Tools and Resources Clearinghouse (NITRC) Computational Environment (CE) and the Configurable Pipeline for the Analysis of Connectomes (C-PAC) have implemented pipelines in EC2 that interface with NDAR
+            \end{itemize}
+        \vfill
+        \end{block}
+        %----------------------------------------------------------------------
+        % Methods
+        %----------------------------------------------------------------------
+        \begin{block}{Methods}
+            %% LONI pipeline
+            \begin{column}{.5\textwidth}
+                {\bf LONI Pipeline}
                 \begin{itemize}
-                    \item C-PAC modules were written in Python to build input data lists by querying NDAR, read input data from S3, write processed results to S3 and write values back to the NDAR database$^{2}$
-                    \item New pipelines were created to perform the ANTS cortical thickness$^{3}$ procedure and the Preprocessed Connectomes Project's Quality Assessment Protocol (\url{http://preprocessed-connectomes-project.github.io/quality-assessment-pipeline})$^{4}$
+                    \item The LONI Pipeline software was extended to include new pipeline modules to access data from the NDAR database, transfer input data out of Amazon S3 (Simple Storage Service), and to load results back into S3$^{1}$
+                    \item A pipeline was constructed to extract cortical thickness and subcortical region volume data from structural MRI images in the NDAR database, which included:
                     \begin{enumerate}
                         \item Reorient images to standard orientation using FSL's reorient2std module
                         \item Extract cortical thickness using FreeSurfer recon-all
                         \item Calculate volumes of subcortical regions using FSL's BET and FIRST all
                     \end{enumerate}
-                    \item The resulting pipeline was used to process 2,085 T1-weighted structural images and return the results to NDAR
+                    \item The resulting pipeline was used to process 780 T1-weighted structural images and return the results to NDAR
                 \end{itemize}
                 \vskip1ex
-                %% NITRC-CE pipeline
-                {\bf Neuroimaging Informatics Tools and Resources Clearinghouse Computational Environment (NITRC-CE)}
+            \end{column}
+            %% LONI pipeline figure
+            \begin{column}{.5\textwidth}
+                \begin{figure}
+                    \begin{center}
+                        \includegraphics[width=.9\textwidth]{loni_pipeline.eps}
+                    \end{center}
+                    \caption{\label{fig:roi_metrics}Graphical layout of the constructed pipeline}
+                \end{figure}
+            \end{column}
+            \vskip1ex
+            %% C-PAC pipeline
+            {\bf Configurable Pipeline For the Analysis of Connectomes (C-PAC)}
+            \begin{itemize}
+                \item C-PAC modules were written in Python to build input data lists by querying NDAR, read input data from S3, write processed results to S3 and write values back to the NDAR database$^{2}$
+                \item New pipelines were created to perform the ANTS cortical thickness$^{3}$ procedure and the Preprocessed Connectomes Project's Quality Assessment Protocol (\url{http://preprocessed-connectomes-project.github.io/quality-assessment-pipeline})$^{4}$
+                \begin{enumerate}
+                    \item Reorient images to standard orientation using FSL's reorient2std module
+                    \item Extract cortical thickness using FreeSurfer recon-all
+                    \item Calculate volumes of subcortical regions using FSL's BET and FIRST all
+                \end{enumerate}
+                \item The resulting pipeline was used to process 2,085 T1-weighted structural images and return the results to NDAR
+            \end{itemize}
+            \vskip1ex
+            %% NITRC-CE pipeline
+            {\bf Neuroimaging Informatics Tools and Resources Clearinghouse Computational Environment (NITRC-CE)}
+            \begin{itemize}
+                \item The NITRC pipeline processed data using three primary utilities
+                    \begin{enumerate}
+                        \item Extract anatomical and surface-base measures with Freesurfer recon-all
+                        \item Segment subcortical structures using FSL's FIRST to produce volumetric and mesh outputs
+                        \item Time series QA measures using the fmriqa\_generate.pl utility from the BXH/XCEDE Tools suite, including mean intensty, center of mass, per-slice variation, and others
+                    \end{enumerate}
+                \item Python modules were created to query and download data from NDAR as well as to store results back to their database
+                \item The recon-all and FIRST tools processed 986 and 1,247 T1-weighted anatomical scans, respectively; the fmriqa\_generate QA measures were generated from 1,349 functional scans.
+            \end{itemize}
+            \vskip1ex
+            \begin{column}{.47\textwidth}
+            %% miNDAR
+            {\bf Interacting with the NDAR database}
                 \begin{itemize}
-                    \item The NITRC pipeline processed data using three primary utilities
-                        \begin{enumerate}
-                            \item Extract anatomical and surface-base measures with Freesurfer recon-all
-                            \item Segment subcortical structures using FSL's FIRST to produce volumetric and mesh outputs
-                            \item Time series QA measures using the fmriqa\_generate.pl utility from the BXH/XCEDE Tools suite, including mean intensty, center of mass, per-slice variation, and others
-                        \end{enumerate}
-                    \item Python modules were created to query and download data from NDAR as well as to store results back to their database
-                    \item The recon-all and FIRST tools processed 986 and 1,247 T1-weighted anatomical scans, respectively; the fmriqa\_generate QA measures were generated from 1,349 functional scans.
+                    \item Launched an AWS-hosted miNDAR database by querying NDAR website for the data of interest (e.g. from a particular study)
+                    \item Built a subject list by querying the database for subjects of interest to pass to our pipeline
+                    \item Launch an AWS EC2 HPC cluster using Starcluster
+                    \item Log into the cluster and submit a Sun Grid Engine job using our pipeline software and the subject list
+                    \item The pipeline software will process the data, store raw outputs in an AWS S3 bucket and insert S3 filepaths and output measures into miNDAR database
                 \end{itemize}
-                \vskip1ex
-                %% miNDAR
-                \begin{column}{.47\textwidth}
-                    \begin{itemize}
-                        \item Launched an AWS-hosted miNDAR database by querying NDAR website for the data of interest (e.g. from a particular study)
-                        \item Built a subject list by querying the database for subjects of interest to pass to our pipeline
-                        \item Launch an AWS EC2 HPC cluster using Starcluster
-                        \item Log into the cluster and submit a Sun Grid Engine job using our pipeline software and the subject list
-                        \item The pipeline software will process the data, store raw outputs in an AWS S3 bucket and insert S3 filepaths and output measures into miNDAR database
-                    \end{itemize}
-                \end{column}
-                \begin{column}{.47\textwidth}
-                    \begin{figure}
-                        \begin{center}
-                            \includegraphics[width=.9\textwidth]{mindar.png}
-                        \end{center}
-                        \caption{\label{fig:mindar}miNDAR database}
-                    \end{figure}
-                \end{column}
-            \begin{figure}
-                \begin{center}
-                    \includegraphics[width=.60\textwidth]{flow_chart.eps}
-                \end{center}
-                \caption{\label{fig:processingflow}Flow chart of neurofeedback experiment.}
-            \end{figure}
-            \vfill
-            \end{block}
+            \end{column}
+            %%
+            \begin{column}{.47\textwidth}
+                % miNDAR database screenshot
+                \begin{figure}
+                    \begin{center}
+                        \includegraphics[width=.9\textwidth]{mindar.png}
+                    \end{center}
+                    \caption{\label{fig:mindar}miNDAR database}
+                \end{figure}
+            \end{column}
+        \vfill
+        \end{block}
           }
         %\end{minipage}
       %\end{beamercolorbox}
     \end{column}
-    % ---------------------------------------------------------%
-    % end the column
-
-    % ---------------------------------------------------------%
-    % Set up a column 
+    %----------------------------------------------------------------------
+    % Right column of poster
+    %----------------------------------------------------------------------
+    % Set up a column
     \begin{column}{.5\textwidth}
-      %\begin{beamercolorbox}[center,wd=\textwidth]{postercolumn}
-       % \begin{minipage}[T]{.98\textwidth} % tweaks the width, makes a new \textwidth
-          \parbox[t][\columnheight]{\textwidth}{ % must be some better way to set the the height, width and textwidth simultaneously
-            % Since all columns are the same length, it is all nice and tidy.  You have to get the height empirically
-            % ---------------------------------------------------------%
-            % fill each column with content
-            \begin{block}{Results}
-				\begin{center}
-			
-			\begin{table}
-			  \caption{Processing completed as a part of the effort. Nodes corresponds to the number of hosts used in the calculation. PF is parallelization factor and corresponds to the number of jobs ran in parallel on each node. On demand instances were used for the master node and spot instances were used for all computation nodes in the cluster. CPU Time is the total amount of time required to perform the computation and Wall Time is the amount of time that passed. \# DS: Number of datasets. CPD: Cost Per Dataset. C-PAC: Configurable Pipeline for the Analysis of Connectomes. NITRC-CE: NITRC Computational Environment}
-			  \begin{tabular}{lrl*{6}{r}}
-				  {\bf Processing} & {\bf \# DS} & {\bf Platform} & {\bf Nodes} & {\bf PF} & {\bf CPU Time} & {\bf Wall Time} & {\bf Cost} & {\bf CPD}\\
-			      \hline
-				  ANTS Cortical Thickness & 3197 &  & 20 & 8 & 23,018 & 147 & \$760.24 & \$0.24\\
-			 	  Resting state fMRI processing w/ 4 strategies & 1112 & C-PAC  & 20 & 3 & 834 & 22 & \$80.54 & \$0.07 \\
-				  Quality Assessment Protocol & 1112 & & 20 & 4 & 380 & 14 & \$19.02 & \$0.02 \\
-				  \hline
-				  Freesurfer recon-all & 986 &  & 4 & 32 & 23,664 & 193 & \$211.44 & \$0.21 \\
-				  FSL FIRST & 1247 & NITRC-CE & 4 & 32 & 208 & 3 & \$2.19 & $>$ \$0.01 \\
-				  Temporal QA & 1349 &  & 4 & 32 & 450 & 13 & \$4.69 & $>$ \$0.01 \\
-				  \hline
-				  Freesurfer recon-all and FSL FIRST & 780 & LONI Pipeline & 20 & 32 & 18,720 & 49 & \$252.36 & \$0.32 \\
-			 \end{tabular}
-			\end{table}
-			 \end{center}
-              \begin{column}{.47\textwidth}
-                  {\bf Benefits of the cloud}
-                  \begin{itemize}
-                      \item The scalability and payment model for processing this data on a cloud platform allowed for an efficient processing of the NDAR datasets, both in time and cost
-                      \item Cloud computing services like AWS EC2 are viable solutions for the processing and analysis of large amounts of data
-                      \item Cost and time models were produced to demonstrate the benefits of using cloud computing for increasingly large datasets
-                  \end{itemize}
-                  %\begin{figure}
-                  %    \includegraphics[width=.99\textwidth]{br_vs_time_fs.eps}
-                  %    \caption{\label{fig:best_worst}Bid ratio vs Computation time in minutes for the Freesurfer pipeline}
-                  %\end{figure}
-                  %\vskip2ex
-                  %\begin{figure}
-                  %    \includegraphics[width=.99\textwidth]{inter_subject.eps}
-                  %    \caption{\label{fig:inter_subject} Performance across particpants (A) differs between feedback and neurofeedback scans as determined by their order (B).}
-                  %\end{figure}
-                  \end{column}
-                  \begin{column}{.49\textwidth}
-                      \vskip4ex
-                  %% C-PAC costs figure
-                  \begin{figure}
-                      \includegraphics[width=.99\textwidth]{cpac-costs.pdf}
-                      \caption{\label{fig:cpac-costs}AWS EC2 costs, grouped by cost type, for a typical C-PAC pipeline for different sized datasets versus owning and maintaining own server}
-                  \end{figure}
-                  %% C-PAC times figure
-                  \begin{figure}
-                      \includegraphics[width=.99\textwidth]{cpac-times.pdf}
-                      \caption{\label{fig:cpac-times}Run times using the C-PAC pipeline, grouped by downloading vs non-downoading output data, for different sized datasets versus running locally}
-                  \end{figure}
-                  %\begin{itemize}
-                  %     \item As shown in figure \ref{fig:best_worst} models learned for the best and worst performing participants match
-                  %           with the canonical pattern of the default network.
-                  %     \item The best participant was able to follow the instructures very well \ref{fig:best_worst}, the worst seems
-                  %           to have been corrupted by noise.
-                  %     \item Figure \ref{fig:inter_subject} shows 12 of the subjects were able to modulate the DN at above chance levels,
-                  %           performance on feedback runs is consistent independent of order, but performance on nonfeedback runs improves
-                  %           if they occur after feedback runs.
-                  %     \item Measures that were significantly associated with DN regulation include ($p<0.05$, FDR corrected):  the affect intensity measure (AIM), ruminative responses scale (RRS), and the imaginal processes inventory. 
-                  %\end{itemize}
-              \end{column}
-            \end{block}
-            \begin{block}{Conclusion}
+    %\begin{beamercolorbox}[center,wd=\textwidth]{postercolumn}
+    %\begin{minipage}[T]{.98\textwidth} % tweaks the width, makes a new \textwidth
+        \parbox[t][\columnheight]{\textwidth}{ % must be some better way to set the the height, width and textwidth simultaneously
+        %----------------------------------------------------------------------
+        % Results
+        %----------------------------------------------------------------------
+        \begin{block}{Results}
+            \begin{center}
+                %% Preprocessing results table
+                \begin{table}
+                    \caption{Processing completed as a part of the effort. Nodes corresponds to the number of hosts used in the calculation. PF is parallelization factor and corresponds to the number of jobs ran in parallel on each node. On demand instances were used for the master node and spot instances were used for all computation nodes in the cluster. CPU Time is the total amount of time required to perform the computation and Wall Time is the amount of time that passed. \# DS: Number of datasets. CPD: Cost Per Dataset. C-PAC: Configurable Pipeline for the Analysis of Connectomes. NITRC-CE: NITRC Computational Environment}
+                    \begin{tabularx}{\textwidth}{XXlrl*{6}{r}}
+                        {\bf Processing} & {\bf \# DS} & {\bf Platform} & {\bf Nodes} & {\bf PF} & {\bf CPU Time} & {\bf Wall Time} & {\bf Cost} & {\bf CPD}\\
+                        \hline
+                        ANTS Cortical Thickness & 3197 &  & 20 & 8 & 23,018 & 147 & \$760.24 & \$0.24\\
+                        Resting state fMRI processing w/ 4 strategies & 1112 & C-PAC  & 20 & 3 & 834 & 22 & \$80.54 & \$0.07\\
+                        Quality Assessment Protocol & 1112 & & 20 & 4 & 380 & 14 & \$19.02 & \$0.02\\
+                        \hline
+                        Freesurfer recon-all & 986 &  & 4 & 32 & 23,664 & 193 & \$211.44 & \$0.21\\
+                        FSL FIRST & 1247 & NITRC-CE & 4 & 32 & 208 & 3 & \$2.19 & $>$ \$0.01\\
+                        Temporal QA & 1349 &  & 4 & 32 & 450 & 13 & \$4.69 & $>$ \$0.01\\
+                        \hline
+                        Freesurfer recon-all and FSL FIRST & 780 & LONI Pipeline & 20 & 32 & 18,720 & 49 & \$252.36 & \$0.32\\
+                    \end{tabularx}
+                \end{table}
+            \end{center}
+          %% Left column
+          \begin{column}{.47\textwidth}
+              %% Benefits of the cloud
+              {\bf Benefits of the cloud}
               \begin{itemize}
-                   \item We developed a system for measuring DN regulation using realtime neurofeedback. 
-                   \item Participants were able to modulate their DN activity and their ability to do so was correlated with phenotype. 
-                   \item This system provides a new experimental paradigm for understanding network dysregulation and how it maps to 
-                        disease states and phenotype.
+                  \item The scalability and payment model for processing this data on a cloud platform allowed for an efficient processing of the NDAR datasets, both in time and cost
+                  \item Additionally, there was no need to install, configure, and maintain machines locally, saving on overhead
+                  \item Competition for computing resources was controlled as every cluster launch was done by the user doing the processing; no fellow researchers needed to login and use additional computing power
+                  \item Cost and time models were produced to demonstrate the benefits of using cloud computing for increasingly large datasets
+                  \item AWS offers cloud solutions based on geographic region, where the price for services vary
               \end{itemize}
-            \end{block}
-            \begin{block}{References and Acknowledgements}
-                    1. Torgerson, C.M. et al. (2015), Brain Imaging and Behavior 9:89-103\\
-                    2. Haselgrove, C. et al. (2014), Front. Neuroinform. 8:52\\
-                    3. Das, S.R. et al. (2009), Neuroimage, 45(3): 867-79\\
-                    4. Hall, D. et al. (2012), Neuroinformatics. 10(4):331-9\\
-                    %9. LaConte, S.M. et al. (2011). NeuroImage, 56(2), 440-454.\\
-                    %10. Cox, R.W. (1996) Comput. Biomed. Res. 29: 162-173.\\
-                    \vskip1ex
-               Data collection and salary support was provided by a NARSAD Young Investigator Award to RCC.
-             \end{block}
+              %\begin{figure}
+              %    \includegraphics[width=.99\textwidth]{br_vs_time_fs.eps}
+              %    \caption{\label{fig:best_worst}Bid ratio vs Computation time in minutes for the Freesurfer pipeline}
+              %\end{figure}
+              %\vskip2ex
+              %\begin{figure}
+              %    \includegraphics[width=.99\textwidth]{inter_subject.eps}
+              %    \caption{\label{fig:inter_subject} Performance across particpants (A) differs between feedback and neurofeedback scans as determined by their order (B).}
+              %\end{figure}
+              %% C-PAC costs figure
+              \begin{figure}
+                  \includegraphics[width=.99\textwidth]{cpac-costs.pdf}
+                  \caption{\label{fig:cpac-costs}AWS EC2 costs, grouped by cost type, for a typical C-PAC pipeline for different sized datasets versus owning and maintaining own server; costs are based on using the cluster configuration shown in Table 1 for the cloud, and a single compute node locally}
+              \end{figure}
+              %% Freesurfer costs figure
+              \begin{figure}
+                  \includegraphics[width=.99\textwidth]{fs-costs.pdf}
+                  \caption{\label{fig:fs-costs}AWS EC2 costs, grouped by cost type, for a typical Freesurfer pipeline for different sized datasets versus owning and maintaining own server; costs are based on using the cluster configuration shown in Table 1 for the cloud, and a single compute node locally}
+              \end{figure}
+              {\bf EC2 Spot Pricing}
+              \begin{itemize}
+                  \item In addition to the ``pay as you go" compute pricing model, AWS offers users to bid on instances that are not being used
+                  \item As opposed to paying an ``on-demand" fixed price, the hourly charge for the instances will vary over time based on what people in different regions are willing to pay
+                  \item If the spot market price goes above what the user bids, their instance will be terminated by Amazon and all of their processes will be stopped and their data lost
+                  \item Typically, one can expect to pay one-eighth of the hourly price of a standard on-demand instance when using spot-pricing
+                  \item Some regions fluxuate on spot price more than others, but there are ways to minimize process interruptions and lost data in how one configures their cluster and pipelines
+              \end{itemize}
+              \end{column}
+          %% Right column
+          \begin{column}{.47\textwidth}
+              %\vskip4ex
+              %% Costs and run time models
+              {\bf Costs and run time models}
+              \begin{itemize}
+                  \item Models assume user uploads their input data to the cloud, runs their pipelines and (optionally) downloads their outputs as they become available.
+                  \item Outputs are stored on an AWS Elastic Block Store (EBS) hard drive mounted to the master node and is NFS-shared across all of the slave nodes.
+                  \item Users can also upload their processed outputs to a cloud storage solution, like AWS Simple Storage Service (S3) directly from the cluster - this is the approach that was taken in processing data for NDAR.
+                  \item Storing results in AWS S3 avoids costly download time and provides for a viable solution for backing up data; however this does incur additional storage costs.
+              \end{itemize}
+              %% C-PAC times figure
+              \begin{figure}
+                  \includegraphics[width=.99\textwidth]{cpac-times.pdf}
+                  \caption{\label{fig:cpac-times}Run times using the C-PAC pipeline, grouped by downloading vs non-downoading output data, for different sized datasets versus running locally; times are based on using the cluster configuration shown in Table 1 for the cloud, and a single compute node locally}
+              \end{figure}
+              %% Freesurfer times figure
+              \begin{figure}
+                  \includegraphics[width=.99\textwidth]{fs-times.pdf}
+                  \caption{\label{fig:fs-times}Run times using the Freesurfer pipeline, grouped by downloading vs non-downoading output data, for different sized datasets versus running locally}
+              \end{figure}
+              %% Spot history figure
+              \begin{figure}
+                  \includegraphics[width=.99\textwidth]{spot_history.png}
+                  \caption{\label{fig:spot_history}Spot price history for the c3.8xlarge instance in the us-east-1 region on AWS across the four different availability zones for the past three months}
+              \end{figure}
+              %\begin{itemize}
+              %     \item As shown in figure \ref{fig:best_worst} models learned for the best and worst performing participants match
+              %           with the canonical pattern of the default network.
+              %     \item The best participant was able to follow the instructures very well \ref{fig:best_worst}, the worst seems
+              %           to have been corrupted by noise.
+              %     \item Figure \ref{fig:inter_subject} shows 12 of the subjects were able to modulate the DN at above chance levels,
+              %           performance on feedback runs is consistent independent of order, but performance on nonfeedback runs improves
+              %           if they occur after feedback runs.
+              %     \item Measures that were significantly associated with DN regulation include ($p<0.05$, FDR corrected):  the affect intensity measure (AIM), ruminative responses scale (RRS), and the imaginal processes inventory. 
+              %\end{itemize}
+          \end{column}
+        \end{block}
+        %----------------------------------------------------------------------
+        % Conclusion
+        %----------------------------------------------------------------------
+        \begin{block}{Conclusion}
+            \begin{itemize}
+                \item Cloud computing services like AWS EC2 are viable solutions for the processing and analysis of large amounts of data
+            \end{itemize}
+        \end{block}
+        %----------------------------------------------------------------------
+        % References and acknowledgements
+        %----------------------------------------------------------------------
+        \begin{block}{References and Acknowledgements}
+            1. Torgerson, C.M. et al. (2015), Brain Imaging and Behavior 9:89-103\\
+            2. Haselgrove, C. et al. (2014), Front. Neuroinform. 8:52\\
+            3. Das, S.R. et al. (2009), Neuroimage, 45(3): 867-79\\
+            4. Hall, D. et al. (2012), Neuroinformatics. 10(4):331-9\\
+            %9. LaConte, S.M. et al. (2011). NeuroImage, 56(2), 440-454.\\
+            %10. Cox, R.W. (1996) Comput. Biomed. Res. 29: 162-173.\\
+            \vskip1ex
+            %% Support
+            Data collection and salary support was provided by a NARSAD Young Investigator Award to RCC.
+         \end{block}
           }
           % ---------------------------------------------------------%
           % end the column
@@ -268,7 +307,6 @@
   \end{columns}
 \end{frame}
 \end{document}
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Local Variables: 
