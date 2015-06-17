@@ -69,7 +69,6 @@
       %\begin{beamercolorbox}[center,wd=\textwidth]{postercolumn}
         %\begin{minipage}[T]{.98\textwidth}  % tweaks the width, makes a new \textwidth
           \parbox[t][\columnheight]{\textwidth}{ % must be some better way to set the the height, width and textwidth simultaneously
-            % Since all columns are the same length, it is all nice and tidy.  You have to get the height empirically
             %----------------------------------------------------------------------
             % Introduction
             %----------------------------------------------------------------------
@@ -86,21 +85,22 @@
             % Methods
             %----------------------------------------------------------------------
             \begin{block}{Methods}
+                %% LONI pipeline
                 \begin{column}{.5\textwidth}
-                    {\bf LONI Pipeline} 
+                    {\bf LONI Pipeline}
                     \begin{itemize}
-					    \item The LONI Pipeline software was extended to include new pipeline modules to access data from the NDAR database, transfer input data out of Amazon S3 (Simple Storage Service), and to load results back into S3$^{1}$
-						\item A pipeline was constructed to extract cortical thickness and subcortical region volume data from structural MRI images in the NDAR database, which included:
-						\begin{enumerate}
-							\item Reorient images to standard orientation using FSL's reorient2std module
-							\item Extract cortical thickness using FreeSurfer recon-all
-							\item Calculate volumes of subcortical regions using FSL's BET and FIRST all
-						\end{enumerate}
-						\item The resulting pipeline was used to process 780 T1-weighted structural images and return the results to NDAR
+                        \item The LONI Pipeline software was extended to include new pipeline modules to access data from the NDAR database, transfer input data out of Amazon S3 (Simple Storage Service), and to load results back into S3$^{1}$
+                        \item A pipeline was constructed to extract cortical thickness and subcortical region volume data from structural MRI images in the NDAR database, which included:
+                        \begin{enumerate}
+                            \item Reorient images to standard orientation using FSL's reorient2std module
+                            \item Extract cortical thickness using FreeSurfer recon-all
+                            \item Calculate volumes of subcortical regions using FSL's BET and FIRST all
+                        \end{enumerate}
+                        \item The resulting pipeline was used to process 780 T1-weighted structural images and return the results to NDAR
                     \end{itemize}
                     \vskip1ex
                 \end{column}
-                %\vskip1ex
+                %% LONI pipeline figure
                 \begin{column}{.5\textwidth}
                     \begin{figure}
                         \begin{center}
@@ -109,19 +109,34 @@
                         \caption{\label{fig:roi_metrics}Graphical layout of the constructed pipeline}
                     \end{figure}
                 \end{column}
-				
-                {\bf Configurable Pipeline For the Analysis of Connectoms (C-PAC)} 
+                \vskip1ex
+                %% C-PAC pipeline
+                {\bf Configurable Pipeline For the Analysis of Connectomes (C-PAC)}
                 \begin{itemize}
-				    \item C-PAC modules were written in Python to build input data lists by querying NDAR, read input data from S3, write processed results to S3 and write values back to the NDAR database$^{2}$
-					\item New pipelines were created to perform the ANTS cortical thickness$^{3}$ procedure and the Preprocessed Connectomes Project's Quality Assessment Protocol (\url{http://preprocessed-connectomes-project.github.io/quality-assessment-pipeline})$^{4}$
-					\begin{enumerate}
-						\item Reorient images to standard orientation using FSL's reorient2std module
-						\item Extract cortical thickness using FreeSurfer recon-all
-						\item Calculate volumes of subcortical regions using FSL's BET and FIRST all
-					\end{enumerate}
-					\item The resulting pipeline was used to process 780 T1-weighted structural images and return the results to NDAR
+                    \item C-PAC modules were written in Python to build input data lists by querying NDAR, read input data from S3, write processed results to S3 and write values back to the NDAR database$^{2}$
+                    \item New pipelines were created to perform the ANTS cortical thickness$^{3}$ procedure and the Preprocessed Connectomes Project's Quality Assessment Protocol (\url{http://preprocessed-connectomes-project.github.io/quality-assessment-pipeline})$^{4}$
+                    \begin{enumerate}
+                        \item Reorient images to standard orientation using FSL's reorient2std module
+                        \item Extract cortical thickness using FreeSurfer recon-all
+                        \item Calculate volumes of subcortical regions using FSL's BET and FIRST all
+                    \end{enumerate}
+                    \item The resulting pipeline was used to process 2,085 T1-weighted structural images and return the results to NDAR
                 \end{itemize}
                 \vskip1ex
+                %% NITRC-CE pipeline
+                {\bf Neuroimaging Informatics Tools and Resources Clearinghouse Computational Environment (NITRC-CE)}
+                \begin{itemize}
+                    \item The NITRC pipeline processed data using three primary utilities
+                        \begin{enumerate}
+                            \item Extract anatomical and surface-base measures with Freesurfer recon-all
+                            \item Segment subcortical structures using FSL's FIRST to produce volumetric and mesh outputs
+                            \item Time series QA measures using the fmriqa\_generate.pl utility from the BXH/XCEDE Tools suite, including mean intensty, center of mass, per-slice variation, and others
+                        \end{enumerate}
+                    \item Python modules were created to query and download data from NDAR as well as to store results back to their database
+                    \item The recon-all and FIRST tools processed 986 and 1,247 T1-weighted anatomical scans, respectively; the fmriqa\_generate QA measures were generated from 1,349 functional scans.
+                \end{itemize}
+                \vskip1ex
+                %% miNDAR
                 \begin{column}{.47\textwidth}
                     \begin{itemize}
                         \item Launched an AWS-hosted miNDAR database by querying NDAR website for the data of interest (e.g. from a particular study)
@@ -144,8 +159,8 @@
                     \includegraphics[width=.60\textwidth]{flow_chart.eps}
                 \end{center}
                 \caption{\label{fig:processingflow}Flow chart of neurofeedback experiment.}
-            \end{figure}    
-            \vfill              
+            \end{figure}
+            \vfill
             \end{block}
           }
         %\end{minipage}
