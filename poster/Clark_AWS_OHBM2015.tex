@@ -24,7 +24,7 @@
 \usepackage{graphicx}
 \usepackage{enumerate}
 %\usepackage[orientation=portrait,size=custom,width=83.96,height=101,scale=1]{beamerposter}
-\usepackage[orientation=portrait,size=custom,width=141,height=140,scale=1]{beamerposter}
+\usepackage[orientation=portrait,size=custom,width=141,height=101,scale=1]{beamerposter}
 %\usepackage[orientation=portrait,width=89,height=102,scale=1.1,debug]{beamerposter}
 %\usepackage[orientation=portrait,size=a0,scale=1.4,debug]{beamerposter}
 % change list indention level
@@ -51,7 +51,7 @@
 \title{\vskip1ex\Huge Harnessing cloud computing for high capacity analysis of neuroimaging data from NDAR}
 
 %% Author
-\author{\Large Daniel Clark$^1$, Christian Haselgrove$^2$, David Kennedy$^2$, Zhizhong Liu$^3$,\\[.5ex]Michael Milham$^1$, Petros Petrosyan$^4$, Carinna Torgerson$^3$, John Van Horn$^3$, Cameron Craddock$^1$}
+\author{\Large Daniel Clark$^1$, Christian Haselgrove$^2$, David Kennedy$^2$, Zhizhong Liu$^3$,\\[.5ex]Michael Milham$^1$, Petros Petrosyan$^4$, Carinna Torgerson$^3$, John Van Horn$^3$, Cameron Craddock$^{1,5}$}
 \institute[NKI]{$^1$Child Mind Institute, New York, NY, $^2$ University of Massachuttes Medical School, Worcester, MA, $^3$University of Southern California, Los Angeles, CA, $^4$UCLA, Los Angeles, CA, $^5$Nathan S. Kline Institute for Psychiatric Research, Orangeburg, NY}
 
 %% Poster info
@@ -132,7 +132,7 @@
 	                \begin{itemize}
 	                    \item Launched an AWS-hosted miNDAR database by querying NDAR website for the data of interest (e.g. from a particular study)
 	                    \item Built a subject list by querying the database for subjects of interest to pass to our pipeline
-	                    \item Launch an AWS EC2 HPC cluster using Starcluster$^{7}$
+	                    \item Launch an AWS EC2 HPC cluster using Starcluster (\url{http://star.mit.edu/cluster/})
 	                    \item Log into the cluster and submit a Sun Grid Engine job using our pipeline software and the subject list
 	                    \item The pipeline software will process the data, store raw outputs in an AWS S3 bucket and insert S3 filepaths and output measures into miNDAR database
 	                \end{itemize}
@@ -227,7 +227,7 @@
             %% Costs and run time models
             {\bf Costs and run time models}
             \begin{itemize}
-                \item Models assume user uploads their input data to the cloud, runs their pipelines and (optionally) downloads their outputs as they become available.
+                \item Models assume that users upload their input data to the cloud, run their pipelines and (optionally) downloads their outputs as they become available.
                 \item Outputs are stored on an AWS Elastic Block Store (EBS) hard drive mounted to the master node and is NFS-shared across all of the slave nodes.
                 \item Users can also upload their processed outputs to a cloud storage solution, like AWS Simple Storage Service (S3) directly from the cluster - this is the approach that was taken in processing data for NDAR.
                 \item Storing results in AWS S3 avoids costly download time and provides for a viable solution for backing up data; however this does incur additional storage costs.
@@ -286,16 +286,13 @@
         \begin{block}{References and Acknowledgements}
             1. Hall, D. et al. (2012), Neuroinformatics. 10(4):331-9\\
             2. Torgerson, C.M. et al. (2015), Brain Imaging and Behavior 9:89-103\\
-            3. C-PAC ref\\
+            3. Craddock, R.C. et al. (2013), Frontiers in Neuroinformatics 42\\
             4. Das, S.R. et al. (2009), Neuroimage, 45(3): 867-79\\
-            5. QAP ref\\
-            6. Haselgrove, C. et al. (2014), Front. Neuroinform. 8:52\\
-            7. Starcluster ref
-            %9. LaConte, S.M. et al. (2011). NeuroImage, 56(2), 440-454.\\
-            %10. Cox, R.W. (1996) Comput. Biomed. Res. 29: 162-173.\\
+            5. Shehzad, Z. et al. (2014), Resting State Conference, Boston\\
+            6. Haselgrove, C. et al. (2014), Front. Neuroinform. 8:52
             \vskip1ex
             %% Support
-            Data collection and salary support was provided by a NARSAD Young Investigator Award to RCC.
+            Data processing and salary support was provided by NDAR.\\
          \end{block}
           }
           % ---------------------------------------------------------%
