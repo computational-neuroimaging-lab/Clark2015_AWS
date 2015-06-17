@@ -804,7 +804,7 @@ def main(proc_time, num_jobs, jobs_per, in_gb, out_gb, out_gb_dl,
         else:
             run_time = num_iter*proc_time
             wait_time = 0
-            pernode_cost = 
+            pernode_cost = np.ceil(run_time/3600.0)*interp_history[1]
             num_interrupts = 0
             first_iter_time = proc_time
 
