@@ -199,7 +199,12 @@
 			\end{table}
 			 \end{center}
               \begin{column}{.47\textwidth}
-
+                  {\bf Benefits of the cloud}
+                  \begin{itemize}
+                      \item The scalability and payment model for processing this data on a cloud platform allowed for an efficient processing of the NDAR datasets, both in time and cost
+                      \item Cloud computing services like AWS EC2 are viable solutions for the processing and analysis of large amounts of data
+                      \item Cost and time models were produced to demonstrate the benefits of using cloud computing for increasingly large datasets
+                  \end{itemize}
                   %\begin{figure}
                   %    \includegraphics[width=.99\textwidth]{br_vs_time_fs.eps}
                   %    \caption{\label{fig:best_worst}Bid ratio vs Computation time in minutes for the Freesurfer pipeline}
@@ -212,21 +217,26 @@
                   \end{column}
                   \begin{column}{.49\textwidth}
                       \vskip4ex
+                  %% C-PAC costs figure
                   \begin{figure}
-                      \includegraphics[width=.99\textwidth]{beh_correlates.eps}
-                      \caption{\label{fig:beh_correlates} Inter-individual variation in preformance correlates with behavioral measures.}
+                      \includegraphics[width=.99\textwidth]{cpac-costs.pdf}
+                      \caption{\label{fig:cpac-costs}AWS EC2 costs, grouped by cost type, for a typical C-PAC pipeline for different sized datasets versus owning and maintaining own server}
                   \end{figure}
-              
-                  \begin{itemize}
-                       \item As shown in figure \ref{fig:best_worst} models learned for the best and worst performing participants match
-                             with the canonical pattern of the default network.
-                       \item The best participant was able to follow the instructures very well \ref{fig:best_worst}, the worst seems
-                             to have been corrupted by noise.
-                       \item Figure \ref{fig:inter_subject} shows 12 of the subjects were able to modulate the DN at above chance levels,
-                             performance on feedback runs is consistent independent of order, but performance on nonfeedback runs improves
-                             if they occur after feedback runs.
-                       \item Measures that were significantly associated with DN regulation include ($p<0.05$, FDR corrected):  the affect intensity measure (AIM), ruminative responses scale (RRS), and the imaginal processes inventory. 
-                  \end{itemize}
+                  %% C-PAC times figure
+                  \begin{figure}
+                      \includegraphics[width=.99\textwidth]{cpac-times.pdf}
+                      \caption{\label{fig:cpac-times}Run times using the C-PAC pipeline, grouped by downloading vs non-downoading output data, for different sized datasets versus running locally}
+                  \end{figure}
+                  %\begin{itemize}
+                  %     \item As shown in figure \ref{fig:best_worst} models learned for the best and worst performing participants match
+                  %           with the canonical pattern of the default network.
+                  %     \item The best participant was able to follow the instructures very well \ref{fig:best_worst}, the worst seems
+                  %           to have been corrupted by noise.
+                  %     \item Figure \ref{fig:inter_subject} shows 12 of the subjects were able to modulate the DN at above chance levels,
+                  %           performance on feedback runs is consistent independent of order, but performance on nonfeedback runs improves
+                  %           if they occur after feedback runs.
+                  %     \item Measures that were significantly associated with DN regulation include ($p<0.05$, FDR corrected):  the affect intensity measure (AIM), ruminative responses scale (RRS), and the imaginal processes inventory. 
+                  %\end{itemize}
               \end{column}
             \end{block}
             \begin{block}{Conclusion}
@@ -235,21 +245,15 @@
                    \item Participants were able to modulate their DN activity and their ability to do so was correlated with phenotype. 
                    \item This system provides a new experimental paradigm for understanding network dysregulation and how it maps to 
                         disease states and phenotype.
-                   
-                   
               \end{itemize}
             \end{block}
             \begin{block}{References and Acknowledgements}
-                    1. Sonuga-Barke, E. et al. (2007), Neuroscience and Biobehavioral Reviews 31:977-986.\\
-                    2. Broyd, S. J. et al. (2009), Neuroscience and Biobehavioral Reviews 33: 279-296.\\
-                    3. Sheline, Y.I. et al. (2009), PNAS 106: 1942-1947.\\
-                    4. Whitfield-Gabrieli, S. et al. (2009), PNAS 106: 1279-1284.\\
-                    5. Hamilton, J.P. et al. (2011), Biol. Psychiatry 70: 327-333.\\
-                    6. Sylvester, C.M. et al. (2012), Trends Neurosci. 35, 527-535.\\
-                    7. Castellanos, F.X. et al. (2012), Trends Cogn. Sci. 16, 17-26.\\
-                    8. LaConte, S.M. et al. (2004). Human Brain Mapping, 11: 2551.\\
-                    9. LaConte, S.M. et al. (2011). NeuroImage, 56(2), 440-454.\\
-                    10. Cox, R.W. (1996) Comput. Biomed. Res. 29: 162-173.\\
+                    1. Torgerson, C.M. et al. (2015), Brain Imaging and Behavior 9:89-103\\
+                    2. Haselgrove, C. et al. (2014), Front. Neuroinform. 8:52\\
+                    3. Das, S.R. et al. (2009), Neuroimage, 45(3): 867-79\\
+                    4. Hall, D. et al. (2012), Neuroinformatics. 10(4):331-9\\
+                    %9. LaConte, S.M. et al. (2011). NeuroImage, 56(2), 440-454.\\
+                    %10. Cox, R.W. (1996) Comput. Biomed. Res. 29: 162-173.\\
                     \vskip1ex
                Data collection and salary support was provided by a NARSAD Young Investigator Award to RCC.
              \end{block}
