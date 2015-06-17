@@ -206,7 +206,6 @@
                   \item Additionally, there was no need to install, configure, and maintain machines locally, saving on overhead
                   \item Competition for computing resources was controlled as every cluster launch was done by the user doing the processing; no fellow researchers needed to login and use additional computing power
                   \item Cost and time models were produced to demonstrate the benefits of using cloud computing for increasingly large datasets
-                  \item AWS offers cloud solutions based on geographic region, where the price for services vary
               \end{itemize}
               %\begin{figure}
               %    \includegraphics[width=.99\textwidth]{br_vs_time_fs.eps}
@@ -233,6 +232,7 @@
                   \item As opposed to paying an ``on-demand" fixed price, the hourly charge for the instances will vary over time based on what people in different regions are willing to pay
                   \item If the spot market price goes above what the user bids, their instance will be terminated by Amazon and all of their processes will be stopped and their data lost
                   \item Typically, one can expect to pay one-eighth of the hourly price of a standard on-demand instance when using spot-pricing
+                  \item AWS offers cloud solutions based on geographic region, where the price for services vary
                   \item Some regions fluxuate on spot price more than others, but there are ways to minimize process interruptions and lost data in how one configures their cluster and pipelines
               \end{itemize}
               \end{column}
