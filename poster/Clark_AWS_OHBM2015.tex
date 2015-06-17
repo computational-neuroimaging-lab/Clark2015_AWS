@@ -103,13 +103,20 @@
                 \end{itemize}
                 \vskip1ex
             \end{column}
-            %% LONI pipeline figure
             \begin{column}{.5\textwidth}
+                %% LONI pipeline figure
                 \begin{figure}
                     \begin{center}
                         \includegraphics[width=.9\textwidth]{loni_pipeline.eps}
                     \end{center}
-                    \caption{\label{fig:roi_metrics}Graphical layout of the constructed pipeline}
+                    \caption{\label{fig:loni_pipe}Graphical layout of the constructed pipeline}
+                \end{figure}
+                %% C-PAC pipeline figure
+                \begin{figure}
+                    \begin{center}
+                        \includegraphics[width=.9\textwidth]{cpac_pipeline.png}
+                    \end{center}
+                    \caption{\label{fig:cpac_pipe}C-PAC preprocessing stages}
                 \end{figure}
             \end{column}
             \vskip1ex
@@ -149,6 +156,16 @@
                     \item Log into the cluster and submit a Sun Grid Engine job using our pipeline software and the subject list
                     \item The pipeline software will process the data, store raw outputs in an AWS S3 bucket and insert S3 filepaths and output measures into miNDAR database
                 \end{itemize}
+              %% EC2 Spot pricing
+              {\bf EC2 Spot Pricing}
+              \begin{itemize}
+                  \item In addition to the ``pay as you go" compute pricing model, AWS offers users to bid on instances that are not being used
+                  \item As opposed to paying an ``on-demand" fixed price, the hourly charge for the instances will vary over time based on what people in different regions are willing to pay
+                  \item If the spot market price goes above what the user bids, their instance will be terminated by Amazon and all of their processes will be stopped and their data lost
+                  \item Typically, one can expect to pay one-eighth of the hourly price of a standard on-demand instance when using spot-pricing
+                  \item AWS offers cloud solutions based on geographic region, where the price for services vary
+                  \item Some regions fluxuate on spot price more than others, but there are ways to minimize process interruptions and lost data in how one configures their cluster and pipelines
+              \end{itemize}
             \end{column}
             %%
             \begin{column}{.47\textwidth}
@@ -159,6 +176,11 @@
                     \end{center}
                     \caption{\label{fig:mindar}miNDAR database}
                 \end{figure}
+              %% Spot history figure
+              \begin{figure}
+                  \includegraphics[width=.99\textwidth]{spot_history.png}
+                  \caption{\label{fig:spot_history}Spot price history for the c3.8xlarge instance in the us-east-1 region on AWS across the four different availability zones for the past three months}
+              \end{figure}
             \end{column}
         \vfill
         \end{block}
@@ -226,15 +248,6 @@
                   \includegraphics[width=.99\textwidth]{fs-costs.pdf}
                   \caption{\label{fig:fs-costs}AWS EC2 costs, grouped by cost type, for a typical Freesurfer pipeline for different sized datasets versus owning and maintaining own server; costs are based on using the cluster configuration shown in Table 1 for the cloud, and a single compute node locally}
               \end{figure}
-              {\bf EC2 Spot Pricing}
-              \begin{itemize}
-                  \item In addition to the ``pay as you go" compute pricing model, AWS offers users to bid on instances that are not being used
-                  \item As opposed to paying an ``on-demand" fixed price, the hourly charge for the instances will vary over time based on what people in different regions are willing to pay
-                  \item If the spot market price goes above what the user bids, their instance will be terminated by Amazon and all of their processes will be stopped and their data lost
-                  \item Typically, one can expect to pay one-eighth of the hourly price of a standard on-demand instance when using spot-pricing
-                  \item AWS offers cloud solutions based on geographic region, where the price for services vary
-                  \item Some regions fluxuate on spot price more than others, but there are ways to minimize process interruptions and lost data in how one configures their cluster and pipelines
-              \end{itemize}
               \end{column}
           %% Right column
           \begin{column}{.47\textwidth}
@@ -256,11 +269,6 @@
               \begin{figure}
                   \includegraphics[width=.99\textwidth]{fs-times.pdf}
                   \caption{\label{fig:fs-times}Run times using the Freesurfer pipeline, grouped by downloading vs non-downoading output data, for different sized datasets versus running locally}
-              \end{figure}
-              %% Spot history figure
-              \begin{figure}
-                  \includegraphics[width=.99\textwidth]{spot_history.png}
-                  \caption{\label{fig:spot_history}Spot price history for the c3.8xlarge instance in the us-east-1 region on AWS across the four different availability zones for the past three months}
               \end{figure}
               %\begin{itemize}
               %     \item As shown in figure \ref{fig:best_worst} models learned for the best and worst performing participants match
@@ -286,11 +294,13 @@
         % References and acknowledgements
         %----------------------------------------------------------------------
         \begin{block}{References and Acknowledgements}
-            1. Torgerson, C.M. et al. (2015), Brain Imaging and Behavior 9:89-103\\
-			2. 
-            2. Haselgrove, C. et al. (2014), Front. Neuroinform. 8:52\\
-            3. Das, S.R. et al. (2009), Neuroimage, 45(3): 867-79\\
-            4. Hall, D. et al. (2012), Neuroinformatics. 10(4):331-9\\
+            1. Hall, D. et al. (2012), Neuroinformatics. 10(4):331-9\\
+            2. Torgerson, C.M. et al. (2015), Brain Imaging and Behavior 9:89-103\\
+            3. C-PAC ref\\
+            4. Das, S.R. et al. (2009), Neuroimage, 45(3): 867-79\\
+            5. QAP ref\\
+            6. Haselgrove, C. et al. (2014), Front. Neuroinform. 8:52\\
+            7. Starcluster ref
             %9. LaConte, S.M. et al. (2011). NeuroImage, 56(2), 440-454.\\
             %10. Cox, R.W. (1996) Comput. Biomed. Res. 29: 162-173.\\
             \vskip1ex
