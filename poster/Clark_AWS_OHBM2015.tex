@@ -81,6 +81,7 @@
                 \item This amount of resources necessitates a high-performance computing (HPC) infrastructure, which is not always readily available for researchers in-house.
                 \item Amazon Web Services (AWS) Elastic Compute Cloud (EC2) computing service offers a ``pay as you go" model that allows researchers to utilize HPC performance without the up-front captial costs and maintenance of an in-house solution.
                 \item The developers of the Laboratory of Neuro Imaging (LONI) Pipeline, the Neuroimaging Informatics Tools and Resources Clearinghouse (NITRC) Computational Environment (CE) and the Configurable Pipeline for the Analysis of Connectomes (C-PAC) have implemented pipelines in EC2 that interface with NDAR
+                \item The developers of the Laboratory of Neuro Imaging (LONI) Pipeline, the Neuroimaging Informatics Tools and Resources Clearinghouse (NITRC) Computational Environment (CE) and the
             \end{itemize}
         \vfill
         \end{block}
@@ -88,6 +89,7 @@
         % Methods
         %----------------------------------------------------------------------
         \begin{block}{Methods}
+            \vskip1ex
             %% LONI pipeline
             \begin{column}{.5\textwidth}
                 {\bf LONI Pipeline}
@@ -113,7 +115,7 @@
                             \item Automated quality asssessment of 1,112 datasets from ABIDE
                         \end{enumerate}
                 \end{itemize}
-				\vskip1ex
+				\vskip3ex
                 %% NITRC-CE pipeline
                 {\bf Neuroimaging Informatics Tools and Resources Clearinghouse Computational Environment (NITRC-CE)$^{6}$}
                 \begin{itemize}
@@ -126,7 +128,7 @@
                     \item Python modules were created to query and download data from NDAR as well as to store results back to their database
                     \item The recon-all and FIRST tools processed 986 and 1,247 T1-weighted anatomical scans, respectively; the fmriqa\_generate QA measures were generated from 1,349 functional scans.
                 \end{itemize}
-				\vskip1ex
+				\vskip3ex
 	            {\bf Interacting with the NDAR database}
 	                \begin{itemize}
 	                    \item Launched an AWS-hosted miNDAR database by querying NDAR website for the data of interest (e.g. from a particular study)
@@ -135,7 +137,7 @@
 	                    \item Log into the cluster and submit a Sun Grid Engine job using our pipeline software and the subject list
 	                    \item The pipeline software will process the data, store raw outputs in an AWS S3 bucket and insert S3 filepaths and output measures into miNDAR database
 	                \end{itemize}
-					\vskip1ex
+					\vskip3ex
 	              %% EC2 Spot pricing
 	              {\bf EC2 Spot Pricing}
 	              \begin{itemize}
@@ -156,13 +158,14 @@
                     \end{center}
                     \caption{\label{fig:loni_pipe}Graphical layout of the constructed pipeline}
                 \end{figure}
-                \vskip1ex			
+                \vskip3ex			
                   \begin{figure}
                       \begin{center}
                           \includegraphics[width=.9\textwidth]{mindar.png}
                       \end{center}
                       \caption{\label{fig:mindar}miNDAR database}
                   \end{figure}
+              \vskip3ex
                 %% Spot history figure
                 \begin{figure}
                     \includegraphics[width=.99\textwidth]{spot_history.png}
@@ -178,6 +181,7 @@
                 %% Preprocessing results table
                 \begin{table}
                     \caption{Processing completed as a part of the effort. Nodes corresponds to the number of hosts used in the calculation. PF is parallelization factor and corresponds to the number of jobs ran in parallel on each node. On demand instances were used for the master node and spot instances were used for all computation nodes in the cluster. CPU Time is the total amount of time required to perform the computation and Wall Time is the amount of time that passed. \# DS: Number of datasets. CPD: Cost Per Dataset. C-PAC: Configurable Pipeline for the Analysis of Connectomes. NITRC-CE: NITRC Computational Environment}
+                    \vskip2ex
                     \begin{tabularx}{\textwidth}{XXlrl*{6}{r}}
                         {\bf Processing} & {\bf \# DS} & {\bf Platform} & {\bf Nodes} & {\bf PF} & {\bf CPU Time} & {\bf Wall Time} & {\bf Cost} & {\bf CPD}\\
                         \hline
@@ -193,7 +197,7 @@
                     \end{tabularx}
                 \end{table}
             \end{center}
-			\vskip1ex
+			\vskip2ex
             {\bf Benefits of the cloud}
             \begin{itemize}
                 \item The scalability and payment model for processing this data on a cloud platform allowed for an efficient processing of the NDAR datasets, both in time and cost
@@ -229,7 +233,7 @@
                 \item Users can also upload their processed outputs to a cloud storage solution, like AWS Simple Storage Service (S3) directly from the cluster - this is the approach that was taken in processing data for NDAR.
                 \item Storing results in AWS S3 avoids costly download time and provides for a viable solution for backing up data; however this does incur additional storage costs.
             \end{itemize}
-		 \vskip4ex
+		 \vskip3ex
           %% Left column
           \begin{column}{.47\textwidth}
               \begin{figure}
@@ -272,7 +276,9 @@
         %----------------------------------------------------------------------
         \begin{block}{Conclusion}
             \begin{itemize}
+                \item NDAR provides a wealth of heterogenous data for studying the effects of autism and an excellent framework for the querying and storing of processed data
                 \item Cloud computing services like AWS EC2 are viable solutions for the processing and analysis of large amounts of data
+                \item A time and cost analysis argues for the benefits of using cloud computing over buying and maintaining one's own computing resource
             \end{itemize}
         \end{block}
         %----------------------------------------------------------------------
