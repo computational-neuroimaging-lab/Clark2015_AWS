@@ -380,27 +380,6 @@ def get_s3_costs(av_zone, in_gb, out_gb, num_jobs):
     return s3_price
 
 
-# Print status of file progression in loop
-def print_loop_status(itr, full_len):
-    '''
-    Function to print the current percentage completed of a loop
-    Parameters
-    ----------
-    itr : integer
-        the current iteration of the loop
-    full_len : integer
-        the full length of the loop
-    Returns
-    -------
-    None
-        the function prints the loop status, but doesn't return a value
-    '''
-
-    # Print the percentage complete
-    per = 100*(float(itr)/full_len)
-    print '%d/%d\n%f%% complete' % (itr, full_len, per)
-
-
 # Find how often a number of jobs fails and its total cost
 def simulate_market(start_time, spot_history, interp_history,
                     proc_time, num_iter, bid_price):
@@ -792,7 +771,7 @@ def main(proc_time, num_jobs, jobs_per, in_gb, out_gb, out_gb_dl,
             break
         else:
             sim_idx += 1
-            print_loop_status(sim_idx, sim_length)
+            utils.print_loop_status(sim_idx, sim_length)
 
     # Write simulation dataframe to disk
     sim_csv = os.path.join(base_dir, '%s_%d-jobs_%.3f-bid_sim.csv' % \
