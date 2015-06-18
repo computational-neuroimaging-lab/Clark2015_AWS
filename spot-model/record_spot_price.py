@@ -267,7 +267,7 @@ if __name__ == '__main__':
 
     # Required arguments
     parser.add_argument('-o', '--out_dir', nargs=1, required=True,
-                        type=float, help='Base directory to store spot '\
+                        type=str, help='Base directory to store spot '\
                         'history data frames')
 
     # Parse arguments
