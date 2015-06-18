@@ -401,55 +401,6 @@ def print_loop_status(itr, full_len):
     print '%d/%d\n%f%% complete' % (itr, full_len, per)
 
 
-# Setup log file
-def setup_logger(logger_name, log_file, level, to_screen=False):
-    '''
-    Function to initialize and configure a logger that can write to file
-    and (optionally) the screen.
-
-    Parameters
-    ----------
-    logger_name : string
-        name of the logger
-    log_file : string
-        file path to the log file on disk
-    level : integer
-        indicates the level at which the logger should log; this is
-        controlled by integers that come with the python logging
-        package. (e.g. logging.INFO=20, logging.DEBUG=10)
-    to_screen : boolean (optional)
-        flag to indicate whether to enable logging to the screen
-
-    Returns
-    -------
-    logger : logging.Logger object
-        Python logging.Logger object which is capable of logging run-
-        time information about the program to file and/or screen
-    '''
-
-    # Import packages
-    import logging
-
-    # Init logger, formatter, filehandler, streamhandler
-    logger = logging.getLogger(logger_name)
-    logger.setLevel(level)
-    formatter = logging.Formatter('%(asctime)s : %(message)s')
-
-    # Write logs to file
-    file_handler = logging.FileHandler(log_file)
-    file_handler.setFormatter(formatter)
-    logger.addHandler(file_handler)
-
-    # Write to screen, if desired
-    if to_screen:
-        stream_handler = logging.StreamHandler()
-        stream_handler.setFormatter(formatter)
-        logger.addHandler(stream_handler)
-
-    # Return the logger
-    return logger
-
-
 # Find how often a number of jobs fails and its total cost
 def simulate_market(start_time, spot_history, interp_history,
                     proc_time, num_iter, bid_price):
@@ -708,6 +659,9 @@ def main(proc_time, num_jobs, jobs_per, in_gb, out_gb, out_gb_dl,
     import os
     import pandas as pd
     import yaml
+
+    # Import local packages
+    import utils
     from record_spot_price import return_spot_history
 
     # Init variables
@@ -731,7 +685,7 @@ def main(proc_time, num_jobs, jobs_per, in_gb, out_gb, out_gb_dl,
         os.makedirs(base_dir)
     log_path = os.path.join(base_dir, '%s_%d-jobs_%.3f-bid.log' % \
                             (instance_type, num_jobs, bid_ratio))
-    stat_log = setup_logger('stat_log', log_path, logging.INFO, to_screen=True)
+    stat_log = utils.setup_logger('stat_log', log_path, logging.INFO, to_screen=True)
 
     # Calculate number of iterations given run configuration
     # Round up and assume that we're waiting for all jobs to finish

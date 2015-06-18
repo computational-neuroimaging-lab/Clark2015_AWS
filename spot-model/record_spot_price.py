@@ -4,11 +4,10 @@
 
 '''
 This module records the spot price from AWS EC2 continuously and saves
-the information to a dataframe as a csv file; if a csv file is not
-provided, one will be initialized in the current directory
+the information to dataframes as a csv files to an output directory
 
 Usage:
-    python record_spot_price.py [-c <csv_file>]
+    python record_spot_price.py -o <output_base_directory>
 '''
 
 # Initialize categorical variables for spot price history
@@ -45,55 +44,6 @@ def init_categories():
     return instance_types, product_descriptions
 
 
-# Setup log file
-def setup_logger(logger_name, log_file, level, to_screen=False):
-    '''
-    Function to initialize and configure a logger that can write to file
-    and (optionally) the screen.
-
-    Parameters
-    ----------
-    logger_name : string
-        name of the logger
-    log_file : string
-        file path to the log file on disk
-    level : integer
-        indicates the level at which the logger should log; this is
-        controlled by integers that come with the python logging
-        package. (e.g. logging.INFO=20, logging.DEBUG=10)
-    to_screen : boolean (optional)
-        flag to indicate whether to enable logging to the screen
-
-    Returns
-    -------
-    logger : logging.Logger object
-        Python logging.Logger object which is capable of logging run-
-        time information about the program to file and/or screen
-    '''
-
-    # Import packages
-    import logging
-
-    # Init logger, formatter, filehandler, streamhandler
-    logger = logging.getLogger(logger_name)
-    logger.setLevel(level)
-    formatter = logging.Formatter('%(asctime)s : %(message)s')
-
-    # Write logs to file
-    file_handler = logging.FileHandler(log_file)
-    file_handler.setFormatter(formatter)
-    logger.addHandler(file_handler)
-
-    # Write to screen, if desired
-    if to_screen:
-        stream_handler = logging.StreamHandler()
-        stream_handler.setFormatter(formatter)
-        logger.addHandler(stream_handler)
-
-    # Return the logger
-    return logger
-
-
 # Return the spot history dataframe for certain categories
 def return_sh_df(start_time, instance_type, product, av_zone):
     '''
@@ -115,7 +65,7 @@ def return_sh_df(start_time, instance_type, product, av_zone):
     for idx, sh_record in enumerate(sh_list):
         df_entry = [str(sh_record.instance_type),
                     str(sh_record.product_description),
-                    str(sh_record.region),
+                    str(sh_record.region.name),
                     str(sh_record.availability_zone),
                     sh_record.price, str(sh_record.timestamp)]
         new_df.loc[idx] = df_entry
@@ -226,125 +176,16 @@ def return_av_zones(region):
     return av_zones
 
 
-# Get all of the data from the past 90 days
-def just_fetch_everything(instance_type, product, region, out_dir):
-    '''
-    Function which iterates through the availability zones of a region
-    and pulls down all of the available spot history it can to archive
-
-    Parameters
-    ----------
-    instance_type : string
-        the type of instance to get the history for (e.g. 'c3.8xlarge')
-    product : string
-        the type of platform for the instance (e.g. 'Linux/UNIX')
-    region : boto.regioninfo.ReionInfo object
-        an object that describes the region to pull history frun
-    out_dir : string
-        filepath to the base output directory to log data to
-
-    Returns
-    -------
-    None
-        this function does not return any data or datatype
-    '''
-
-    # Import packages
-    import boto
-    import datetime
-    import gzip
-    import logging
-    import os
-    import pickle
-
-    # Init variables
-    av_zones = return_av_zones(region)
-    full_sh_list = []
-
-    # Get date
-    utc_now = datetime.datetime.utcnow()
-    utc_date = utc_now.strftime('%m-%d-%Y')
-
-    # Form output path for spot histories
-    file_path = os.path.join(out_dir, utc_date, str(region.name),
-                             product.replace('/', '-'), instance_type+'.pklz')
-    # Get logger
-    sh_log = logging.getLogger('sh_log')
-
-    # For each availability zone, get spot histories and append to one list
-    for av_zone in av_zones:
-        av_list = return_spot_history(None, instance_type, product, av_zone)
-        full_sh_list.extend(av_list)
-
-    # Pickle the list and save as compressed pklz
-    sh_log.info('Saving entire spot history to disk as %s...' % file_path)
-    file_dir = os.path.dirname(file_path)
-    if not os.path.exists(file_dir):
-        os.makedirs(file_dir)
-    with gzip.open(file_path, 'wb') as file_out:
-        pickle.dump(full_sh_list, file_out)
-
-
-# Return the previous end time of the last spot history
-def return_prev_end_time(spot_hist_df, instance_type, product, region, av_zone):
-    '''
-    '''
-
-    # Import packages
-    import datetime
-    import dateutil
-    import logging
-    import pytz
-    import sys
-
-    # Init variables
-    utc_now = datetime.datetime.utcnow()
-    utc_now = utc_now.replace(tzinfo=pytz.utc)
-
-    # Get only relevant data
-    df_mask = (spot_hist_df['Instance type'] == instance_type) & \
-              (spot_hist_df['Product'] == product) & \
-              (spot_hist_df['Region'] == str(region.name)) & \
-              (spot_hist_df['Availability zone'] == av_zone)
-
-    rel_df = spot_hist_df[df_mask]
-
-    # Iterate through list and find most recent timestamp
-    sh_log = logging.getLogger('sh_log')
-    sh_log.info('Searching for most recent timestamp...')
-
-    # Init loop variables
-    min_diff = sys.maxint
-    min_ts = None
-
-    # For each string time stamp in dataframe, find difference from now
-    for idx, ts in enumerate(rel_df['Timestamp']):
-        # Get then as formatted datetime obj
-        utc_then = dateutil.parser.parse(ts)
-
-        # Find difference between then and now
-        diff_time = utc_now - utc_then
-        diff_secs = diff_time.total_seconds()
-
-        # Test if its smaller than the minimum difference
-        if diff_secs < min_diff:
-            min_diff = diff_secs
-            min_ts = ts
-
-    # Return end time
-    return min_ts
-
-
 # Main routine
-def main(csv_file):
+def main(out_dir):
     '''
     Function to fetch the latest spot history from AWS and store in a
-    dataframe saved to a local csv file
+    dataframe saved to a local csv file for every availability zone
 
     Parameters
     ----------
-    csv_file : string
-        filepath to local csv file to save the data frame to
+    out_dir : string
+        base file directory to store the spot history dataframes
     '''
 
     # Import packages
@@ -354,29 +195,15 @@ def main(csv_file):
     import os
     import pandas as pd
 
-    # If csv file wasn't specified, create new df and write to disk
-    if csv_file is None:
-        init_df = True
-        csv_file = os.path.join(os.getcwd(), 'spot_histories.csv')
-        df_cols = ['Instance type', 'Product', 'Region', 'Availability zone',
-                   'Spot price', 'Timestamp']
-        # Create df and write to csv
-        spot_hist_df = pd.DataFrame(columns=df_cols)
-        spot_hist_df.to_csv(csv_file)
-    # Otherwise, just use csv file as dataframe
-    else:
-        init_df = False
-        spot_hist_df = pd.DataFrame.from_csv(csv_file)
-
-    # Get folder where csv_file is
-    out_dir = os.path.dirname(csv_file)
+    # Import local packages
+    import utils
 
     # Set up logger
     now_date = datetime.datetime.now()
     log_month = now_date.strftime('%m-%Y')
     log_path = os.path.join(out_dir, 'spot_history_'+log_month+'.log')
 
-    sh_log = setup_logger('sh_log', log_path, logging.INFO, to_screen=True)
+    sh_log = utils.setup_logger('sh_log', log_path, logging.INFO, to_screen=True)
 
     # Get list of regions
     reg_conn = boto.connect_ec2()
@@ -391,46 +218,42 @@ def main(csv_file):
                                            for prod in product_descriptions]
 
     # Get total lengths
-    reg_tot = len(regions)
-    ip_tot = len(instance_products)
+    reg_len = len(regions)
+    ip_len = len(instance_products)
 
     # For each AWS region
     for reg_idx, region in enumerate(regions):
-        # For each instance_type-product combination
-        for ip_idx, (instance_type, product) in enumerate(instance_products):
-            # First just save everything
-            just_fetch_everything(instance_type, product, region, out_dir)
+        # Get the availability zones
+        av_zones = return_av_zones(region)
+        av_len = len(av_zones)
+        # For each availability zone
+        for av_idx, av_zone in enumerate(av_zones):
+            # For each instance_type-product combination
+            for ip_idx, (instance_type, product) in enumerate(instance_products):
+                # Grab the spot history
+                df = return_sh_df(None, instance_type, product, av_zone)
 
-            # Next, get only latest data
-            sh_log.info('Acquiring latest spot history for (%s, %s, %s)...' \
-                  % (instance_type, product, region))
+                # Create csv path
+                out_csv = os.path.join(out_dir, log_month, str(region.name),
+                                       product.replace('/', '-'),
+                                       instance_type + '.csv')
 
-            # Get avail zones
-            av_zones = return_av_zones(region)
+                # Check to see if folder needs to be created
+                csv_dir = os.path.dirname(out_csv)
+                if not os.path.exists(csv_dir):
+                    os.makedirs(csv_dir)
 
-            # Iterate through availability zones
-            for av_zone in av_zones:
-                # Get last entry's end time
-                if init_df:
-                    prev_end_time = None
-                else:
-                    prev_end_time = \
-                            return_prev_end_time(spot_hist_df, instance_type,
-                                                 product, region, av_zone)
-                # Get the latest spot prices and time stamps
-                new_df = return_sh_df(prev_end_time, instance_type, product,
-                                      region, av_zone)
-                # Append to csv
-                new_df.to_csv(csv_file, header=False, mode='a')
+                # Save the dataframe
+                df.to_csv(out_csv)
 
-                # Print done
-                print 'Added spot history to csv: %s' % csv_file
+                # Log instance type finished
+                sh_log.info('%d/%d instance-products completed' % (ip_idx+1, ip_len))
 
             # Log instance type finished
-            sh_log.info('%d/%d instance-products completed' % (ip_idx+1, ip_tot))
+            sh_log.info('%d/%d availability zones completed' % (av_idx+1, av_len))
 
         # Print region complete
-        sh_log.info('%d/%d regions completed' % (reg_idx+1, reg_tot))
+        sh_log.info('%d/%d regions completed' % (reg_idx+1, reg_len))
 
 
 # Make script executable
@@ -438,23 +261,21 @@ if __name__ == '__main__':
 
     # Import packages
     import argparse
-    import os
 
     # Init argparser
     parser = argparse.ArgumentParser(description=__doc__)
 
-    # Optional arguments
-    parser.add_argument('-c', '--csv_file', nargs=1, required=False,
-                        help='Filepath to data frame csv file')
+    # Required arguments
+    parser.add_argument('-o', '--out_dir', nargs=1, required=True,
+                        type=float, help='Base directory to store spot '\
+                        'history data frames')
 
     # Parse arguments
     args = parser.parse_args()
 
     # Init variables
-    try:
-        csv_file = args.csv_file[0]
-    except TypeError as exc:
-        csv_file = None
+    # Pipeline config params
+    out_dir = args.out_dir[0]
 
     # Run main routine
-    main(csv_file)
+    main(out_dir)

@@ -137,12 +137,15 @@ def run_in_parallel(proc_list, num_cores):
 # Make executable
 if __name__ == '__main__':
 
+    # Import packages
+    import sys
+
     # Grab az_zone folders base
-    zones_basedir = '/home/dclark/Documents/projects/Clark2015_AWS/spot-model/out/'
+    zones_basedir = str(sys.argv[1])
 
     # Call main
     proc_list = build_proc_list(zones_basedir)
 
-    build_big_df('/home/dclark/Documents/projects/Clark2015_AWS/spot-model/out/us-east-1a')
+    #build_big_df('~/Documents/projects/Clark2015_AWS/spot-model/out/us-east-1a')
     # Run in parallel
-    #run_in_parallel(proc_list, 6)
+    run_in_parallel(proc_list, 6)
