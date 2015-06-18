@@ -17,26 +17,16 @@
 \usepackage[english]{babel}
 \usepackage[latin1]{inputenc}
 \usepackage{amsmath,amsthm, amssymb, latexsym}
-%\usepackage[framemethod=tikz]{mdframed}
-%\usepackage{times}\usefonttheme{professionalfonts}  % obsolete
-%\usefonttheme[onlymath]{serif}
-%\boldmath
 \usepackage{graphicx}
 \usepackage{enumerate}
-%\usepackage[orientation=portrait,size=custom,width=83.96,height=101,scale=1]{beamerposter}
 \usepackage[orientation=portrait,size=custom,width=141,height=117,scale=1]{beamerposter}
-%\usepackage[orientation=portrait,width=89,height=102,scale=1.1,debug]{beamerposter}
-%\usepackage[orientation=portrait,size=a0,scale=1.4,debug]{beamerposter}
-% change list indention level
-% \setdefaultleftmargin{3em}{}{}{}{}{}
-%\usepackage{snapshot} % will write a .dep file with all dependencies, allows for easy bundling
-
 \usepackage{array,booktabs,tabularx}
 
 %% Formatting
 \mode<presentation>{\usetheme{CMINKI}}
-\newcolumntype{Z}{>{\centering\arraybackslash}X} % centered tabularx columns
-\newcommand{\pphantom}{\textcolor{ta3aluminium}} % phantom introduces a vertical space in p formatted table columns??!!
+\newcolumntype{Z}{>{\centering\arraybackslash}X}
+\newcommand{\pphantom}{\textcolor{ta3aluminium}}
+
 % Column sizing
 \newlength{\columnheight}
 \setlength{\columnheight}{72cm}
@@ -62,18 +52,18 @@
 % Poster content
 %----------------------------------------------------------------------
 \begin{document}
-
+% Start of frame
 \begin{frame}
-	\vskip-52ex
+    % Keep content at top of page, no blank space
+    \vskip-52ex
+    % Start of column-izing
     \begin{columns}
     %----------------------------------------------------------------------
-    % Right column of poster
+    % Left column of poster
     %----------------------------------------------------------------------
     % Set up a column
     \begin{column}{.5\textwidth}
-    %\begin{beamercolorbox}[center,wd=\textwidth]{postercolumn}
-    %\begin{minipage}[T]{.98\textwidth}  % tweaks the width, makes a new \textwidth
-        \parbox[t][\columnheight]{\textwidth}{ % must be some better way to set the the height, width and textwidth simultaneously
+        \parbox[t][\columnheight]{\textwidth}{
         %----------------------------------------------------------------------
         % Introduction
         %----------------------------------------------------------------------
@@ -91,8 +81,9 @@
         %----------------------------------------------------------------------
         \begin{block}{Methods}
             \vskip1ex
-            %% LONI pipeline
+            %% Left column
             \begin{column}{.5\textwidth}
+                %% LONI pipeline
                 {\bf LONI Pipeline}
                 \begin{itemize}
                     \item The LONI Pipeline software was extended to include new pipeline modules to access data from the NDAR database, transfer input data out of Amazon S3 (Simple Storage Service), and to load results back into S3$^{2}$.
@@ -105,6 +96,7 @@
                     \item The resulting pipeline was used to process 780 T1-weighted structural images and return the results to NDAR.
                 \end{itemize}
                 \vskip3ex
+                %% CPAC pipeline
                 {\bf Configurable Pipeline For the Analysis of Connectomes (C-PAC)$^{3}$}
                 \begin{itemize}
                     \item C-PAC modules were written in Python to build input data lists by querying NDAR, read input data from S3, write processed results to S3, and write values back to the NDAR database.
@@ -116,7 +108,7 @@
                             \item Automated quality asssessment of 1,112 datasets from ABIDE
                         \end{enumerate}
                 \end{itemize}
-				\vskip3ex
+                \vskip3ex
                 %% NITRC-CE pipeline
                 {\bf Neuroimaging Informatics Tools and Resources Clearinghouse Computational Environment (NITRC-CE)$^{6}$}
                 \begin{itemize}
@@ -129,28 +121,29 @@
                     \item Python modules were created to query and download data from NDAR as well as to store results back to their database.
                     \item The recon-all and FIRST tools processed 986 and 1,247 T1-weighted anatomical scans, respectively; the fmriqa\_generate QA measures were generated from 1,349 functional scans.
                 \end{itemize}
-				\vskip3ex
-	            {\bf Interacting with the NDAR database}
-	                \begin{itemize}
-	                    \item An AWS-hosted miNDAR database was created by querying the NDAR website for the data of interest (e.g. from a particular study).
-	                    \item The developed modules were then used to build a subject list by querying the database for subjects of interest to pass to the pipeline.
-	                    \item The launch and configuration of an AWS EC2 HPC cluster was handled using Starcluster (\url{http://star.mit.edu/cluster/}).
-	                    \item A process run was submitted from the cluster head node as a Sun Grid Engine job using our pipeline software and the subject list.
-	                    \item The pipeline software then processed the data, stored raw outputs in an S3 bucket, and inserted the S3 filepaths and output measures into the miNDAR database.
-	                \end{itemize}
-					\vskip3ex
-	              %% EC2 Spot pricing
-	              {\bf EC2 Spot Pricing}
-	              \begin{itemize}
-	                  \item In addition to the ``pay as you go" compute pricing model, AWS offers users to bid on instances that are not being used.
-	                  \item As opposed to paying an ``on-demand" fixed price, the hourly charge for the instances will vary over time based on what people in different regions are willing to pay.
-	                  \item If the spot market price goes above what the user bids, their instance will be terminated by Amazon and all of their processes will be stopped and their data lost.
-	                  \item Typically, one can expect to pay one-eighth of the hourly price of a standard on-demand instance when using spot-pricing.
-	                  \item AWS offers cloud solutions based on geographic region, where the price for services vary.
-	                  \item Some regions fluxuate on spot price more than others, but there are ways to minimize process interruptions and lost data in how one configures their cluster and pipelines.
-	              \end{itemize}
-				
+                \vskip3ex
+                %% miNDAR database
+                {\bf Interacting with the NDAR database}
+                    \begin{itemize}
+                        \item An AWS-hosted miNDAR database was created by querying the NDAR website for the data of interest (e.g. from a particular study).
+                        \item The developed modules were then used to build a subject list by querying the database for subjects of interest to pass to the pipeline.
+                        \item The launch and configuration of an AWS EC2 HPC cluster was handled using Starcluster (\url{http://star.mit.edu/cluster/}).
+                        \item A process run was submitted from the cluster head node as a Sun Grid Engine job using our pipeline software and the subject list.
+                        \item The pipeline software then processed the data, stored raw outputs in an S3 bucket, and inserted the S3 filepaths and output measures into the miNDAR database.
+                    \end{itemize}
+                \vskip3ex
+                %% EC2 Spot pricing
+                {\bf EC2 Spot Pricing}
+                \begin{itemize}
+                    \item In addition to the ``pay as you go" compute pricing model, AWS offers users to bid on instances that are not being used.
+                    \item As opposed to paying an ``on-demand" fixed price, the hourly charge for the instances will vary over time based on what people in different regions are willing to pay.
+                    \item If the spot market price goes above what the user bids, their instance will be terminated by Amazon and all of their processes will be stopped and their data lost.
+                    \item Typically, one can expect to pay one-eighth of the hourly price of a standard on-demand instance when using spot-pricing.
+                    \item AWS offers cloud solutions based on geographic region, where the price for services vary.
+                    \item Some regions fluxuate on spot price more than others, but there are ways to minimize process interruptions and lost data in how one configures their cluster and pipelines.
+                \end{itemize}
             \end{column}
+            %% Right column
             \begin{column}{.5\textwidth}
                 %% LONI pipeline figure
                 \begin{figure}
@@ -159,24 +152,26 @@
                     \end{center}
                     \caption{\label{fig:loni_pipe}Graphical layout of the constructed pipeline}
                 \end{figure}
-                \vskip3ex			
-                  \begin{figure}
-                      \begin{center}
-                          \includegraphics[width=.9\textwidth]{mindar.png}
-                      \end{center}
-                      \caption{\label{fig:mindar}miNDAR database}
-                  \end{figure}
-              \vskip3ex
+                \vskip3ex
+                %% miNDAR figure
+                \begin{figure}
+                    \begin{center}
+                        \includegraphics[width=.9\textwidth]{mindar.png}
+                    \end{center}
+                    \caption{\label{fig:mindar}miNDAR database}
+                \end{figure}
+                \vskip3ex
                 %% Spot history figure
                 \begin{figure}
                     \includegraphics[width=.99\textwidth]{spot_history.png}
                     \caption{\label{fig:spot_history}Spot price history for the c3.8xlarge instance in the us-east-1 region on AWS across the four different availability zones for the past three months}
                 \end{figure}
-					
-				
             \end{column}
         \vfill
         \end{block}
+        %----------------------------------------------------------------------
+        % Results
+        %----------------------------------------------------------------------
         \begin{block}{Results}
             \begin{center}
                 %% Preprocessing results table
@@ -198,7 +193,8 @@
                     \end{tabularx}
                 \end{table}
             \end{center}
-			\vskip2ex
+            \vskip2ex
+            %% Benefits of the cloud
             {\bf Benefits of the cloud}
             \begin{itemize}
                 \item The scalability and payment model for processing this data on a cloud platform allowed for an efficient processing of the NDAR datasets, both in time and cost.
@@ -206,21 +202,17 @@
                 \item Competition for computing resources was controlled as every cluster launch was done by the user doing the processing; no fellow researchers needed to login and use additional computing power.
                 \item Cost and time models were produced to demonstrate the benefits of using cloud computing for increasingly large datasets.
             \end{itemize}
-	        \vfill
-	        \end{block}
-			
-          }
-        %\end{minipage}
-      %\end{beamercolorbox}
+            \vfill
+        \end{block}
+    }
     \end{column}
     %----------------------------------------------------------------------
     % Right column of poster
     %----------------------------------------------------------------------
     % Set up a column
     \begin{column}{.5\textwidth}
-    %\begin{beamercolorbox}[center,wd=\textwidth]{postercolumn}
-    %\begin{minipage}[T]{.98\textwidth} % tweaks the width, makes a new \textwidth
-        \parbox[t][\columnheight]{\textwidth}{ % must be some better way to set the the height, width and textwidth simultaneously
+        % Set column size
+        \parbox[t][\columnheight]{\textwidth}{
         %----------------------------------------------------------------------
         % Results
         %----------------------------------------------------------------------
@@ -234,43 +226,33 @@
                 \item Users can also upload their processed outputs to a cloud storage solution, like AWS S3, directly from the cluster - this was the approach taken in processing data for NDAR.
                 \item Storing results in S3 avoids costly download time and provides for a viable solution for backing up data; however this does incur additional storage costs.
             \end{itemize}
-		 \vskip3ex
-          %% Left column
-          \begin{column}{.47\textwidth}
-              \begin{figure}
-                  \includegraphics[width=.99\textwidth]{cpac-costs.pdf}
-                  \caption{\label{fig:cpac-costs}AWS EC2 costs, grouped by cost type, for a typical C-PAC pipeline for different sized datasets versus owning and maintaining own server; costs are based on using the cluster configuration shown in Table 1 for the cloud, and a single compute node locally}
-              \end{figure}
-              %% Freesurfer costs figure
-              \begin{figure}
-                  \includegraphics[width=.99\textwidth]{fs-costs.pdf}
-                  \caption{\label{fig:fs-costs}AWS EC2 costs, grouped by cost type, for a typical Freesurfer pipeline for different sized datasets versus owning and maintaining own server; costs are based on using the cluster configuration shown in Table 1 for the cloud, and a single compute node locally}
-              \end{figure}
-              \end{column}
-          %% Right column
-          \begin{column}{.47\textwidth}
-
-              %% C-PAC times figure
-              \begin{figure}
-                  \includegraphics[width=.99\textwidth]{cpac-times.pdf}
-                  \caption{\label{fig:cpac-times}Run times using the C-PAC pipeline, grouped by downloading output data or not, for different sized datasets versus running locally; times are based on using the cluster configuration shown in Table 1 for the cloud, and a single compute node locally}
-              \end{figure}
-              %% Freesurfer times figure
-              \begin{figure}
-                  \includegraphics[width=.99\textwidth]{fs-times.pdf}
-                  \caption{\label{fig:fs-times}Run times using the Freesurfer pipeline, grouped by downloading output data or not, for different sized datasets versus running locally; times are based on using the cluster configuration shown in Table 1 for the cloud, and a single compute node locally}
-              \end{figure}
-              %\begin{itemize}
-              %     \item As shown in figure \ref{fig:best_worst} models learned for the best and worst performing participants match
-              %           with the canonical pattern of the default network.
-              %     \item The best participant was able to follow the instructures very well \ref{fig:best_worst}, the worst seems
-              %           to have been corrupted by noise.
-              %     \item Figure \ref{fig:inter_subject} shows 12 of the subjects were able to modulate the DN at above chance levels,
-              %           performance on feedback runs is consistent independent of order, but performance on nonfeedback runs improves
-              %           if they occur after feedback runs.
-              %     \item Measures that were significantly associated with DN regulation include ($p<0.05$, FDR corrected):  the affect intensity measure (AIM), ruminative responses scale (RRS), and the imaginal processes inventory. 
-              %\end{itemize}
-          \end{column}
+            \vskip3ex
+            %% Left column
+            \begin{column}{.47\textwidth}
+                %% C-PAC costs figure
+                \begin{figure}
+                    \includegraphics[width=.99\textwidth]{cpac-costs.pdf}
+                    \caption{\label{fig:cpac-costs}AWS EC2 costs, grouped by cost type, for a typical C-PAC pipeline for different sized datasets versus owning and maintaining own server; costs are based on using the cluster configuration shown in Table 1 for the cloud, and a single compute node locally}
+                \end{figure}
+                %% Freesurfer costs figure
+                \begin{figure}
+                    \includegraphics[width=.99\textwidth]{fs-costs.pdf}
+                    \caption{\label{fig:fs-costs}AWS EC2 costs, grouped by cost type, for a typical Freesurfer pipeline for different sized datasets versus owning and maintaining own server; costs are based on using the cluster configuration shown in Table 1 for the cloud, and a single compute node locally}
+                \end{figure}
+            \end{column}
+            %% Right column
+            \begin{column}{.47\textwidth}
+                %% C-PAC times figure
+                \begin{figure}
+                    \includegraphics[width=.99\textwidth]{cpac-times.pdf}
+                    \caption{\label{fig:cpac-times}Run times using the C-PAC pipeline, grouped by downloading output data or not, for different sized datasets versus running locally; times are based on using the cluster configuration shown in Table 1 for the cloud, and a single compute node locally}
+                \end{figure}
+                %% Freesurfer times figure
+                \begin{figure}
+                    \includegraphics[width=.99\textwidth]{fs-times.pdf}
+                    \caption{\label{fig:fs-times}Run times using the Freesurfer pipeline, grouped by downloading output data or not, for different sized datasets versus running locally; times are based on using the cluster configuration shown in Table 1 for the cloud, and a single compute node locally}
+                \end{figure}
+            \end{column}
         \end{block}
         %----------------------------------------------------------------------
         % Conclusion
@@ -296,20 +278,8 @@
             %% Support
             Data processing and salary support was provided by NDAR.\\
          \end{block}
-          }
-          % ---------------------------------------------------------%
-          % end the column
-      %  \end{minipage}
-      %\end{beamercolorbox}
+    }
     \end{column}
-    % ---------------------------------------------------------%
-    % end the column
-  \end{columns}
+    \end{columns}
 \end{frame}
 \end{document}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% Local Variables: 
-%%% mode: latex
-%%% TeX-PDF-mode: t
-%%% End:
