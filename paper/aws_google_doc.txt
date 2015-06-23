@@ -1,0 +1,8 @@
+2. Methods
+----------
+a. The Amazon Web Services Elastic Compute Cloud
+    Amazon provides a collection of remote computing services called Amazon Web Services (AWS). One of the most central and well-known of these services is Amazon Elastic Compute Cloud (EC2). EC2 allows for the configuration and use of virtual servers, or compute instances, at any capacity desired. In contrast with the up-front research and costs necessary to purchase an in-house computing solution, EC2 offers the flexibility to utilize a wide range of computing capacity with a "pay-as-you-go" model. This framework makes it possible to optimize one's computing power and budget for their application
+
+1. Computational resources
+i. Instances and AMIs
+    EC2 offers virtual servers called "instances", which users can configure, start, and securely log in to use. These instances are based on operating system "templates" called Amazon Machine Images (AMIs). Users can choose thousands of different AMIs from the AWS or community marketplaces to launch instances of in EC2. Additionally, users can create their own customized AMIs for private or public use.
