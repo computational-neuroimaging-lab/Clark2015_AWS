@@ -133,40 +133,23 @@ def build_proc_list(zones_basedir):
     return proc_list
 
 
-# Merge separate pklz files
-def return_pklz(base_dir, region, product, instance_type):
-    '''
-    '''
-
-    # Import packages
-    import glob
-    import os
-
-    # Init variables
-    product = product.replace('/', '-')
-    merge_files = []
-
-    # File pattern - base/date/region/product/type.pklz
-    file_pattern = os.path.join(base_dir, '*', '*', '*', '*.pklz')
-    pklz_list = glob.glob(file_pattern)
-
-    # Filter pklz list
-    for pklz in pklz_list:
-        pklz_sp = pklz.split('/')
-        pklz_reg = pklz_sp[-3]
-        pklz_prod = pklz_sp[-2]
-        pklz_inst = pklz_sp[-1].split('.pklz')[0]
-        if pklz_reg == region and pklz_prod == product and \
-           pklz_inst == instance_type:
-            merge_files.append(pklz)
-
-    # Return the files to merge
-    return merge_files
-
-
 # Convert spot history list to dataframe csv
-def pklz_to_df(base_dir, pklz_file, proc_idx):
+def pklz_to_df(out_dir, pklz_file):
     '''
+    Function to convert pklz list file to csv dataframe
+
+    Parameters
+    ----------
+    out_dir : string
+        filepath to the output base directory to store the dataframes
+    pklz_file : string
+        filepath to the .pklz file, which contains a list of
+        boto spot price history objects
+
+    Returns
+    -------
+    None
+        this function saves the dataframe to a csv
     '''
 
     # Import packages
@@ -174,16 +157,18 @@ def pklz_to_df(base_dir, pklz_file, proc_idx):
     import os
     import pandas as pd
     import pickle as pk
+    import time
 
     # Init variables
-    out_dir = os.path.join(base_dir, 'regions')
     gfile = gzip.open(pklz_file)
     sh_list = pk.load(gfile)
     idx = 0
 
+    # If the list is empty return nothing
     if len(sh_list) == 0:
         return
 
+    # Init data frame
     df_cols = ['Timestamp', 'Price', 'Region', 'Availability zone',
                'Product', 'Instance type']
     merged_df = pd.DataFrame(columns=df_cols)
@@ -202,7 +187,7 @@ def pklz_to_df(base_dir, pklz_file, proc_idx):
         print '%d/%d' % (idx, len(sh_list))
 
     # Write out merged dataframe
-    out_csv = os.path.join(out_dir, reg, prod.replace('/', '-'), inst + str(proc_idx) + '.csv')
+    out_csv = os.path.join(out_dir, reg, prod.replace('/', '-'), inst, str(time.time()) + '.csv')
     csv_dir = os.path.dirname(out_csv)
 
     # Check if folders exists
@@ -327,6 +312,7 @@ def setup_logger(logger_name, log_file, level, to_screen=False):
 
     # Return the logger
     return logger
+
 
 # Make executable
 if __name__ == '__main__':
