@@ -429,8 +429,8 @@ def simulate_market(start_time, spot_history, interp_history,
     num_interrupts = 0
 
     # Get first spot history start time
-    current_indices = spot_history.index >= start_time
-    spot_history_start = min(spot_history.index[current_indices])
+    start_idx = np.argmax(spot_history.index >= start_time)
+    spot_history_start = spot_history.index[start_idx]
 
     # Init remaining rumtime
     remaining_runtime = proc_time*num_iter
