@@ -133,6 +133,86 @@ def build_proc_list(zones_basedir):
     return proc_list
 
 
+# Merge separate pklz files
+def return_pklz(base_dir, region, product, instance_type):
+    '''
+    '''
+
+    # Import packages
+    import glob
+    import os
+
+    # Init variables
+    product = product.replace('/', '-')
+    merge_files = []
+
+    # File pattern - base/date/region/product/type.pklz
+    file_pattern = os.path.join(base_dir, '*', '*', '*', '*.pklz')
+    pklz_list = glob.glob(file_pattern)
+
+    # Filter pklz list
+    for pklz in pklz_list:
+        pklz_sp = pklz.split('/')
+        pklz_reg = pklz_sp[-3]
+        pklz_prod = pklz_sp[-2]
+        pklz_inst = pklz_sp[-1].split('.pklz')[0]
+        if pklz_reg == region and pklz_prod == product and \
+           pklz_inst == instance_type:
+            merge_files.append(pklz)
+
+    # Return the files to merge
+    return merge_files
+
+
+# Convert spot history list to dataframe csv
+def pklz_to_df(base_dir, pklz_file, proc_idx):
+    '''
+    '''
+
+    # Import packages
+    import gzip
+    import os
+    import pandas as pd
+    import pickle as pk
+
+    # Init variables
+    out_dir = os.path.join(base_dir, 'regions')
+    gfile = gzip.open(pklz_file)
+    sh_list = pk.load(gfile)
+    idx = 0
+
+    if len(sh_list) == 0:
+        return
+
+    df_cols = ['Timestamp', 'Price', 'Region', 'Availability zone',
+               'Product', 'Instance type']
+    merged_df = pd.DataFrame(columns=df_cols)
+
+    # Iterate through histories
+    for sh in sh_list:
+        timestamp = str(sh.timestamp)
+        price = sh.price
+        reg = str(sh.region).split(':')[-1]
+        av_zone = str(sh.availability_zone)
+        prod = str(sh.product_description)
+        inst = str(sh.instance_type)
+        df_entry = [timestamp, price, reg, av_zone, prod, inst]
+        merged_df.loc[idx] = df_entry
+        idx += 1
+        print '%d/%d' % (idx, len(sh_list))
+
+    # Write out merged dataframe
+    out_csv = os.path.join(out_dir, reg, prod.replace('/', '-'), inst + str(proc_idx) + '.csv')
+    csv_dir = os.path.dirname(out_csv)
+
+    # Check if folders exists
+    if not os.path.exists(csv_dir):
+        os.makedirs(csv_dir)
+
+    print 'Done merging, writing out to %s...' % out_csv
+    merged_df.to_csv(out_csv)
+
+
 # Run jobs in parallel
 def run_in_parallel(proc_list, num_cores):
     '''
