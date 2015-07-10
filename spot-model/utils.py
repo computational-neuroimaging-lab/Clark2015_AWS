@@ -55,7 +55,7 @@ def build_big_df(av_zone_dir):
         bid_price = bid_ratio*spot_history.mean()
 
         ### Download time fix ###
-        # *Note the CPAC, ANTs, and Freesurfer, FS-GPU csv outputs need this
+        # *Note the CPAC, ANTs, and Freesurfer csv outputs need this
         # CPAC pipeline params
         jobs_per = 3
         down_rate = 20

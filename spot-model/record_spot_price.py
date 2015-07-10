@@ -138,7 +138,7 @@ def return_spot_history(start_time, instance_type, product, av_zone):
             sh_log.info('Found no spot history in %s, moving on...' % av_zone)
 
         # Check if list is still returning 1000 objects
-        if len(sh_list) != 1000:
+        if len(sh_list) < 1000:
             token_flg = False
 
     # Return full spot history list

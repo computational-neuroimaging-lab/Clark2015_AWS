@@ -87,8 +87,8 @@ def calc_full_time_costs(run_time, wait_time, node_cost, first_iter_time,
     exec_time = run_time + wait_time
 
     ### Master runtime + storage time (EBS) + xfer time ###
-    up_gb_per_sec = up_rate/8.0/1024.0
-    down_gb_per_sec = down_rate/8.0/1024.0
+    up_gb_per_sec = up_rate/8.0/1000.0
+    down_gb_per_sec = down_rate/8.0/1000.0
     xfer_up_time = num_jobs*(in_gb/up_gb_per_sec)
 
     # Get the number of jobs ran through n-1 iterations
@@ -648,9 +648,12 @@ def main(proc_time, num_jobs, jobs_per, in_gb, out_gb, out_gb_dl,
     num_nodes = min(np.ceil(float(num_jobs)/jobs_per), 20)
 
     # Init simulation market results dataframe
-    sim_market_cols = ['Start time', 'Run time', 'Wait time',
-                       'Per-node cost', 'Interrupts', 'First Iter Time']
-    sim_df = pd.DataFrame(columns=sim_market_cols)
+    sim_df_cols = ['start_time', 'spot_hist_csv', 'proc_time', 'num_datasets',
+                   'jobs_per_node', 'num_jobs_iter', 'bid_ratio', 'bid_price',
+                   'median_history', 'mean_history', 'stdev_history',
+                   'compute_time', 'wait_time', 'per_node_cost',
+                   'num_interrupts', 'first_iter_time']
+    sim_df = pd.DataFrame(columns=sim_df_cols)
 
     # Init full run stats data frame
     stat_df_cols = ['Total cost', 'Instance cost', 'Storage cost', 'Tranfer cost',
@@ -742,8 +745,11 @@ def main(proc_time, num_jobs, jobs_per, in_gb, out_gb, out_gb_dl,
             first_iter_time = proc_time
 
         # Write simulate market output to dataframe
-        sim_df.loc[sim_idx] = [start_time, run_time, wait_time, pernode_cost,
-                                      num_interrupts, first_iter_time]
+        sim_df.loc[sim_idx] = [start_time, csv_file, proc_time, num_jobs,
+                               jobs_per, num_iter, bid_ratio, bid_price,
+                               np.mean(spot_history), np.median(spot_history),
+                               np.std(spot_history), run_time, wait_time,
+                               pernode_cost, num_interrupts, first_iter_time]
 
         # Get complete time and costs from spot market simulation paramters
         total_cost, instance_cost, stor_cost, xfer_cost, \
