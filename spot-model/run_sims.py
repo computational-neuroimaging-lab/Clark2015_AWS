@@ -51,10 +51,10 @@ if __name__ == '__main__':
 
     # Import packages
     import argparse
-    import utils.run_in_parallel
+    import utils
 
     # Init argparser
-    parser = argparse.ArugmentParser(description=__doc__)
+    parser = argparse.ArgumentParser(description=__doc__)
 
     # Required arguments
     parser.add_argument('-c', '--config_file', nargs=1, required=True,
