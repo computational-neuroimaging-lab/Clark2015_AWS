@@ -566,7 +566,7 @@ def spothistory_from_dataframe(csv_file, instance_type, product, av_zone):
     df_subset = data_frame[df_bool]
 
     # Get spot histories from data frame with str timestamps
-    spot_history = df_subset.set_index('Timestamp')['Spot price']
+    spot_history = df_subset.set_index('Timestamp')['Price']
     spot_history = spot_history.sort_index()
 
     # Get new histories with datetime timestamps
@@ -664,10 +664,20 @@ def main(proc_time, num_jobs, jobs_per, in_gb, out_gb, out_gb_dl,
     # Set up logger
     base_dir = os.path.join(os.getcwd(), av_zone)
     if not os.path.exists(base_dir):
-        os.makedirs(base_dir)
+        try:
+            os.makedirs(base_dir)
+        except OSError as exc:
+            print 'Found av zone directory %s, continuing...' % av_zone
     log_path = os.path.join(base_dir, '%s_%d-jobs_%.3f-bid.log' % \
                             (instance_type, num_jobs, bid_ratio))
     stat_log = utils.setup_logger('stat_log', log_path, logging.INFO, to_screen=True)
+
+    # Check to see if simulation was already run (sim csv file exists)
+    sim_csv = os.path.join(base_dir, '%s_%d-jobs_%.3f-bid_sim.csv' % \
+                           (instance_type, num_jobs, bid_ratio))
+    if os.path.exists(sim_csv):
+        stat_log.info('Simulation file %s already exits, skipping...')
+        return
 
     # Calculate number of iterations given run configuration
     # Round up and assume that we're waiting for all jobs to finish
@@ -681,6 +691,8 @@ def main(proc_time, num_jobs, jobs_per, in_gb, out_gb, out_gb_dl,
         # Parse dataframe to form history
         spot_history = spothistory_from_dataframe(csv_file, instance_type,
                                                   product, av_zone)
+        # Get rid of any duplicated timestamps
+        spot_history = spot_history.groupby(spot_history.index).first()
 
     # Otherwise, just grab latest 90 days
     else:
@@ -780,8 +792,6 @@ def main(proc_time, num_jobs, jobs_per, in_gb, out_gb, out_gb_dl,
             utils.print_loop_status(sim_idx, sim_length)
 
     # Write simulation dataframe to disk
-    sim_csv = os.path.join(base_dir, '%s_%d-jobs_%.3f-bid_sim.csv' % \
-                           (instance_type, num_jobs, bid_ratio))
     sim_df.to_csv(sim_csv)
 
     # Write stats dataframe to disk

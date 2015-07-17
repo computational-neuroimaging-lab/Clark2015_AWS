@@ -55,7 +55,7 @@ def return_sh_df(start_time, instance_type, product, av_zone):
 
     # Init variables
     df_cols = ['Instance type', 'Product', 'Region', 'Availability zone',
-               'Spot price', 'Timestamp']
+               'Price', 'Timestamp']
     new_df = pd.DataFrame(columns=df_cols)
 
     # Get spot history
