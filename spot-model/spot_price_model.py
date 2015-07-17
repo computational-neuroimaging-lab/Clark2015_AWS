@@ -578,7 +578,7 @@ def spothistory_from_dataframe(csv_file, instance_type, product, av_zone):
 
 
 # Main routine
-def main(proc_time, num_jobs, jobs_per, in_gb, out_gb, out_gb_dl,
+def main(sim_dir, proc_time, num_jobs, jobs_per, in_gb, out_gb, out_gb_dl,
          up_rate, down_rate, bid_ratio, instance_type, av_zone, product,
          csv_file=None, toy_data=None):
     '''
@@ -588,6 +588,9 @@ def main(proc_time, num_jobs, jobs_per, in_gb, out_gb, out_gb_dl,
 
     Parameters
     ----------
+    sim_dir : string
+        base directory where to create the availability zone folders
+        for storing the simulation results
     proc_time : float
         the number of minutes a single job of interest takes to run
     num_jobs : integer
@@ -662,7 +665,7 @@ def main(proc_time, num_jobs, jobs_per, in_gb, out_gb, out_gb_dl,
     stat_df = pd.DataFrame(columns=stat_df_cols)
 
     # Set up logger
-    base_dir = os.path.join(os.getcwd(), av_zone)
+    base_dir = os.path.join(sim_dir, av_zone)
     if not os.path.exists(base_dir):
         try:
             os.makedirs(base_dir)
