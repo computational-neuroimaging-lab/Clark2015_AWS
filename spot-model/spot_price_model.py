@@ -679,7 +679,7 @@ def main(sim_dir, proc_time, num_jobs, jobs_per, in_gb, out_gb, out_gb_dl,
     sim_csv = os.path.join(base_dir, '%s_%d-jobs_%.3f-bid_sim.csv' % \
                            (instance_type, num_jobs, bid_ratio))
     if os.path.exists(sim_csv):
-        stat_log.info('Simulation file %s already exits, skipping...')
+        stat_log.info('Simulation file %s already exits, skipping...' % sim_csv)
         return
 
     # Calculate number of iterations given run configuration
