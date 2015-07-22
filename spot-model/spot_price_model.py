@@ -8,14 +8,162 @@ expected failure time, expected wait time, and probability of failure
 for a job submission to an AWS EC2 SPOT cluster
 '''
 
-# Calculate running time and all other data storage/transfers costs
-def calc_full_time_costs(run_time, wait_time, node_cost, first_iter_time,
+# Calculate costs with the EBS model
+def calc_s3_model_costs(run_time, wait_time, node_cost, first_iter_time,
+                         num_jobs, num_nodes, jobs_per, av_zone,
+                         in_gb, out_gb, up_rate, down_rate):
+    '''
+    Function to take results from the simulate_market function and
+    calculate total costs and runtimes with data transfer and storage
+    included for the S3-based storage model
+
+    Parameters
+    ----------
+    run_time : float
+        the total number of seconds all of the nodes were up running
+    wait_time : float
+        the total number of seconds spent waiting for the spot price
+        to come down below bid
+    node_cost : float
+        the per-node running, or instance, cost
+    first_iter_time : float
+        the number of seconds the first job iteration took to complete;
+        this is used to model when outputs begin downloading from EC2
+    num_jobs : integer
+        total number of jobs to run to complete job submission
+    num_nodes : integer
+        the number of nodes that the cluster uses to run job submission
+    jobs_per : integer
+        the number of jobs to run per node
+    av_zone : string
+        the AWS EC2 availability zone (sub-region) to get spot history
+        from
+    in_gb : float
+        the total amount of input data for a particular job (in GB)
+    out_gb : float
+        the total amount of output data from a particular job (in GB)
+    up_rate : float
+        the average upload rate to transfer data to EC2 (in Mb/s)
+
+    Returns
+    -------
+    total_cost : float
+        the total amount of dollars the job submission cost
+    instance_cost : float
+        cost for running the instances, includes master and all slave
+        nodes
+    storage_cost : float
+        cost associated with data storage
+    xfer_cost : float
+        cost associated with data transfer (out only as in is free)
+    total_time : float
+        the total amount of seconds for the entire job submission to
+        complete
+    run_time : float
+        returns the input parameter run_time for convenience
+    wait_time : float
+        returns the input parameter wait_time for convenience
+    xfer_up_time : float
+        the amount of time it took to transfer the input data up to
+        the master node (seconds)
+    xfer_down_time : float
+        the amount of time it took to transfer all of the output data
+        from the master node (seconds)
+    '''
+
+    # Import packages
+    import numpy as np
+
+    # Init variables
+    cpac_ami_gb = 30
+    secs_per_avg_month = (365/12.0)*24*3600
+    num_iter = np.ceil(num_jobs/float((jobs_per*num_nodes)))
+    # Upload speed from instance to S3 (mbps/8 bits/1000 MB in 1 GB)
+    upl_to_s3_gbps = 100/8.0/1000.0
+
+    # Get total execution time as sum of running and waiting times
+    exec_time = run_time + wait_time
+
+    ### Master runtime + storage time (EBS) + xfer time ###
+    up_gb_per_sec = up_rate/8.0/1000.0
+    xfer_up_time = num_jobs*(in_gb/up_gb_per_sec)
+
+    # Get the number of jobs ran through n-1 iterations
+    num_jobs_n1 = ((num_iter-1)*num_nodes*jobs_per)
+    # Calculate how long it takes to transfer down all of the jobs
+    # *This is modeled as happening as the jobs finish during the full run
+    xfer_s3_time_n1 = num_jobs_n1*(out_gb/upl_to_s3_gbps)
+    exec_time_n1 = exec_time - first_iter_time
+    residual_jobs = num_jobs - num_jobs_n1
+
+    # End of download of master node
+    master_up_time = xfer_up_time + \
+                     first_iter_time + \
+                     np.max([exec_time_n1, xfer_s3_time_n1]) + \
+                     residual_jobs*(out_gb/upl_to_s3_gbps)
+
+    # Get total transfer down time
+    xfer_s3_time = xfer_s3_time_n1 + residual_jobs*(out_gb/upl_to_s3_gbps)
+
+    ### Get EBS storage costs ###
+    ebs_ssd = get_ec2_costs(av_zone, 'ssd')
+    ebs_nfs_gb = in_gb*num_jobs + num_nodes*nodes_per*out_gb
+
+    # Get GB-months
+    master_gb_months = (ebs_nfs_gb+cpac_ami_gb)*\
+                       (3600.0*np.ceil(master_up_time/3600.0)/secs_per_avg_month)
+    nodes_gb_months = num_nodes*cpac_ami_gb*\
+                      (3600.0*np.ceil(run_time/3600.0)/secs_per_avg_month)
+    storage_cost = ebs_ssd*(master_gb_months + nodes_gb_months)
+####
+    # Return pricing for each storage, transfer, and requests
+    # Assuming in_gb and out_gb stored on S3 for month
+    stor_price = s3_stor[region]*(in_gb+out_gb)
+    xfer_price = s3_xfer_out[region]*(out_gb)
+    req_price = s3_reqs[region]['put']*(num_jobs/1000.0) + \
+                s3_reqs[region]['get']*((out_ratio*num_jobs)/10000.0)
+
+    # Sum of storage, transfer, and requests
+    s3_price = stor_price + xfer_price + req_price
+    
+    # How many input/output files get generated per job
+    # Assume ~2 for input
+    in_ratio = 2
+    # Assume ~50 for outupt
+    out_ratio = 50
+###
+    ### Get computation costs ###
+    # Add in master node costs - asssumed to be on-demand, t2.small
+    master_on_demand = get_ec2_costs(av_zone, 'master')
+    master_cost = master_on_demand*np.ceil(master_up_time/3600.0)
+    # Get cumulative cost for running N nodes per iteration
+    nodes_cost = node_cost*num_nodes
+    # Sum master and slave nodes for total computation cost
+    instance_cost = master_cost + nodes_cost
+
+    ### Data transfer costs ###
+    s3_xfer_out = get_s3_costs(av_zone, 'xfer')
+    xfer_cost = ec2_xfer_out*(num_jobs*out_gb_dl)
+
+    ### Total cost ###
+    total_cost = instance_cost + storage_cost + xfer_cost
+    ### Total time ###
+    total_time = master_up_time
+
+    # Return data frame entries
+    return total_cost, instance_cost, storage_cost, xfer_cost, \
+           total_time, run_time, wait_time, \
+           xfer_up_time, xfer_down_time
+
+
+# Calculate costs with the EBS model
+def calc_ebs_model_costs(run_time, wait_time, node_cost, first_iter_time,
                          num_jobs, num_nodes, jobs_per, av_zone,
                          in_gb, out_gb, out_gb_dl, up_rate, down_rate):
     '''
     Function to take results from the simulate_market function and
     calculate total costs and runtimes with data transfer and storage
-    included
+    included for the EBS/EC2 storage model
 
     Parameters
     ----------
@@ -295,7 +443,7 @@ def get_ec2_costs(av_zone, cost_type):
 
 
 # Lookup tables for pricing for EBS
-def get_s3_costs(av_zone, in_gb, out_gb, num_jobs):
+def get_s3_costs(av_zone, cost_type):
     '''
     Data transfer to S3 from anywhere is free (all regions)
     Data transfer from S3 to EC2 in same region is free (all regions)
@@ -304,13 +452,11 @@ def get_s3_costs(av_zone, in_gb, out_gb, num_jobs):
     ----------
     av_zone : string
         the availability zone to get the pricing info for
-    in_gb : float
-        the amount of gigabytes to upload to S3
-    out_gb : float
-        the amount of gigabytes to upload to S3
-    num_jobs : integer
-        the number of jobs that will be used to gauge how many S3
-        requests that are made to return an accurate price
+    cost_type : string
+        the type of cost to extract, supported types include:
+        'stor' - S3 standard storage per-GB-month
+        'xfer' - download from S3 transfer costs
+        'req' - bucket key requests cost
 
     Returns
     -------
@@ -324,12 +470,6 @@ def get_s3_costs(av_zone, in_gb, out_gb, num_jobs):
 
     # Init variables
     region = av_zone[:-1]
-
-    # How many input/output files get generated per job
-    # Assume ~2 for input
-    in_ratio = 2
-    # Assume ~50 for outupt
-    out_ratio = 50
 
     # S3 standard storage (up to 1TB/month), units of $/GB-month
     s3_stor = {'us-east-1' : 0.03,
@@ -366,18 +506,19 @@ def get_s3_costs(av_zone, in_gb, out_gb, num_jobs):
                'ap-northeast-1' : {'put' : 0.0047, 'get' : 0.0037},
                'sa-east-1' : {'put' : 0.007, 'get' : 0.0056}}
 
-    # Return pricing for each storage, transfer, and requests
-    # Assuming in_gb and out_gb stored on S3 for month
-    stor_price = s3_stor[region]*(in_gb+out_gb)
-    xfer_price = s3_xfer_out[region]*(out_gb)
-    req_price = s3_reqs[region]['put']*(num_jobs/1000.0) + \
-                s3_reqs[region]['get']*((out_ratio*num_jobs)/10000.0)
+    # Select costs type
+    if cost_type == 'stor':
+        s3_cost = s3_stor[region]
+    elif cost_type == 'xfer':
+        s3_cost = s3_xfer_out[region]
+    elif cost_type == 'req':
+        s3_cost = s3_reqs[region]
+    else:
+        err_msg = 'cost_type argument does not support %s' % cost_type
+        raise Exception(err_msg)
 
-    # Sum of storage, transfer, and requests
-    s3_price = stor_price + xfer_price + req_price
-
-    # Return s3 costs
-    return s3_price
+    # Return the ec2 cost
+    return s3_cost
 
 
 # Find how often a number of jobs fails and its total cost
@@ -770,9 +911,10 @@ def main(sim_dir, proc_time, num_jobs, jobs_per, in_gb, out_gb, out_gb_dl,
         total_cost, instance_cost, stor_cost, xfer_cost, \
         total_time, run_time, wait_time, \
         xfer_up_time, xfer_down_time = \
-                calc_full_time_costs(run_time, wait_time, pernode_cost, first_iter_time,
-                                     num_jobs, num_nodes, jobs_per, av_zone,
-                                     in_gb, out_gb, out_gb_dl, up_rate, down_rate)
+                calc_ebs_model_costs(run_time, wait_time, pernode_cost,
+                                     first_iter_time, num_jobs, num_nodes,
+                                     jobs_per, av_zone, in_gb, out_gb,
+                                     out_gb_dl, up_rate, down_rate)
 
         # Add to output dataframe
         stat_df.loc[sim_idx] = [total_cost, instance_cost, stor_cost, xfer_cost,
