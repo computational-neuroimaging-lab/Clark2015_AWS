@@ -238,7 +238,10 @@ def run_in_parallel(proc_list, num_cores):
                     print 'found dead job', job
                     loc = job_queue.index(job)
                     del job_queue[loc]
-                    proc_list[idx].start()
+                    if idx < len(proc_list):
+                        proc_list[idx].start()
+                    else:
+                        break
                     job_queue.append(proc_list[idx])
                     idx += 1
             time.sleep(2)

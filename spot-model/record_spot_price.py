@@ -55,7 +55,7 @@ def return_sh_df(start_time, instance_type, product, av_zone):
 
     # Init variables
     df_cols = ['Instance type', 'Product', 'Region', 'Availability zone',
-               'Price', 'Timestamp']
+               'Spot price', 'Timestamp']
     new_df = pd.DataFrame(columns=df_cols)
 
     # Get spot history
@@ -138,7 +138,7 @@ def return_spot_history(start_time, instance_type, product, av_zone):
             sh_log.info('Found no spot history in %s, moving on...' % av_zone)
 
         # Check if list is still returning 1000 objects
-        if len(sh_list) < 1000:
+        if len(sh_list) != 1000:
             token_flg = False
 
     # Return full spot history list
@@ -176,8 +176,44 @@ def return_av_zones(region):
     return av_zones
 
 
+# Function to get the spot_history and save to csv dataframe
+def get_df_and_save(start_time, instance_type, product, region, av_zone, out_dir):
+    '''
+    '''
+
+    # Import packages
+    import datetime
+    import logging
+    import os
+
+    # Init variables
+    now_date = datetime.datetime.now()
+    log_month = now_date.strftime('%m-%Y')
+
+    # Get logger
+    sh_log = logging.getLogger('sh_log')
+
+    # Check to see if folder needs to be created
+    out_csv = os.path.join(out_dir, log_month, str(region.name),
+                           product.replace('/', '-'),
+                           instance_type + '.csv')
+    if os.path.exists(out_csv):
+        sh_log.info('%s already exists, skipping...' % out_csv)
+        return
+
+    csv_dir = os.path.dirname(out_csv)
+    if not os.path.exists(csv_dir):
+        os.makedirs(csv_dir)
+
+    # Grab the spot history
+    df = return_sh_df(None, instance_type, product, av_zone)
+
+    # Save the dataframe
+    df.to_csv(out_csv)
+
+
 # Main routine
-def main(out_dir):
+def main(out_dir, num_cores):
     '''
     Function to fetch the latest spot history from AWS and store in a
     dataframe saved to a local csv file for every availability zone
@@ -186,6 +222,8 @@ def main(out_dir):
     ----------
     out_dir : string
         base file directory to store the spot history dataframes
+    num_cores: integer
+        number of cores to use
     '''
 
     # Import packages
@@ -194,9 +232,15 @@ def main(out_dir):
     import logging
     import os
     import pandas as pd
+    from multiprocessing import Process
 
     # Import local packages
     import utils
+
+    # Init variables
+    proc_list = []
+    out_csvs = []
+    df_list = []
 
     # Set up logger
     now_date = datetime.datetime.now()
@@ -230,30 +274,33 @@ def main(out_dir):
         for av_idx, av_zone in enumerate(av_zones):
             # For each instance_type-product combination
             for ip_idx, (instance_type, product) in enumerate(instance_products):
-                # Grab the spot history
-                df = return_sh_df(None, instance_type, product, av_zone)
+                proc = Process(target=get_df_and_save,
+                               args=(None, instance_type, product, region, av_zone, out_dir))
+                proc_list.append(proc)
 
-                # Create csv path
-                out_csv = os.path.join(out_dir, log_month, str(region.name),
-                                       product.replace('/', '-'),
-                                       instance_type + '.csv')
+    # Run in parallel
+    utils.run_in_parallel(proc_list, num_cores)
 
-                # Check to see if folder needs to be created
-                csv_dir = os.path.dirname(out_csv)
-                if not os.path.exists(csv_dir):
-                    os.makedirs(csv_dir)
+    # Gather files to merge into one dataframe
+    sh_log.info('Done fetching and saving histories.\nGathering for merge...')
+    for root, dirs, files in os.walk(out_dir):
+        if files:
+            found_csvs = [os.path.join(root, f) for f in files \
+                          if f.endswith('csv')]
+            out_csvs.extend(found_csvs)
 
-                # Save the dataframe
-                df.to_csv(out_csv)
+    # Create data frame list
+    for csv in out_csvs:
+        df_list.append(pd.DataFrame.from_csv(csv))
 
-                # Log instance type finished
-                sh_log.info('%d/%d instance-products completed' % (ip_idx+1, ip_len))
+    # Merge dataframes
+    sh_log.info('Merging dataframe list...')
+    big_df = pd.concat(df_list, ignore_index=True)
 
-            # Log instance type finished
-            sh_log.info('%d/%d availability zones completed' % (av_idx+1, av_len))
-
-        # Print region complete
-        sh_log.info('%d/%d regions completed' % (reg_idx+1, reg_len))
+    # Save to disk
+    big_csv = os.path.join(out_dir, 'spot_history_%s.csv' % log_month)
+    sh_log.info('Saving data frame to disk as %s' % big_csv)
+    big_df.to_csv(big_csv)
 
 
 # Make script executable
@@ -269,13 +316,15 @@ if __name__ == '__main__':
     parser.add_argument('-o', '--out_dir', nargs=1, required=True,
                         type=str, help='Base directory to store spot '\
                         'history data frames')
+    parser.add_argument('-n', '--num_cores', nargs=1, required=True,
+                        type=int, help='Number of cores to run in parallel')
 
     # Parse arguments
     args = parser.parse_args()
 
     # Init variables
-    # Pipeline config params
     out_dir = args.out_dir[0]
+    num_cores = args.num_cores[0]
 
     # Run main routine
-    main(out_dir)
+    main(out_dir, num_cores)
