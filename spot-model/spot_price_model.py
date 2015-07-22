@@ -566,7 +566,7 @@ def spothistory_from_dataframe(csv_file, instance_type, product, av_zone):
     df_subset = data_frame[df_bool]
 
     # Get spot histories from data frame with str timestamps
-    spot_history = df_subset.set_index('Timestamp')['Price']
+    spot_history = df_subset.set_index('Timestamp')['Spot price']
     spot_history = spot_history.sort_index()
 
     # Get new histories with datetime timestamps
