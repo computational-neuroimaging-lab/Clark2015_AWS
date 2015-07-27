@@ -78,6 +78,7 @@ def calc_s3_model_costs(run_time, wait_time, node_cost, first_iter_time,
     cpac_ami_gb = 30
     secs_per_avg_month = (365/12.0)*24*3600
     num_iter = np.ceil(num_jobs/float((jobs_per*num_nodes)))
+    region = av_zone[:-1]
     # Upload speed from instance to S3 (mbps/8 bits/1000 MB in 1 GB)
     upl_to_s3_gbps = 100/8.0/1000.0
 
@@ -90,48 +91,60 @@ def calc_s3_model_costs(run_time, wait_time, node_cost, first_iter_time,
 
     # Get the number of jobs ran through n-1 iterations
     num_jobs_n1 = ((num_iter-1)*num_nodes*jobs_per)
-    # Calculate how long it takes to transfer down all of the jobs
+    # Calculate how long it takes to transfer up all of the output data
     # *This is modeled as happening as the jobs finish during the full run
+    # Sequential uploads at full bandwidth
+    # (could be simultaneous uploads at 1/jobs_per bandwidth - same upl time)
     xfer_s3_time_n1 = num_jobs_n1*(out_gb/upl_to_s3_gbps)
     exec_time_n1 = exec_time - first_iter_time
     residual_jobs = num_jobs - num_jobs_n1
 
-    # End of download of master node
+    # End of upload of master node
+    # 1) Transfer data up
+    # 2) First iteration of running
+    # 3) Rest of iteration runtimes, or all but last iteration's upload times..
+    # ....whichever is greater
+    # 4) Last iteration's (residual) upload times
     master_up_time = xfer_up_time + \
                      first_iter_time + \
                      np.max([exec_time_n1, xfer_s3_time_n1]) + \
                      residual_jobs*(out_gb/upl_to_s3_gbps)
 
-    # Get total transfer down time
-    xfer_s3_time = xfer_s3_time_n1 + residual_jobs*(out_gb/upl_to_s3_gbps)
+    # Get total transfer up time
+    s3_xfer_time = xfer_s3_time_n1 + residual_jobs*(out_gb/upl_to_s3_gbps)
 
     ### Get EBS storage costs ###
     ebs_ssd = get_ec2_costs(av_zone, 'ssd')
+    # EBS should only need to hold per-iteration jobs (rm complete as they go)
     ebs_nfs_gb = in_gb*num_jobs + num_nodes*nodes_per*out_gb
-
     # Get GB-months
     master_gb_months = (ebs_nfs_gb+cpac_ami_gb)*\
                        (3600.0*np.ceil(master_up_time/3600.0)/secs_per_avg_month)
     nodes_gb_months = num_nodes*cpac_ami_gb*\
                       (3600.0*np.ceil(run_time/3600.0)/secs_per_avg_month)
-    storage_cost = ebs_ssd*(master_gb_months + nodes_gb_months)
-####
-    # Return pricing for each storage, transfer, and requests
-    # Assuming in_gb and out_gb stored on S3 for month
-    stor_price = s3_stor[region]*(in_gb+out_gb)
-    xfer_price = s3_xfer_out[region]*(out_gb)
-    req_price = s3_reqs[region]['put']*(num_jobs/1000.0) + \
-                s3_reqs[region]['get']*((out_ratio*num_jobs)/10000.0)
+    ebs_storage_cost = ebs_ssd*(master_gb_months + nodes_gb_months)
 
-    # Sum of storage, transfer, and requests
-    s3_price = stor_price + xfer_price + req_price
-    
+    ### Get S3 storage/xfer/requests costs ###
+    # Return pricing for each storage, transfer, and requests
+    # Assuming out_gb stored on S3 for month, up to 1TB/month price
+    # S3 storage
+    stor_gb_month = get_s3_costs(region, 'stor')
+    s3_storage_cost = stor_price*(num_jobs*out_gb)
+    # S3 download requests
     # How many input/output files get generated per job
     # Assume ~2 for input
     in_ratio = 2
     # Assume ~50 for outupt
     out_ratio = 50
-###
+    req_prices = get_s3_costs(region, 'req')
+    s3_req_cost = req_prices['get']*((out_ratio*num_jobs)/10000.0)
+    # S3 download transfer
+    xfer_per_gb = get_s3_costs(region, 'xfer')
+    s3_xfer_cost = xfer_per_gb*(num_jobs*out_gb)
+
+    # Sum of storage, transfer, and requests
+    s3_cost = s3_storage_cost + s3_req_cost + s3_xfer_cost
+
     ### Get computation costs ###
     # Add in master node costs - asssumed to be on-demand, t2.small
     master_on_demand = get_ec2_costs(av_zone, 'master')
@@ -141,19 +154,18 @@ def calc_s3_model_costs(run_time, wait_time, node_cost, first_iter_time,
     # Sum master and slave nodes for total computation cost
     instance_cost = master_cost + nodes_cost
 
-    ### Data transfer costs ###
-    s3_xfer_out = get_s3_costs(av_zone, 'xfer')
-    xfer_cost = ec2_xfer_out*(num_jobs*out_gb_dl)
+    ### Data transfer in costs are free ###
 
     ### Total cost ###
-    total_cost = instance_cost + storage_cost + xfer_cost
+    total_cost = instance_cost + ebs_storage_cost + s3_cost
     ### Total time ###
     total_time = master_up_time
 
     # Return data frame entries
-    return total_cost, instance_cost, storage_cost, xfer_cost, \
+    return total_cost, instance_cost, ebs_storage_cost, s3_cost, \
+           s3_storage_cost, s3_req_cost, s3_xfer_cost, \
            total_time, run_time, wait_time, \
-           xfer_up_time, xfer_down_time
+           xfer_up_time, s3_xfer_time
 
 
 # Calculate costs with the EBS model
