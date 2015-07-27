@@ -10,10 +10,23 @@ this folder or package
 # Apply simulation dataframe
 def apply_cost_model(sim_df_row):
     '''
+    Apply cost model to the simulation results dataframe by row
+
+    Parameters
+    ----------
+    sim_df_row : pandas.Series
+        dataframe row from AWS simulation result dataframe
+
+    Returns
+    -------
+    stat_series : pandas.Series
+        dataframe series with the configuration, simulation run, and
+        costs
     '''
 
     # Import packages
     import numpy as np
+    import pandas as pd
     import spot_price_model
 
     # Init variables
@@ -37,6 +50,45 @@ def apply_cost_model(sim_df_row):
         calc_s3_model_costs(run_time, wait_time, node_cost, first_iter_time,
                              num_jobs, num_nodes, jobs_per, av_zone,
                              in_gb, out_gb, up_rate, down_rate)
+
+    # Create dictionary
+    stat_dict = {'start_time' : sim_df_row['start_time'],
+                 'proc_time' : sim_df_row['proc_time'],
+                 'num_datasets' : num_jobs,
+                 'jobs_per_node' : jobs_per,
+                 'num_jobs_iter' : sim_df_row['num_jobs_iter'],
+                 'bid_ratio' : sim_df_row['bid_ratio'],
+                 'bid_price' : sim_df_row['bid_price'],
+                 'median_history' : sim_df_row['median_history'],
+                 'mean_history' : sim_df_row['mean_history'],
+                 'stdev_history' : sim_df_row['stdev_history'],
+                 'run_time' : run_time,
+                 'wait_time' : wait_time,
+                 'per_node_cost' : node_cost,
+                 'num_interrupts' : sim_df_row['num_interrupts'],
+                 'first_iter_time' : first_iter_time,
+                 'num_nodes' : num_nodes,
+                 'av_zone' : av_zone,
+                 'in_gb' : in_gb,
+                 'up_rate' : up_rate,
+                 'down_rate' : down_rate,
+                 # S3 model costs
+                 'total_cost' : total_cost,
+                 'instance_cost' : instance_cost,
+                 'ebs_storage_cost' : ebs_storage_cost,
+                 's3_cost' : s3_cost,
+                 's3_storage_cost' : s3_storage_cost,
+                 's3_req_cost' : s3_req_cost,
+                 's3_xfer_cost' : s3_xfer_cost,
+                 'total_time' : total_time,
+                 'xfer_up_time' : xfer_up_time,
+                 's3_xfer_time' : s3_xfer_time}
+
+    # Convert dict to pandas Series
+    stat_series = pd.Series(stat_dict)
+
+    # Return new dataframe row
+    return stat_series
 
 
 # Add comfig columns to simulation dataframe
