@@ -824,7 +824,7 @@ def main(sim_dir, proc_time, num_jobs, jobs_per, in_gb, out_gb, out_gb_dl,
         y_file.write(yaml.dump(params))
 
     # Give simulation-wide statistics
-    interrupt_avg = sim_df['Interrupts'].mean()
+    interrupt_avg = sim_df['num_interrupts'].mean()
     time_avg = stat_df['Total time'].mean()
     cost_avg = stat_df['Total cost'].mean()
 
