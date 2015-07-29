@@ -78,7 +78,6 @@ def calc_s3_model_costs(run_time, wait_time, node_cost, first_iter_time,
     cpac_ami_gb = 30
     secs_per_avg_month = (365/12.0)*24*3600
     num_iter = np.ceil(num_jobs/float((jobs_per*num_nodes)))
-    region = av_zone[:-1]
     # Upload speed from instance to S3 (mbps/8 bits/1000 MB in 1 GB)
     upl_to_s3_gbps = 100/8.0/1000.0
 
@@ -116,7 +115,7 @@ def calc_s3_model_costs(run_time, wait_time, node_cost, first_iter_time,
     ### Get EBS storage costs ###
     ebs_ssd = get_ec2_costs(av_zone, 'ssd')
     # EBS should only need to hold per-iteration jobs (rm complete as they go)
-    ebs_nfs_gb = in_gb*num_jobs + num_nodes*nodes_per*out_gb
+    ebs_nfs_gb = in_gb*num_jobs + num_nodes*jobs_per*out_gb
     # Get GB-months
     master_gb_months = (ebs_nfs_gb+cpac_ami_gb)*\
                        (3600.0*np.ceil(master_up_time/3600.0)/secs_per_avg_month)
@@ -128,18 +127,18 @@ def calc_s3_model_costs(run_time, wait_time, node_cost, first_iter_time,
     # Return pricing for each storage, transfer, and requests
     # Assuming out_gb stored on S3 for month, up to 1TB/month price
     # S3 storage
-    stor_gb_month = get_s3_costs(region, 'stor')
-    s3_storage_cost = stor_price*(num_jobs*out_gb)
+    stor_gb_month = get_s3_costs(av_zone, 'stor')
+    s3_storage_cost = stor_gb_month*(num_jobs*out_gb)
     # S3 download requests
     # How many input/output files get generated per job
     # Assume ~2 for input
     in_ratio = 2
     # Assume ~50 for outupt
     out_ratio = 50
-    req_prices = get_s3_costs(region, 'req')
+    req_prices = get_s3_costs(av_zone, 'req')
     s3_req_cost = req_prices['get']*((out_ratio*num_jobs)/10000.0)
     # S3 download transfer
-    xfer_per_gb = get_s3_costs(region, 'xfer')
+    xfer_per_gb = get_s3_costs(av_zone, 'xfer')
     s3_xfer_cost = xfer_per_gb*(num_jobs*out_gb)
 
     # Sum of storage, transfer, and requests

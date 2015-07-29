@@ -27,7 +27,7 @@ def apply_cost_model(sim_df_row):
     # Import packages
     import numpy as np
     import pandas as pd
-    import spot_price_model
+    from spot_price_model import calc_s3_model_costs
 
     # Init variables
     run_time = sim_df_row['compute_time']
@@ -39,6 +39,7 @@ def apply_cost_model(sim_df_row):
     num_nodes = min(np.ceil(float(num_jobs)/jobs_per), 20)
     av_zone = sim_df_row['av_zone']
     in_gb = sim_df_row['in_gb']
+    out_gb = sim_df_row['out_gb']
     up_rate = sim_df_row['up_rate']
     down_rate = sim_df_row['down_rate']
 
