@@ -1,0 +1,37 @@
+---
+title: "AWSome simulation plots"
+author: "cameron and danny"
+date: "07/06/2015"
+output: pdf_document
+---
+
+Results for AWS simulations. Ideal plots are based on a static model in
+which the price does not fluctuate over time. Simulation results use 
+historical spot price information to run monte-carlo simulations to 
+estimate how long and how expensive the runs would be if they were
+run at that point in time. Models are based on the execution of a few
+different processing pipelines:
+
+1 The Configurable Pipeline for the Analysis of Connectomes (C-PAC) pipeline which performs basic structural processing along with functional-connectomics style fMRI processing.
+2 The freesurfer pipeline for extracting cortical thickness and other indices of anatomy from structural MRI data.
+
+The pipelines are executed on a SGE style cluster with a single master node and up to 20 compute "worker" nodes. The master node is a t2.small
+on-demand instance with local data storage to support the execution of 
+all other nodes. 
+
+```{r}
+
+library(ggplot2)
+library(reshape)
+summary(cars)
+
+
+```
+
+You can also embed plots, for example:
+
+```{r, echo=FALSE}
+plot(cars)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
