@@ -9,9 +9,9 @@ library(reshape2)
 library(grid)
 
 # Init variables
-cpac_csv <- '/home/dclark/Documents/projects/Clark2015_AWS/spot-model/sim-outs/cpac_df.csv'
-ants_csv <- '/home/dclark/Documents/projects/Clark2015_AWS/spot-model/sim-outs/ants_df.csv'
-fs_csv <- '/home/dclark/Documents/projects/Clark2015_AWS/spot-model/sim-outs/fs_df.csv'
+cpac_csv <- '/home/dclark/Documents/data/aws/sim_results_merged/cpac_df.csv'
+ants_csv <- '/home/dclark/Documents/data/aws/sim_results_merged/ants_df.csv'
+fs_csv <- '/home/dclark/Documents/data/aws/sim_results_merged/fs_df.csv'
 
 # Sim plots fixed variables
 bid_ratio <- 2.5
