@@ -1,4 +1,4 @@
-# spot_sim_plots.R
+# spot-model/spot_sim_plots.R
 #
 # Author: Daniel Clark, 2015
 
@@ -155,8 +155,8 @@ costs_df_plots <- function(df, max_num, costs_compare){
             legend.text = element_text(size=10))
 
     # Add percentages (optional)
-#     p0_perc <- p0_format + geom_text(data=subset(costs_maxnum, Num.datasets >= 7000),
-#                                      aes(x=factor(Num.datasets), y=pos, label=label), size=2)
+    #  p0_perc <- p0_format + geom_text(data=subset(costs_maxnum, Num.datasets >= 7000),
+    #                                   aes(x=factor(Num.datasets), y=pos, label=label), size=2)
 
     # Add other line over the top (this isnt working, verrry hard to figure out)
     p0_withline <- p0_format + geom_line(data=costs_compare, aes(x=as.numeric(factor(num_datasets)), y=cap_costs))
@@ -219,10 +219,10 @@ times_df_plots <- function(df, max_num, times_compare){
           legend.text = element_text(size=10))
 
     # Add percentages (optional)
-#     p0_perc <- p0_format +
-#                geom_text(data=subset(times_maxnum, Num.datasets >=2000),
-#                          aes(x=factor(Num.datasets), label=label, y=pos/60), position=position_dodge(width=1),
-#                          size=3)
+    #  p0_perc <- p0_format +
+    #             geom_text(data=subset(times_maxnum, Num.datasets >=2000),
+    #                       aes(x=factor(Num.datasets), label=label, y=pos/60), position=position_dodge(width=1),
+    #                       size=3)
 
     # Add trendline
     p0_withline <- p0_format + geom_line(data=times_compare, aes(x=as.numeric(factor(num_datasets)), y=cap_time))
