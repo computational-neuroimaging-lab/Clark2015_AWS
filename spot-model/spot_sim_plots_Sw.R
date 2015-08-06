@@ -8,11 +8,6 @@ library(gridExtra)
 library(plyr)
 library(reshape2)
 
-# Init variables
-df_csv <- '~/data/aws/sim_results_merged/03-15_07-10-2015/cpac/merged_raw_sims-s3_costs.csv'
-agg_csv <- 'cpac_df_agg.csv'
-avg_type <- 'mean'
-
 # Create aggregated dataframe
 aggregate_df <- function(full_df, func_name) {
 
@@ -38,11 +33,11 @@ aggregate_df <- function(full_df, func_name) {
   }
 
   # Rename regions
-  #df_agg$region[grep("us-west",df_agg$av_zone)]="US West"
-  #df_agg$region[grep("us-east",df_agg$av_zone)]="US East"
-  #df_agg$region[grep("ap",df_agg$av_zone)]="Asia Pacific"
-  #df_agg$region[grep("eu",df_agg$av_zone)]="Europe"
-  #df_agg$region[grep("sa",df_agg$av_zone)]="S. America"
+  df_agg$region[grep("us-west",df_agg$av_zone)]="US West"
+  df_agg$region[grep("us-east",df_agg$av_zone)]="US East"
+  df_agg$region[grep("ap",df_agg$av_zone)]="Asia Pacific"
+  df_agg$region[grep("eu",df_agg$av_zone)]="Europe"
+  df_agg$region[grep("sa",df_agg$av_zone)]="S. America"
   #df_agg$region=factor(df_agg$region)
 
   # Return the aggregated dataframe
@@ -50,15 +45,48 @@ aggregate_df <- function(full_df, func_name) {
 }
 
 
+# Populate regions with name formatted
+format_region <- function(data_frame) {
+  data_frame$region[grep("us-west",data_frame$av_zone)]="US West"
+  data_frame$region[grep("us-east",data_frame$av_zone)]="US East"
+  data_frame$region[grep("ap",data_frame$av_zone)]="Asia Pacific"
+  data_frame$region[grep("eu",data_frame$av_zone)]="Europe"
+  data_frame$region[grep("sa",data_frame$av_zone)]="S. America"
+  #data_frame$region=factor(data_frame$region)
+  
+  return(data_frame)
+}
+
+### Scatter of simulation versus static models ###
+# Init variables
+stat_sim_csv <- '~/data/aws/sim_results_merged/03-15_07-10-2015/cpac/mean_static_vs_mean_sim.csv'
+
+# Load in stat vs sim dataframe
+stat_sim_df <- read.csv(stat_sim_csv)
+stat_sim_df$region <- 'to-fill'
+region_stat_sim <- format_region(stat_sim_df)
+
+# Plot
+stat_vs_sim <- ggplot(region_stat_sim, aes(x=avg_total_cost, y=total_cost, color=factor(region), size=factor(num_datasets))) +
+               labs(x='Avg simulation total cost ($)', y='Static model total cost ($)') + geom_point()
+
+plot(stat_vs_sim)
+               
+### Mean cost and time vs bid ratio and num datasets ###
+# Init variables
+df_csv <- '~/data/aws/sim_results_merged/03-15_07-10-2015/cpac/merged_raw_sims-s3_costs.csv'
+agg_csv <- 'cpac_df_agg.csv'
+avg_type <- 'mean'
+
 # Load in dataframe if it exists
 if (!file.exists(agg_csv)) {
   # Read in csv if need be
   if (!exists('full_df')) {
     full_df <- read.csv(df_csv)
   }
-    agg_df <- aggregate_df(full_df, avg_type)
+  agg_df <- aggregate_df(full_df, avg_type)
 } else {
-    agg_df <- read.csv(agg_csv)
+  agg_df <- read.csv(agg_csv)
 }
 
 # Cost vs. Bid ratio
