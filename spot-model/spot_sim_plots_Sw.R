@@ -9,7 +9,7 @@ library(plyr)
 library(reshape2)
 
 # Init variables
-df_csv <- '~/data/aws/sim_results_merged/03-15_07-10-2015/cpac/merged_raw_sims-s3_costs1.csv'
+df_csv <- '~/data/aws/sim_results_merged/03-15_07-10-2015/cpac/merged_raw_sims-s3_costs.csv'
 agg_csv <- 'cpac_df_agg.csv'
 avg_type <- 'mean'
 
@@ -38,12 +38,12 @@ aggregate_df <- function(full_df, func_name) {
   }
 
   # Rename regions
-  df_agg$region[grep("us-west",df_agg$av_zone)]="US West"
-  df_agg$region[grep("us-east",df_agg$av_zone)]="US East"
-  df_agg$region[grep("ap",df_agg$av_zone)]="Asia Pacific"
-  df_agg$region[grep("eu",df_agg$av_zone)]="Europe"
-  df_agg$region[grep("sa",df_agg$av_zone)]="S. America"
-  df_agg$region=factor(df_agg$region)
+  #df_agg$region[grep("us-west",df_agg$av_zone)]="US West"
+  #df_agg$region[grep("us-east",df_agg$av_zone)]="US East"
+  #df_agg$region[grep("ap",df_agg$av_zone)]="Asia Pacific"
+  #df_agg$region[grep("eu",df_agg$av_zone)]="Europe"
+  #df_agg$region[grep("sa",df_agg$av_zone)]="S. America"
+  #df_agg$region=factor(df_agg$region)
 
   # Return the aggregated dataframe
   return(df_agg)
