@@ -59,7 +59,7 @@ format_region <- function(data_frame) {
 
 ### Scatter of simulation versus static models ###
 # Init variables
-stat_sim_csv <- '~/data/aws/sim_results_merged/03-15_07-10-2015/cpac/mean_static_vs_mean_sim.csv'
+stat_sim_csv <- '~/data/aws/sim_results_merged/03-15_07-10-2015/cpac/median_static_vs_median_sim.csv'
 
 # Load in stat vs sim dataframe
 stat_sim_df <- read.csv(stat_sim_csv)
@@ -67,10 +67,14 @@ stat_sim_df$region <- 'to-fill'
 region_stat_sim <- format_region(stat_sim_df)
 
 # Plot
-stat_vs_sim <- ggplot(region_stat_sim, aes(x=avg_total_cost, y=total_cost, color=factor(region), size=factor(num_datasets))) +
-               labs(x='Avg simulation total cost ($)', y='Static model total cost ($)') + geom_point()
+stat_vs_sim_cost <- ggplot(region_stat_sim, aes(x=total_cost, y=avg_total_cost, color=factor(region), size=factor(num_datasets))) +
+                    labs(x='Static model total cost ($)', y='Avg simulation total cost ($)') + geom_point()
 
-plot(stat_vs_sim)
+stat_vs_sim_time <- ggplot(region_stat_sim, aes(x=total_time/3600, y=avg_total_time/3600, color=factor(region), size=factor(num_datasets))) +
+  labs(x='Static model total time (hrs)', y='Avg simulation total time (hrs)') + geom_point()
+
+plot(stat_vs_sim_cost)
+plot(stat_vs_sim_time)
                
 ### Mean cost and time vs bid ratio and num datasets ###
 # Init variables
