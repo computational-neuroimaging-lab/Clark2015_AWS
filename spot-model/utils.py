@@ -47,7 +47,7 @@ def apply_cost_model(sim_df_row):
     total_cost, instance_cost, ebs_storage_cost, s3_cost, \
     s3_storage_cost, s3_req_cost, s3_xfer_cost, \
     total_time, run_time, wait_time, \
-    xfer_up_time, s3_xfer_time = \
+    xfer_up_time, s3_upl_time, s3_download_time = \
         calc_s3_model_costs(run_time, wait_time, node_cost, first_iter_time,
                              num_jobs, num_nodes, jobs_per, av_zone,
                              in_gb, out_gb, up_rate, down_rate)
@@ -83,7 +83,8 @@ def apply_cost_model(sim_df_row):
                  's3_xfer_cost' : s3_xfer_cost,
                  'total_time' : total_time,
                  'xfer_up_time' : xfer_up_time,
-                 's3_xfer_time' : s3_xfer_time}
+                 's3_upl_time' : s3_upl_time,
+                 's3_download_time' : s3_download_time}
 
     # Convert dict to pandas Series
     stat_series = pd.Series(stat_dict)

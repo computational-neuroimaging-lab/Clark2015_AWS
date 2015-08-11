@@ -94,7 +94,7 @@ def calc_s3_model_costs(run_time, wait_time, node_cost, first_iter_time,
     # *This is modeled as happening as the jobs finish during the full run
     # Sequential uploads at full bandwidth
     # (could be simultaneous uploads at 1/jobs_per bandwidth - same upl time)
-    xfer_s3_time_n1 = num_jobs_n1*(out_gb/upl_to_s3_gbps)
+    s3_upl_time_n1 = num_jobs_n1*(out_gb/upl_to_s3_gbps)
     exec_time_n1 = exec_time - first_iter_time
     residual_jobs = num_jobs - num_jobs_n1
 
@@ -106,11 +106,11 @@ def calc_s3_model_costs(run_time, wait_time, node_cost, first_iter_time,
     # 4) Last iteration's (residual) upload times
     master_up_time = xfer_up_time + \
                      first_iter_time + \
-                     np.max([exec_time_n1, xfer_s3_time_n1]) + \
+                     np.max([exec_time_n1, s3_upl_time_n1]) + \
                      residual_jobs*(out_gb/upl_to_s3_gbps)
 
     # Get total transfer up time
-    s3_xfer_time = xfer_s3_time_n1 + residual_jobs*(out_gb/upl_to_s3_gbps)
+    s3_upl_time = s3_upl_time_n1 + residual_jobs*(out_gb/upl_to_s3_gbps)
 
     ### Get EBS storage costs ###
     ebs_ssd = get_ec2_costs(av_zone, 'ssd')
@@ -128,7 +128,11 @@ def calc_s3_model_costs(run_time, wait_time, node_cost, first_iter_time,
     # Assuming out_gb stored on S3 for month, up to 1TB/month price
     # S3 storage
     stor_gb_month = get_s3_costs(av_zone, 'stor')
-    s3_storage_cost = stor_gb_month*(num_jobs*out_gb)
+    down_gb_per_sec = down_rate/8.0/1000.0
+    secs_to_download_s3 = (num_jobs*out_gb)/down_gb_per_sec
+    s3_storage_cost = stor_gb_month*\
+                      (secs_to_download_s3/secs_per_avg_month)*\
+                      (num_jobs*out_gb)
     # S3 download requests
     # How many input/output files get generated per job
     # Assume ~2 for input
@@ -158,13 +162,13 @@ def calc_s3_model_costs(run_time, wait_time, node_cost, first_iter_time,
     ### Total cost ###
     total_cost = instance_cost + ebs_storage_cost + s3_cost
     ### Total time ###
-    total_time = master_up_time
+    total_time = master_up_time + secs_to_download_s3
 
     # Return data frame entries
     return total_cost, instance_cost, ebs_storage_cost, s3_cost, \
            s3_storage_cost, s3_req_cost, s3_xfer_cost, \
            total_time, run_time, wait_time, \
-           xfer_up_time, s3_xfer_time
+           xfer_up_time, s3_upl_time, secs_to_download_s3
 
 
 # Calculate costs with the EBS model
