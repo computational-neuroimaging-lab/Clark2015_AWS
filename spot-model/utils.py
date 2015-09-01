@@ -149,7 +149,10 @@ def add_config_columns(sim_df_csv, cfg_yaml, out_dir):
     # Save dataframe
     out_csv_dir = os.path.join(out_dir, av_zone)
     if not os.path.exists(out_csv_dir):
-        os.makedirs(out_csv_dir)
+        try:
+            os.makedirs(out_csv_dir)
+        except Exception as err:
+            print err
 
     new_df.to_csv(os.path.join(out_csv_dir, os.path.basename(sim_df_csv)))
 

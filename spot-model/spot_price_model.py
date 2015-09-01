@@ -951,6 +951,14 @@ def main(sim_dir, proc_time, num_jobs, jobs_per, in_gb, out_gb, out_gb_dl,
             sim_idx += 1
             utils.print_loop_status(sim_idx, sim_length)
 
+    # Add configuration parameters to dataframe
+    sim_df['av_zone'] = av_zone
+    sim_df['in_gb'] = in_gb
+    sim_df['out_gb'] = out_gb
+    sim_df['out_gb_dl'] = out_gb_dl
+    sim_df['up_rate'] = up_rate
+    sim_df['down_rate'] = down_rate
+
     # Write simulation dataframe to disk
     sim_df.to_csv(sim_csv)
 
