@@ -951,6 +951,8 @@ def main(sim_dir, proc_time, num_jobs, jobs_per, in_gb, out_gb, out_gb_dl,
             sim_idx += 1
             utils.print_loop_status(sim_idx, sim_length)
 
+    # Add config columns to dataframe
+
     # Write simulation dataframe to disk
     sim_df.to_csv(sim_csv)
 
