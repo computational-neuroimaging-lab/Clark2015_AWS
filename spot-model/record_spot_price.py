@@ -7,7 +7,7 @@ This module records the spot price from AWS EC2 continuously and saves
 the information to dataframes as a csv files to an output directory
 
 Usage:
-    python record_spot_price.py -o <output_base_directory>
+    python record_spot_price.py -o <out_dir> -n <num_cores>
 '''
 
 # Initialize categorical variables for spot price history
@@ -44,107 +44,6 @@ def init_categories():
     return instance_types, product_descriptions
 
 
-# Return the spot history dataframe for certain categories
-def return_sh_df(start_time, instance_type, product, av_zone):
-    '''
-    Function to return the spot prices and timestamps
-    '''
-
-    # Import packages
-    import pandas as pd
-
-    # Init variables
-    df_cols = ['Instance type', 'Product', 'Region', 'Availability zone',
-               'Spot price', 'Timestamp']
-    new_df = pd.DataFrame(columns=df_cols)
-
-    # Get spot history
-    sh_list = return_spot_history(start_time, instance_type, product, av_zone)
-
-    # Populate new dataframe
-    for idx, sh_record in enumerate(sh_list):
-        df_entry = [str(sh_record.instance_type),
-                    str(sh_record.product_description),
-                    str(sh_record.region.name),
-                    str(sh_record.availability_zone),
-                    sh_record.price, str(sh_record.timestamp)]
-        new_df.loc[idx] = df_entry
-
-    # Return new dataframe
-    return new_df
-
-
-# Return a list of spot price histories
-def return_spot_history(start_time, instance_type, product, av_zone):
-    '''
-    Function to return a list of SpotPriceHistory objects
-
-    Parameters
-    ----------
-    start_time : string
-        the start time of interest to begin collecting histories
-    instance_type : string
-        the type of interest to collect the histories for
-    product : string
-        the OS product platform to collect histories for
-    av_zone : string
-        the availability zone to collect histories for
-
-    Returns
-    -------
-    full_sh_list : list
-        a list of boto.ec2.spotpricechistory.SpotPriceHistory objects;
-        each object contains price, timestamp, and other information
-    '''
-
-    # Import packages
-    import boto
-    import boto.ec2
-    import logging
-
-    # Init variables
-    full_sh_list = []
-    regions = boto.ec2.regions()
-
-    # Grab region of interest and connect to ec2 in that region
-    reg_name = av_zone[:-1]
-    region = [reg for reg in regions if reg_name in reg.name][0]
-    ec2_conn = boto.connect_ec2(region=region)
-
-    # Get logger
-    sh_log = logging.getLogger('sh_log')
-
-    # While the token flag indicates to more data
-    token_flg = True
-    next_token = None
-    while token_flg:
-        # Grab batch of histories
-        sh_list = \
-                ec2_conn.get_spot_price_history(start_time=start_time,
-                                                instance_type=instance_type,
-                                                product_description=product,
-                                                availability_zone=av_zone,
-                                                next_token=next_token)
-        # Grab next token for next batch of histories
-        next_token = sh_list.nextToken
-
-        # Update list if it has elements and log
-        if len(sh_list) > 0:
-            first_ts = str(sh_list[0].timestamp)
-            last_ts = str(sh_list[-1].timestamp)
-            sh_log.info('Appending to list: %s - %s' % (first_ts, last_ts))
-            full_sh_list.extend(sh_list)
-        else:
-            sh_log.info('Found no spot history in %s, moving on...' % av_zone)
-
-        # Check if list is still returning 1000 objects
-        if len(sh_list) != 1000:
-            token_flg = False
-
-    # Return full spot history list
-    return full_sh_list
-
-
 # Get availability zones
 def return_av_zones(region):
     '''
@@ -176,9 +75,132 @@ def return_av_zones(region):
     return av_zones
 
 
-# Function to get the spot_history and save to csv dataframe
-def get_df_and_save(start_time, instance_type, product, region, av_zone, out_dir):
+# Return the spot history dataframe for certain categories
+def return_sh_df(start_time, instance_type, product, region):
     '''
+    Function to return the spot prices and timestamps
+    '''
+
+    # Import packages
+    import pandas as pd
+
+    # Init variables
+    df_cols = ['Instance type', 'Product', 'Region', 'Availability zone',
+               'Spot price', 'Timestamp']
+    new_df = pd.DataFrame(columns=df_cols)
+
+    # Get spot history
+    sh_list = return_spot_history(start_time, instance_type, product, region)
+
+    # Populate new dataframe
+    for idx, sh_record in enumerate(sh_list):
+        df_entry = [str(sh_record.instance_type),
+                    str(sh_record.product_description),
+                    str(sh_record.region.name),
+                    str(sh_record.availability_zone),
+                    sh_record.price, str(sh_record.timestamp)]
+        new_df.loc[idx] = df_entry
+
+    # Return new dataframe
+    return new_df
+
+
+# Return a list of spot price histories
+def return_spot_history(start_time, instance_type, product, region):
+    '''
+    Function to return a list of SpotPriceHistory objects
+
+    Parameters
+    ----------
+    start_time : string
+        the start time of interest to begin collecting histories
+    instance_type : string
+        the type of interest to collect the histories for
+    product : string
+        the OS product platform to collect histories for
+    region : boto.regioninfo.RegionInfo object
+        the region object to get the zones from
+
+    Returns
+    -------
+    full_sh_list : list
+        a list of boto.ec2.spotpricechistory.SpotPriceHistory objects;
+        each object contains price, timestamp, and other information
+    '''
+
+    # Import packages
+    import boto
+    import boto.ec2
+    import logging
+    from boto.exception import BotoServerError
+
+    # Init variables
+    full_sh_list = []
+
+    # Grab region of interest and connect to ec2 in that region
+    ec2_conn = boto.connect_ec2(region=region)
+
+    # Get logger
+    sh_log = logging.getLogger('sh_log')
+
+    # Iterate over all the availability zones
+    av_zones = return_av_zones(region)
+    num_zones = len(av_zones)
+    for av_idx, av_zone in enumerate(av_zones):
+        sh_log.info('Getting history for %d/%d: %s...' \
+                    % (av_idx+1, num_zones, av_zone))
+        # While the token flag indicates to more data
+        token_flg = True
+        next_token = None
+        while token_flg:
+            # Grab batch of histories
+            try:
+                sh_list = \
+                        ec2_conn.get_spot_price_history(start_time=start_time,
+                                                        instance_type=instance_type,
+                                                        product_description=product,
+                                                        availability_zone=av_zone,
+                                                        next_token=next_token)
+                # Grab next token for next batch of histories
+                next_token = sh_list.nextToken
+            except BotoServerError as exc:
+                sh_log.info('Could not access any further histories.\nError: %s' \
+                      % exc.message)
+                token_flg = False
+
+            # Update list if it has elements and log
+            if len(sh_list) > 0:
+                first_ts = str(sh_list[0].timestamp)
+                last_ts = str(sh_list[-1].timestamp)
+                sh_log.info('Appending to list: %s - %s' % (first_ts, last_ts))
+                full_sh_list.extend(sh_list)
+            else:
+                sh_log.info('Found no spot history in %s, moving on...' % av_zone)
+
+            # Check if list is still returning 1000 objects
+            if len(sh_list) != 1000:
+                token_flg = False
+
+    # Return full spot history list
+    return full_sh_list
+
+
+# Function to get the spot_history and save to csv dataframe
+def get_df_and_save(start_time, instance_type, product, region, out_dir):
+    '''
+    Function to get the dataframe for a particular instance type,
+    product, and region starting as far back as possible
+
+    Parameters
+    ----------
+    start_time : string
+        the start time of interest to begin collecting histories
+    instance_type : string
+        the type of interest to collect the histories for
+    product : string
+        the OS product platform to collect histories for
+    region : boto.regioninfo.RegionInfo object
+        the region object to get the zones from
     '''
 
     # Import packages
@@ -206,7 +228,7 @@ def get_df_and_save(start_time, instance_type, product, region, av_zone, out_dir
         os.makedirs(csv_dir)
 
     # Grab the spot history
-    df = return_sh_df(None, instance_type, product, av_zone)
+    df = return_sh_df(start_time, instance_type, product, region)
 
     # Save the dataframe
     df.to_csv(out_csv)
@@ -267,16 +289,11 @@ def main(out_dir, num_cores):
 
     # For each AWS region
     for reg_idx, region in enumerate(regions):
-        # Get the availability zones
-        av_zones = return_av_zones(region)
-        av_len = len(av_zones)
-        # For each availability zone
-        for av_idx, av_zone in enumerate(av_zones):
-            # For each instance_type-product combination
-            for ip_idx, (instance_type, product) in enumerate(instance_products):
-                proc = Process(target=get_df_and_save,
-                               args=(None, instance_type, product, region, av_zone, out_dir))
-                proc_list.append(proc)
+        # For each instance_type-product combination
+        for ip_idx, (instance_type, product) in enumerate(instance_products):
+            proc = Process(target=get_df_and_save,
+                           args=(None, instance_type, product, region, out_dir))
+            proc_list.append(proc)
 
     # Run in parallel
     utils.run_in_parallel(proc_list, num_cores)

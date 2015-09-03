@@ -278,7 +278,8 @@ def calc_ebs_model_costs(run_time, wait_time, node_cost, first_iter_time,
     # Get GB-months
     master_gb_months = (ebs_nfs_gb+cpac_ami_gb)*\
             (3600.0*np.ceil(master_up_time/3600.0)/secs_per_avg_month)
-    nodes_gb_months = num_nodes*cpac_ami_gb*(3600.0*np.ceil(run_time/3600.0)/secs_per_avg_month)
+    nodes_gb_months = num_nodes*cpac_ami_gb*\
+            (3600.0*np.ceil(run_time/3600.0)/secs_per_avg_month)
     storage_cost = ebs_ssd*(master_gb_months + nodes_gb_months)
 
     ### Get computation costs ###
@@ -924,7 +925,7 @@ def main(sim_dir, proc_time, num_jobs, jobs_per, in_gb, out_gb, out_gb_dl,
                                np.std(spot_history), run_time, wait_time,
                                pernode_cost, num_interrupts, first_iter_time]
 
-        # Get complete time and costs from spot market simulation paramters
+        # Get complete time and costs from spot market simulation parameters
         total_cost, instance_cost, stor_cost, xfer_cost, \
         total_time, run_time, wait_time, \
         xfer_up_time, xfer_down_time = \

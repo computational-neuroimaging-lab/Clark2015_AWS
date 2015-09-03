@@ -1,4 +1,4 @@
-# run_sims.py
+# run_spot_sims.py
 #
 # Author: Daniel Clark
 
@@ -6,21 +6,38 @@
 Script to run AWS simulation for a given configuration file in parallel
 
 Usage:
-    python run_sims.py -c <config_file> -n <num_cores>
-                       -o <out_dir> -s <spot_csv>
+    python run_spot_sims.py -c <config_file> -n <num_cores>
+                            -o <out_dir> -s <spot_csv>
 '''
 
 # Build processing list
-def build_proc_list(config_file, num_cores, out_dir, spot_csv):
+def build_proc_list(config_file, out_dir, spot_csv):
     '''
+    Build a list of spot_price_model.main processes
+
+    Parameters
+    ----------
+    config_file : string
+        filepath to the spot model configuration file
+    out_dir : string
+        directory to output the results of the simulations
+    spot_csv : string
+        filepath to the spot history csv file
+
+    Returns
+    -------
+    proc_list : list
+        list of multiprocessing.Process objects that run the simulation
     '''
 
     # Import packages
-    import record_spot_price
-    import spot_price_model
     import utils
     import yaml
     from multiprocessing import Process
+
+    # Import local modules
+    import record_spot_price
+    import spot_price_model
 
     # Init variables
     proc_list = []
@@ -51,6 +68,8 @@ if __name__ == '__main__':
 
     # Import packages
     import argparse
+
+    # Import local modules
     import utils
 
     # Init argparser
@@ -76,7 +95,7 @@ if __name__ == '__main__':
     spot_csv = args.spot_csv[0]
 
     # Build processing list
-    proc_list = build_proc_list(config_file, num_cores, out_dir, spot_csv)
+    proc_list = build_proc_list(config_file, out_dir, spot_csv)
 
     # Run jobs in parallel
     utils.run_in_parallel(proc_list, num_cores)
