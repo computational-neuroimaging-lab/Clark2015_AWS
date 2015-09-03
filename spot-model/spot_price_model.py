@@ -306,7 +306,8 @@ def calc_ebs_model_costs(run_time, wait_time, node_cost, first_iter_time,
 
 
 # Calculate cost over interval
-def calculate_cost(start_time, uptime_seconds, interp_history, interrupted=False):
+def calculate_cost(start_time, uptime_seconds, interp_history,
+                   interrupted=False):
     '''
     Function to calculate the runtime spot cost associated with an
     instance's spot history
@@ -585,6 +586,7 @@ def simulate_market(start_time, spot_history, interp_history,
     num_interrupts = 0
 
     # Get first spot history start time
+    # Note: np.argmax returns first occurence of True
     start_idx = np.argmax(spot_history.index >= start_time)
     spot_history_start = spot_history.index[start_idx]
 
@@ -871,7 +873,7 @@ def main(sim_dir, proc_time, num_jobs, jobs_per, in_gb, out_gb, out_gb_dl,
 
     # Get interpolated times per second (forward fill)
     interp_seq = pd.date_range(spot_history.index[0], spot_history.index[-1],
-                            freq='S')
+                               freq='S')
     interp_history = spot_history.reindex(interp_seq)
     interp_history = interp_history.fillna(method='ffill')
 
@@ -887,7 +889,7 @@ def main(sim_dir, proc_time, num_jobs, jobs_per, in_gb, out_gb, out_gb_dl,
     time_needed = num_iter*(proc_time)
 
     # Get bid price
-    spot_history_avg = spot_history.mean()
+    spot_history_avg = interp_history.mean()
     bid_price = bid_ratio*spot_history_avg
     stat_log.info('Spot history average is $%.3f, bid ratio of %.3fx sets ' \
                   'bid to $%.3f' % (spot_history_avg, bid_ratio, bid_price))
