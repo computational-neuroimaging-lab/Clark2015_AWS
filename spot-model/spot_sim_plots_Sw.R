@@ -149,12 +149,12 @@ plot(stat_vs_sim_time)
 
 ### Mean cost and time vs bid ratio and num datasets ###
 # Init variables
-full_csv <- '~/data/aws/sim_results_merged/03-15_07-10-2015/fs/merged_raw_sims-s3_costs.csv'
-avg_type <- 'mean'
-agg_csv <- '~/data/aws/sim_results_merged/03-15_07-10-2015/cpac/merged_mean-s3_costs.csv'
+full_csv <- '~/data/aws/sim_results_merged/03-15_09-04-2015/fs_costs_merged.csv'
+avg_type <- 'median'
+agg_csv <- '~/data/aws/sim_results_merged/03-15_09-04-2015/cpac_mean_costs.csv'
 
 # Form the averaged-aggregated-dataframe
 agg_df <- aggregate_df(full_csv, avg_type)
 agg_df <- read.csv(agg_csv)
 #agg_df <- format_region(agg_df)
-plot_cost_times(agg_df, 1000, 2.5, 'fs_sim_mean.pdf')
+plot_cost_times(agg_df, 1000, 2.5, 'cpac_sim_median.pdf')
