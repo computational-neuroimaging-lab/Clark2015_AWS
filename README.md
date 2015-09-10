@@ -30,12 +30,41 @@ data-preproc
     - act_interface.py - Nipype interface made to work with the ANTs cortical thickness extraction script found [here](https://raw.githubusercontent.com/stnava/ANTs/master/Scripts/antsCorticalThickness.sh)
     - act_run.py - Python script to run the ANTs cortical thickness script and upload results to S3
     - act_run.sge - SGE bash script to launch act_run.py over parallel HPC nodes via SGE
-    - download_run_fs.py - script to download and run Freesurfer's 'recon-all' command on the CORR IBA_TRT data and then uploads the results to S3 on the 'fcp-indi' bucket
     - download_run_fs_gpu.py - script to download and run Freesurfer's 'recon-all' command using GPU-optimized binaries instead of CPU ones.
+    - download_run_fs.py - script to download and run Freesurfer's 'recon-all' command on the CORR IBA_TRT data and then uploads the results to S3 on the 'fcp-indi' bucket
     - download_run_fs.sge - SGE bash script to launch download_run_fs.py over parallel HPC nodes via SGE
+    - get_run_stats.py - Python script to pull data from pipeline log files and plot the runtime data
+
+paper
+-----
+Transcript related to the AWS paper (now on Google docs)
+
+poster
+------
+LaTeX files and images used to create the AWS/NDAR poster for OHBM 2015 and Neuroimformatics 2015
 
 spot-model
 ----------
+- record_spot_price.py - Python module to record the spot price history from AWS and save histories to csv dataframes and log files
+- run_spot_sims.py - Python script to run AWS simulations over spot history in parallel using a configuration file and spot history csv
+- run_static_model.py Python script to run the AWS static pricing model given a per-hour price, availability zone, and configuration file
 - S3_costs_2mm.R - R script that models and plots AWS costs for based on CPAC runtimes for 2mm images
-- record_spot_price.py - python module to record the spot price history from AWS and save histories to pklz files and a csv dataframe
-- spot_price_model.py - python module to simulate job submissions over spot history and calculate runtimes and costs
+- spot_sim_plots.R - R script to create static model plots for the poster
+- spot_sim_plots_Sw.R - R script to create static and simulation model plots for paper
+- spot_price_model.py - Python module to simulate job submissions over spot history and calculate runtimes and costs
+- utils.py - Python module with various utilities related to the AWS spot simulations, including dataframe consolidation and parallel processing
+
+    configs
+    -------
+    ANTs, CPAC, and Freesurfer spot simulation config files with the runtime details for estimating time and cost of running on AWS
+
+    csvs
+    ----
+    - ants_avg_simgs_and_static.csv - ANTs mean and median spot simulation averages along side static runtimes and costs
+    - c3.8xlarge-allzones-avgs_03-15_09-04-2015.csv - Mean and median spot history price for the c3.8xlarge Linux/UNIX instance across availability zones from March 3 to Sept 4 2015
+    - cpac_avg_simgs_and_static.csv - C-PAC mean and median spot simulation averages along side static runtimes and costs
+    - fs_avg_simgs_and_static.csv - Freesurfer mean and median spot simulation averages along side static runtimes and costs
+
+    plots
+    -----
+    Plots of the cost and times across number of datasets and bid ratios as well as mean simulation vs static costs and times

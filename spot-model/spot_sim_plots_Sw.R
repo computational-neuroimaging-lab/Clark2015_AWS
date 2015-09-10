@@ -122,7 +122,7 @@ plot_cost_times <- function(agg_df, num_ds, bid_rat, out_file) {
 
 ### Scatter of simulation versus static models ###
 # Init variables
-stat_sim_csv <- '~/Documents/projects/Clark2015_AWS/spot-model/csvs/ants_avg_sims_and_static.csv'
+stat_sim_csv <- '~/Documents/projects/Clark2015_AWS/spot-model/csvs/cpac_avg_sims_and_static.csv'
 
 # Load in stat vs sim dataframe
 stat_sim_df <- read.csv(stat_sim_csv)
@@ -134,14 +134,14 @@ stat_vs_sim_cost <- ggplot(region_stat_sim,
                            aes(x=static_total_cost, y=mean_total_cost,
                                color=factor(region), size=factor(num_datasets))) +
                     labs(x='Static model total cost ($)',
-                         y='Avg simulation total cost ($)') +
+                         y='Mean simulation total cost ($)') +
                     geom_point()
 
 stat_vs_sim_time <- ggplot(region_stat_sim,
                            aes(x=static_total_time/3600,y=mean_total_time/3600,
                                color=factor(region), size=factor(num_datasets))) +
                     labs(x='Static model total time (hrs)',
-                         y='Avg simulation total time (hrs)') +
+                         y='Mean simulation total time (hrs)') +
                     geom_point()
 
 plot(stat_vs_sim_cost)
