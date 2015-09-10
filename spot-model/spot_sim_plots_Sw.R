@@ -135,7 +135,7 @@ stat_vs_sim_cost <- ggplot(region_stat_sim,
                                color=factor(region), size=factor(num_datasets))) +
                     labs(x='Static model total cost ($)',
                          y='Mean simulation total cost ($)') +
-                    geom_point()
+                    geom_point(alpha=2/10) + scale_size_manual(values=c(1,3,5,7,9,11,13,15))
 
 stat_vs_sim_time <- ggplot(region_stat_sim,
                            aes(x=static_total_time/3600,y=mean_total_time/3600,
