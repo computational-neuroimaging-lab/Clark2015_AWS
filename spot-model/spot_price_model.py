@@ -739,7 +739,7 @@ def spothistory_from_dataframe(csv_file, instance_type, product, av_zone):
 # Main routine
 def main(sim_dir, proc_time, num_jobs, jobs_per, in_gb, out_gb, out_gb_dl,
          up_rate, down_rate, bid_ratio, instance_type, av_zone, product,
-         csv_file=None, toy_data=None):
+         csv_file=None):
     '''
     Function to calculate spot instance run statistics based on job
     submission parameters; this function will save the statistics and
@@ -779,9 +779,6 @@ def main(sim_dir, proc_time, num_jobs, jobs_per, in_gb, out_gb, out_gb_dl,
         the filepath to a csv dataframe to get spot history from;
         if not specified, the function will just get the most recent 90
         days worth of spot price history
-    toy_data : boolean
-        flag indicating whether to only run the simulation once
-        since the data is the same across time anyway
 
     Returns
     -------
@@ -897,26 +894,19 @@ def main(sim_dir, proc_time, num_jobs, jobs_per, in_gb, out_gb, out_gb_dl,
 
     # Iterate through the interpolated timeseries
     for start_time, start_price in sim_series.iteritems():
-        if not toy_data:
-            # First see if there's enough time to run jobs
-            time_window = (end_time-start_time).total_seconds()
-            if time_needed > time_window:
-                stat_log.info('Total runtime exceeds time window, ending simulation...')
+        # First see if there's enough time to run jobs
+        time_window = (end_time-start_time).total_seconds()
+        if time_needed > time_window:
+            stat_log.info('Total runtime exceeds time window, ending simulation...')
 
-            # Simulate running job and get stats from that start time
-            try:
-                run_time, wait_time, pernode_cost, num_interrupts, first_iter_time = \
-                        simulate_market(start_time, spot_history, interp_history,
-                                        proc_time, num_iter, bid_price)
-            except Exception as exc:
-                stat_log.info('Could not run full simulation because of:\n%s' % exc)
-                continue
-        else:
-            run_time = num_iter*proc_time
-            wait_time = 0
-            pernode_cost = np.ceil(run_time/3600.0)*interp_history[1]
-            num_interrupts = 0
-            first_iter_time = proc_time
+        # Simulate running job and get stats from that start time
+        try:
+            run_time, wait_time, pernode_cost, num_interrupts, first_iter_time = \
+                    simulate_market(start_time, spot_history, interp_history,
+                                    proc_time, num_iter, bid_price)
+        except Exception as exc:
+            stat_log.info('Could not run full simulation because of:\n%s' % exc)
+            continue
 
         # Write simulate market output to dataframe
         sim_df.loc[sim_idx] = [start_time, csv_file, proc_time, num_jobs,
@@ -947,12 +937,8 @@ def main(sim_dir, proc_time, num_jobs, jobs_per, in_gb, out_gb, out_gb_dl,
         stat_log.info('number of interrupts: %d' % num_interrupts)
         stat_log.info('wait time (minutes): %.3f' % (wait_time/60.0))
 
-        # Print loop status
-        if toy_data:
-            break
-        else:
-            sim_idx += 1
-            utils.print_loop_status(sim_idx, sim_length)
+        sim_idx += 1
+        utils.print_loop_status(sim_idx, sim_length)
 
     # Add configuration parameters to dataframe
     sim_df['av_zone'] = av_zone
@@ -1055,8 +1041,6 @@ if __name__ == '__main__':
                              'default is \'Linux/Unix\'')
     parser.add_argument('-c', '--csv_file', nargs=1, required=False, type=str,
                         help='Specify csv dataframe to parse histories')
-    parser.add_argument('-td', '--toy_data', required=False, action='store_true',
-                        help='Specify if the data is toy (fixed price) or not')
 
     # Parse arguments
     args = parser.parse_args()
@@ -1094,13 +1078,8 @@ if __name__ == '__main__':
     except TypeError as exc:
         csv_file = None
         print 'No csv dataframe specified, only using latest history...'
-    try:
-        toy_data = args.toy_data
-    except TypeError as exc:
-        toy_data = None
-        print 'Not toy data, assuming real spot history data...'
 
     # Call main routine
     main(proc_time, num_jobs, jobs_per, in_gb, out_gb, out_gb_dl,
          up_rate, down_rate, bid_ratio, instance_type, av_zone, product,
-         csv_file, toy_data)
+         csv_file)
