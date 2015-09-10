@@ -64,7 +64,7 @@ def load_and_run(config, av_zone, price_hr):
         # Populate dictionary
         row_dict = {'av_zone' : av_zone, 'down_rate' : down_rate,
                     'in_gb' : in_gb, 'instance_type' : instance_type,
-                    'jobs_per' : jobs_per, 'num_jobs' : num_jobs,
+                    'jobs_per' : jobs_per, 'num_datasets' : num_jobs,
                     'out_gb' : out_gb, 'out_gb_dl' : out_gb_dl,
                     'proc_time' : proc_time, 'product' : product,
                     'up_rate' : up_rate, 'price_hr' : price_hr,

@@ -19,22 +19,22 @@ aggregate_df <- function(csv, func_name) {
   print('Aggregating dataframe...')
   if (func_name == 'mean') {
     df_agg <- ddply(full_df, .(av_zone, bid_ratio, num_datasets), summarize,
-                    avg_instance_cost=mean(instance_cost),
-                    avg_num_interr=mean(num_interrupts),
-                    avg_pernode_cost=mean(per_node_cost),
-                    avg_run_time=mean(run_time),
-                    avg_total_cost=mean(total_cost),
-                    avg_total_time=mean(total_time),
-                    avg_wait_time=mean(wait_time))
+                    mean_instance_cost=mean(instance_cost),
+                    mean_num_interr=mean(num_interrupts),
+                    mean_pernode_cost=mean(per_node_cost),
+                    mean_run_time=mean(run_time),
+                    mean_total_cost=mean(total_cost),
+                    mean_total_time=mean(total_time),
+                    mean_wait_time=mean(wait_time))
   } else if (func_name == 'median') {
       df_agg <- ddply(full_df, .(av_zone, bid_ratio, num_datasets), summarize,
-                      avg_instance_cost=median(instance_cost),
-                      avg_num_interr=median(num_interrupts),
-                      avg_pernode_cost=median(per_node_cost),
-                      avg_run_time=median(run_time),
-                      avg_total_cost=median(total_cost),
-                      avg_total_time=median(total_time),
-                      avg_wait_time=median(wait_time))
+                      median_instance_cost=median(instance_cost),
+                      median_num_interr=median(num_interrupts),
+                      median_pernode_cost=median(per_node_cost),
+                      median_run_time=median(run_time),
+                      median_total_cost=median(total_cost),
+                      median_total_time=median(total_time),
+                      median_wait_time=median(wait_time))
   }
 
   # Rename regions
@@ -122,7 +122,7 @@ plot_cost_times <- function(agg_df, num_ds, bid_rat, out_file) {
 
 ### Scatter of simulation versus static models ###
 # Init variables
-stat_sim_csv <- '~/data/aws/sim_results_merged/03-15_07-10-2015/cpac/median_static_vs_median_sim.csv'
+stat_sim_csv <- '~/Documents/projects/Clark2015_AWS/spot-model/csvs/ants_avg_sims_and_static.csv'
 
 # Load in stat vs sim dataframe
 stat_sim_df <- read.csv(stat_sim_csv)
@@ -131,14 +131,14 @@ region_stat_sim <- format_region(stat_sim_df)
 
 # Plot
 stat_vs_sim_cost <- ggplot(region_stat_sim, 
-                           aes(x=total_cost, y=avg_total_cost,
+                           aes(x=static_total_cost, y=mean_total_cost,
                                color=factor(region), size=factor(num_datasets))) +
                     labs(x='Static model total cost ($)',
                          y='Avg simulation total cost ($)') +
                     geom_point()
 
 stat_vs_sim_time <- ggplot(region_stat_sim,
-                           aes(x=total_time/3600,y=avg_total_time/3600,
+                           aes(x=static_total_time/3600,y=mean_total_time/3600,
                                color=factor(region), size=factor(num_datasets))) +
                     labs(x='Static model total time (hrs)',
                          y='Avg simulation total time (hrs)') +
@@ -151,7 +151,7 @@ plot(stat_vs_sim_time)
 # Init variables
 full_csv <- '~/data/aws/sim_results_merged/03-15_09-04-2015/fs_costs_merged.csv'
 avg_type <- 'median'
-agg_csv <- '~/data/aws/sim_results_merged/03-15_09-04-2015/cpac_mean_costs.csv'
+agg_csv <- '~/data/aws/sim_results_merged/03-15_09-04-2015/fs_mean_costs.csv'
 
 # Form the averaged-aggregated-dataframe
 agg_df <- aggregate_df(full_csv, avg_type)
