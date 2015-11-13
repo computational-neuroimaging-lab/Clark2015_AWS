@@ -129,7 +129,42 @@ plot_cost_times <- function(agg_df, num_ds, bid_rat, out_file) {
   dev.off()
 }
 
-### Scatter of simulation versus static models ###
+
+# Plot correlation plots for costs and times
+plot_correlations <- function(sim_stat_df, bid_ratio, pipeline) {
+  # Plot
+  # Average sim vs static costs
+  sim_vs_stat_cost <- ggplot(subset(sim_stat_df, bid_ratio=bid_ratio), 
+                             aes(x=static_total_cost, y=mean_total_cost,
+                                 color=factor(region), size=factor(num_datasets))) +
+    labs(x='Static model total cost ($)',
+         y='Mean simulation total cost ($)',
+         title=paste('Mean simulation costs vs Static model costs, bid ratio =', bid_ratio)) +
+    geom_point(alpha=2/10)
+  # Write out to pdf
+  pdf(file=file.path(proj_base_dir, 'spot-model/plots',
+                     paste(pipeline, '_mean_sim_vs_static_costs.pdf', sep='')),
+      width=11, height=8)
+  print(sim_vs_stat_cost)
+  dev.off()
+  
+  # Average sim vs static times
+  sim_vs_stat_time <- ggplot(subset(sim_stat_df, bid_ratio=bid_ratio),
+                             aes(x=static_total_time/3600,y=mean_total_time/3600,
+                                 color=factor(region), size=factor(num_datasets))) +
+    labs(x='Static model total time (hrs)',
+         y='Mean simulation total time (hrs)',
+         title=paste('Mean simulation time vs Static model time, bid ratio =', bid_ratio)) +
+    geom_point(alpha=2/10)
+  # Write out to pdf
+  pdf(file=file.path(proj_base_dir, 'spot-model/plots',
+                     paste(pipeline, '_mean_sim_vs_static_times.pdf', sep='')),
+      width=11, height=8)
+  print(sim_vs_stat_time)
+  dev.off()
+}
+
+
 # Init variables
 # Local dir of project base on computer
 proj_base_dir <- '~/Documents/projects/Clark2015_AWS'
@@ -150,39 +185,9 @@ sim_stat_csv <- file.path(proj_base_dir, rel_csvs_dir,
 # Load in sim vs stat dataframe
 sim_stat_df <- read.csv(sim_stat_csv)
 
-# To write out
+# To write out plots
 plot_cost_times(ants_df, num_datasets, bid_ratio,
                 file.path(proj_base_dir, 'spot-model/plots',
                           paste(pipeline,'_sim_mean.pdf', sep='')))
 
-# Plot
-# Average sim vs static costs
-sim_vs_stat_cost <- ggplot(subset(sim_stat_df, bid_ratio=bid_ratio), 
-                           aes(x=static_total_cost, y=mean_total_cost,
-                               color=factor(region), size=factor(num_datasets))) +
-                    labs(x='Static model total cost ($)',
-                         y='Mean simulation total cost ($)',
-                         title=paste('Mean simulation costs vs Static model costs, bid ratio =', bid_ratio)) +
-                    geom_point(alpha=2/10)
-# Write out to pdf
-pdf(file=file.path(proj_base_dir, 'spot-model/plots',
-                   paste(pipeline, '_mean_sim_vs_static_costs.pdf', sep='')),
-    width=11, height=8)
-print(sim_vs_stat_cost)
-dev.off()
-
-# Average sim vs static times
-sim_vs_stat_time <- ggplot(subset(sim_stat_df, bid_ratio=bid_ratio),
-                           aes(x=static_total_time/3600,y=mean_total_time/3600,
-                               color=factor(region), size=factor(num_datasets))) +
-                           labs(x='Static model total time (hrs)',
-                                y='Mean simulation total time (hrs)',
-                                title=paste('Mean simulation time vs Static model time, bid ratio =', bid_ratio)) +
-                           geom_point(alpha=2/10)
-# Write out to pdf
-pdf(file=file.path(proj_base_dir, 'spot-model/plots',
-                   paste(pipeline, '_mean_sim_vs_static_times.pdf', sep='')),
-    width=11, height=8)
-print(sim_vs_stat_time)
-dev.off()
-
+plot_correlations(sim_stat_df, bid_ratio, pipeline)
