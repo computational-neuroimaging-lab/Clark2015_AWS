@@ -81,24 +81,29 @@ format_cost_times <- function(plot_obj) {
 
 # Plot and print simulation results to pdf
 plot_cost_times <- function(agg_df, num_ds, bid_rat, out_file) {
+  ## Ceiling costs to round to the nearest dollar
   # Cost vs. Bid ratio
   cost_br <- ggplot(subset(agg_df, num_datasets==num_ds),
-                    aes(x=bid_ratio, y=ceiling(avg_total_cost), col=av_zone))
+                    aes(x=bid_ratio, y=ceiling(median_total_cost), col=av_zone)) +
+             labs(x='Bid ratio to mean price', y='Cost ($)')
   cost_br <- format_cost_times(cost_br)
 
   # Cost vs. Num datasets
   cost_ds <- ggplot(subset(agg_df, bid_ratio==bid_rat),
-                    aes(x=num_datasets, y=ceiling(avg_total_cost), col=av_zone))
+                    aes(x=num_datasets, y=ceiling(median_total_cost), col=av_zone)) +
+             labs(x='Number of datasets', y='Cost ($)')
   cost_ds <- format_cost_times(cost_ds)
 
   # Cost vs. Bid ratio
   time_br <- ggplot(subset(agg_df, num_datasets==num_ds),
-                    aes(x=bid_ratio, y=avg_total_time/3600, col=av_zone))
+                    aes(x=bid_ratio, y=median_total_time/3600, col=av_zone)) +
+             labs(x='Bid ratio to mean price', y='Time (hours)')
   time_br <- format_cost_times(time_br)
 
   # Cost vs. Num datasets
   time_ds <- ggplot(subset(agg_df, bid_ratio==bid_rat),
-                    aes(x=num_datasets, y=avg_total_time/3600, col=av_zone))
+                    aes(x=num_datasets, y=median_total_time/3600, col=av_zone)) +
+             labs(x='Number of datasets', y='Time (hours)')
   time_ds <- format_cost_times(time_ds)
 
   # Open pdf file to save plots to
@@ -122,12 +127,19 @@ plot_cost_times <- function(agg_df, num_ds, bid_rat, out_file) {
 
 ### Scatter of simulation versus static models ###
 # Init variables
-stat_sim_csv <- '~/Documents/projects/Clark2015_AWS/spot-model/csvs/cpac_avg_sims_and_static.csv'
+# Local dir of project base on computer
+proj_base_dir <- '~/Documents/projects/Clark2015_AWS'
+
+# Relative path of project csvs
+rel_csvs_dir <- file.path('spot-model', 'csvs')
+stat_sim_csv <- file.path(proj_base_dir, rel_csvs_dir, 'fs_avg_sims_and_static.csv')
 
 # Load in stat vs sim dataframe
 stat_sim_df <- read.csv(stat_sim_csv)
-stat_sim_df$region <- 'to-fill'
-region_stat_sim <- format_region(stat_sim_df)
+plot_cost_times(stat_sim_df, 1000, 2.5, 'fs_sim_median.pdf')
+
+#stat_sim_df$region <- 'to-fill'
+#region_stat_sim <- format_region(stat_sim_df)
 
 # Plot
 stat_vs_sim_cost <- ggplot(region_stat_sim, 
@@ -149,12 +161,12 @@ plot(stat_vs_sim_time)
 
 ### Mean cost and time vs bid ratio and num datasets ###
 # Init variables
-full_csv <- '~/data/aws/sim_results_merged/03-15_09-04-2015/fs_costs_merged.csv'
-avg_type <- 'median'
-agg_csv <- '~/data/aws/sim_results_merged/03-15_09-04-2015/fs_mean_costs.csv'
+#full_csv <- '~/data/aws/sim_results_merged/03-15_09-04-2015/fs_costs_merged.csv'
+#avg_type <- 'median'
+#agg_csv <- '~/data/aws/sim_results_merged/03-15_09-04-2015/fs_mean_sim_costs.csv'
 
 # Form the averaged-aggregated-dataframe
-agg_df <- aggregate_df(full_csv, avg_type)
-agg_df <- read.csv(agg_csv)
+#agg_df <- aggregate_df(full_csv, avg_type)
+#agg_df <- read.csv(agg_csv)
 #agg_df <- format_region(agg_df)
-plot_cost_times(agg_df, 1000, 2.5, 'cpac_sim_median.pdf')
+
