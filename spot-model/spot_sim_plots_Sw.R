@@ -167,40 +167,78 @@ plot_correlations <- function(sim_stat_df, bid_ratio, pipeline) {
 }
 
 
-# Plot correlation plots for costs and times
-plot_ratios <- function(sim_stat_df, pipeline, bid_ratio, num_datasets) {
-  # Plot
-  # Average sim vs static costs
-  sim_vs_stat_cost <- ggplot(subset(sim_stat_df, bid_ratio=bid_ratio), 
-                             aes(x=static_total_cost, y=mean_total_cost,
-                                 color=factor(region), size=factor(num_datasets))) +
-    labs(x='Static model total cost ($)',
-         y='Mean simulation total cost ($)',
-         title=paste('Mean simulation costs vs Static model costs, bid ratio =',
-                     bid_ratio)) +
-    geom_point(alpha=2/10)
-  # Write out to pdf
-  pdf(file=file.path(proj_base_dir, 'spot-model/plots',
-                     paste(pipeline, '_mean_sim_vs_static_costs.pdf', sep='')),
-      width=11, height=8)
-  print(sim_vs_stat_cost)
-  dev.off()
+# Plot correlation plots for costs
+plot_cost_ratio <- function(sim_stat_df, pipeline, bid_ratio, num_datasets, itr, x_axis) {
+
+  # Ratio vs bid ratio
+  if (x_axis == 'bid_ratio') {
+    # Get only dataframe at fixed number of datasets
+    subset_df <- subset(sim_stat_df, num_datasets=num_datasets)
+
+    # Average sim vs static costs
+    cost_ratio_plot <- ggplot(subset_df, aes(x=bid_ratio, y=cost_ratio,
+                                              color=factor(region))) +
+      labs(x='Bid ratio',
+           y='Static cost to mean simulation cost ratio',
+           title=paste(pipeline, ' - cost ratio vs number of datasets, num datasets =',
+                       num_datasets)) +
+      geom_point(alpha=2/10)
+    
+  }
   
-  # Average sim vs static times
-  sim_vs_stat_time <- ggplot(subset(sim_stat_df, bid_ratio=bid_ratio),
-                             aes(x=static_total_time/3600,y=mean_total_time/3600,
-                                 color=factor(region), size=factor(num_datasets))) +
-    labs(x='Static model total time (hrs)',
-         y='Mean simulation total time (hrs)',
-         title=paste('Mean simulation time vs Static model time, bid ratio =',
+  # Ratio vs num datasets
+  else if (x_axis == 'num_datasets') {
+    # Get only dataframe at fixed bid ratio
+    subset_df <- subset(sim_stat_df, bid_ratio=bid_ratio)
+
+    # Average sim vs static costs
+    cost_ratio_plot <- ggplot(subset_df, aes(x=num_datasets, y=cost_ratio,
+                                          color=factor(region))) +
+      labs(x='Number of datasets',
+           y='Static cost to mean simulation cost ratio',
+           title=paste(pipeline, ' - cost ratio vs number of datasets, bid ratio =',
+                       bid_ratio, sep='')) +
+      geom_point(alpha=2/10)
+
+  }
+  return(cost_ratio_plot)
+
+}
+
+# Plot correlation plots for costs
+plot_time_ratio <- function(sim_stat_df, pipeline, bid_ratio, num_datasets, itr, x_axis) {
+
+  # Ratio vs bid ratio
+  if (x_axis == 'bid_ratio') {
+    # Get only dataframe at fixed number of datasets
+    subset_df <- subset(sim_stat_df, num_datasets=num_datasets)
+    
+    # Average sim vs static costs
+    time_ratio_plot <- ggplot(subset_df, aes(x=bid_ratio, y=time_ratio,
+                                             color=factor(region))) +
+      labs(x='Bid ratio',
+           y='Static runtime to mean simulation runtime ratio',
+           title=paste(pipeline, ' - time ratio vs number of datasets, num datasets =',
+                       num_datasets)) +
+      geom_point(alpha=2/10)
+  }
+
+  # Ratio vs num datasets
+  else if (x_axis == 'num_datasets') {
+    # Get only dataframe at fixed bid ratio
+    subset_df <- subset(sim_stat_df, bid_ratio=bid_ratio)
+
+    # Average sim vs static costs
+    time_ratio_plot <- ggplot(subset_df, aes(x=num_datasets, y=time_ratio,
+                                             color=factor(region))) +
+    labs(x='Number of datasets',
+         y='Static runtime to mean simulation runtime ratio',
+         title=paste(pipeline, ' - time ratio vs number of datasets, bid ratio =',
                      bid_ratio)) +
     geom_point(alpha=2/10)
-  # Write out to pdf
-  pdf(file=file.path(proj_base_dir, 'spot-model/plots',
-                     paste(pipeline, '_mean_sim_vs_static_times.pdf', sep='')),
-      width=11, height=8)
-  print(sim_vs_stat_time)
-  dev.off()
+  }
+
+  return(time_ratio_plot)
 }
 
 
@@ -232,4 +270,61 @@ plot_cost_times(ants_df, num_datasets, bid_ratio,
 # Plot the correlations between simultions and static models
 plot_correlations(sim_stat_df, bid_ratio, pipeline)
 
+# Iterate over pipelines for plots
+pipelines <- c('ants', 'cpac', 'fs')
+for (p_idx in 1:3) {
+  # Init pipeline
+  pipeline <- pipelines[p_idx]
 
+  # Define csv
+  sim_stat_csv <- file.path(proj_base_dir, rel_csvs_dir,
+                            paste(pipeline, '_avg_sims_and_static.csv', sep=''))
+  # Load in sim vs stat dataframe
+  sim_stat_df <- read.csv(sim_stat_csv)
+
+  # Make plots
+  # Plot cost and times vs bid ratio and num datasets
+  plot_cost_times(ants_df, num_datasets, bid_ratio,
+                  file.path(proj_base_dir, 'spot-model/plots',
+                            paste(pipeline,'_sim_mean.pdf', sep='')))
+
+  # Plot the correlations between simultions and static models
+  plot_correlations(sim_stat_df, bid_ratio, pipeline)
+
+  # Plot ratios vs bid ratios
+  cost_plot_br <- plot_cost_ratio(sim_stat_df, pipeline, bid_ratio, num_datasets, p_idx, 'bid_ratio')
+  time_plot_br <- plot_time_ratio(sim_stat_df, pipeline, bid_ratio, num_datasets, p_idx, 'bid_ratio')
+  if (p_idx == 1) {
+    # Open pdf file to save plots to
+    pdf(file=paste('~/bid_ratio.pdf'), width=24, height=8)
+    # Set up the 2x3 grid
+    grid.newpage()
+    layout=grid.layout(2,3)
+    pushViewport(viewport(layout=layout)) 
+  }
+  # Print to pdf
+  print(cost_plot_br, vp=viewport(layout.pos.row=1, layout.pos.col=p_idx))
+  print(time_plot_br, vp=viewport(layout.pos.row=2, layout.pos.col=p_idx))
+  # Write out to pdf
+  if (p_idx == 3) {
+    dev.off()
+  }  
+
+#   # Plot ratios vs num datasets
+#   cost_plot_ds <- plot_cost_ratio(sim_stat_df, pipeline, bid_ratio, num_datasets, p_idx, 'num_datasets')
+#   time_plot_ds <- plot_time_ratio(sim_stat_df, pipeline, bid_ratio, num_datasets, p_idx, 'num_datasets')
+#   # Open pdf file to save plots to
+#   if (p_idx == 1) {
+#     pdf(file=paste('~/num_datasets.pdf'), width=24, height=8)
+#     # Set up the 2x3 grid
+#     grid.newpage()
+#     layout=grid.layout(2,3)
+#     pushViewport(viewport(layout=layout)) 
+#   }
+#   # Print to pdf
+#   print(cost_plot_ds, vp=viewport(layout.pos.row=1, layout.pos.col=p_idx))
+#   print(time_plot_ds, vp=viewport(layout.pos.row=2, layout.pos.col=p_idx))
+#   if (p_idx == 3) {
+#     dev.off()
+#   }  
+}
