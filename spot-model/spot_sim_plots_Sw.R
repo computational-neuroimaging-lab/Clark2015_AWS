@@ -137,9 +137,47 @@ plot_correlations <- function(sim_stat_df, bid_ratio, pipeline) {
   sim_vs_stat_cost <- ggplot(subset(sim_stat_df, bid_ratio=bid_ratio), 
                              aes(x=static_total_cost, y=mean_total_cost,
                                  color=factor(region), size=factor(num_datasets))) +
+                      labs(x='Static model total cost ($)',
+                           y='Mean simulation total cost ($)',
+                           title=paste('Mean simulation costs vs Static model costs, bid ratio =',
+                                       bid_ratio)) +
+                      geom_point(alpha=2/10)
+  # Write out to pdf
+  pdf(file=file.path(proj_base_dir, 'spot-model/plots',
+                     paste(pipeline, '_mean_sim_vs_static_costs.pdf', sep='')),
+      width=11, height=8)
+  print(sim_vs_stat_cost)
+  dev.off()
+  
+  # Average sim vs static times
+  sim_vs_stat_time <- ggplot(subset(sim_stat_df, bid_ratio=bid_ratio),
+                             aes(x=static_total_time/3600,y=mean_total_time/3600,
+                                 color=factor(region), size=factor(num_datasets))) +
+                      labs(x='Static model total time (hrs)',
+                           y='Mean simulation total time (hrs)',
+                           title=paste('Mean simulation time vs Static model time, bid ratio =',
+                                       bid_ratio)) +
+                      geom_point(alpha=2/10)
+  # Write out to pdf
+  pdf(file=file.path(proj_base_dir, 'spot-model/plots',
+                     paste(pipeline, '_mean_sim_vs_static_times.pdf', sep='')),
+      width=11, height=8)
+  print(sim_vs_stat_time)
+  dev.off()
+}
+
+
+# Plot correlation plots for costs and times
+plot_ratios <- function(sim_stat_df, pipeline, bid_ratio, num_datasets) {
+  # Plot
+  # Average sim vs static costs
+  sim_vs_stat_cost <- ggplot(subset(sim_stat_df, bid_ratio=bid_ratio), 
+                             aes(x=static_total_cost, y=mean_total_cost,
+                                 color=factor(region), size=factor(num_datasets))) +
     labs(x='Static model total cost ($)',
          y='Mean simulation total cost ($)',
-         title=paste('Mean simulation costs vs Static model costs, bid ratio =', bid_ratio)) +
+         title=paste('Mean simulation costs vs Static model costs, bid ratio =',
+                     bid_ratio)) +
     geom_point(alpha=2/10)
   # Write out to pdf
   pdf(file=file.path(proj_base_dir, 'spot-model/plots',
@@ -154,7 +192,8 @@ plot_correlations <- function(sim_stat_df, bid_ratio, pipeline) {
                                  color=factor(region), size=factor(num_datasets))) +
     labs(x='Static model total time (hrs)',
          y='Mean simulation total time (hrs)',
-         title=paste('Mean simulation time vs Static model time, bid ratio =', bid_ratio)) +
+         title=paste('Mean simulation time vs Static model time, bid ratio =',
+                     bid_ratio)) +
     geom_point(alpha=2/10)
   # Write out to pdf
   pdf(file=file.path(proj_base_dir, 'spot-model/plots',
@@ -173,7 +212,7 @@ rel_csvs_dir <- 'spot-model/csvs'
 
 # Input parameters
 # Pipeline
-pipeline <- 'fs'
+pipeline <- 'cpac'
 # Plotting parameters
 bid_ratio = 2.5
 num_datasets = 1000
@@ -190,4 +229,7 @@ plot_cost_times(ants_df, num_datasets, bid_ratio,
                 file.path(proj_base_dir, 'spot-model/plots',
                           paste(pipeline,'_sim_mean.pdf', sep='')))
 
+# Plot the correlations between simultions and static models
 plot_correlations(sim_stat_df, bid_ratio, pipeline)
+
+
