@@ -148,7 +148,7 @@ plot_correlations <- function(sim_stat_df, bid_ratio, pipeline) {
       width=11, height=8)
   print(sim_vs_stat_cost)
   dev.off()
-  
+
   # Average sim vs static times
   sim_vs_stat_time <- ggplot(subset(sim_stat_df, bid_ratio=bid_ratio),
                              aes(x=static_total_time/3600,y=mean_total_time/3600,
@@ -183,9 +183,9 @@ plot_cost_ratio <- function(sim_stat_df, pipeline, bid_ratio, num_datasets, itr,
            title=paste(pipeline, ' - cost ratio vs number of datasets, num datasets =',
                        num_datasets)) +
       geom_point(alpha=2/10)
-    
+
   }
-  
+
   # Ratio vs num datasets
   else if (x_axis == 'num_datasets') {
     # Get only dataframe at fixed bid ratio
@@ -212,7 +212,7 @@ plot_time_ratio <- function(sim_stat_df, pipeline, bid_ratio, num_datasets, itr,
   if (x_axis == 'bid_ratio') {
     # Get only dataframe at fixed number of datasets
     subset_df <- subset(sim_stat_df, num_datasets=num_datasets)
-    
+
     # Average sim vs static costs
     time_ratio_plot <- ggplot(subset_df, aes(x=bid_ratio, y=time_ratio,
                                              color=factor(region))) +
@@ -250,7 +250,7 @@ rel_csvs_dir <- 'spot-model/csvs'
 
 # Input parameters
 # Pipeline
-pipeline <- 'cpac'
+pipeline <- 'fs'
 # Plotting parameters
 bid_ratio = 2.5
 num_datasets = 1000
@@ -300,7 +300,7 @@ for (p_idx in 1:3) {
     # Set up the 2x3 grid
     grid.newpage()
     layout=grid.layout(2,3)
-    pushViewport(viewport(layout=layout)) 
+    pushViewport(viewport(layout=layout))
   }
   # Print to pdf
   print(cost_plot_br, vp=viewport(layout.pos.row=1, layout.pos.col=p_idx))
@@ -308,7 +308,7 @@ for (p_idx in 1:3) {
   # Write out to pdf
   if (p_idx == 3) {
     dev.off()
-  }  
+  }
 
 #   # Plot ratios vs num datasets
 #   cost_plot_ds <- plot_cost_ratio(sim_stat_df, pipeline, bid_ratio, num_datasets, p_idx, 'num_datasets')
@@ -319,12 +319,12 @@ for (p_idx in 1:3) {
 #     # Set up the 2x3 grid
 #     grid.newpage()
 #     layout=grid.layout(2,3)
-#     pushViewport(viewport(layout=layout)) 
+#     pushViewport(viewport(layout=layout))
 #   }
 #   # Print to pdf
 #   print(cost_plot_ds, vp=viewport(layout.pos.row=1, layout.pos.col=p_idx))
 #   print(time_plot_ds, vp=viewport(layout.pos.row=2, layout.pos.col=p_idx))
 #   if (p_idx == 3) {
 #     dev.off()
-#   }  
+#   }
 }
