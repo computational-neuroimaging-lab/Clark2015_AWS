@@ -250,7 +250,7 @@ rel_csvs_dir <- 'spot-model/csvs'
 
 # Input parameters
 # Pipeline
-pipeline <- 'fs'
+pipeline <- 'cpac'
 # Plotting parameters
 bid_ratio = 2.5
 num_datasets = 1000

@@ -1,0 +1,100 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% This is just an example/guide for you to refer to when producing your supplementary material for your Frontiers article.                                 %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%% Version 2.1 Generated 2015/05/22 %%%
+%%% You will need to have the following packages installed: datetime, fmtcount, etoolbox, fcprefix, which are normally inlcuded in WinEdt. %%%
+%%% In http://www.ctan.org/ you can find the packages and how to install them, if necessary. %%%
+
+\documentclass{frontiers_suppmat} % for all articles
+
+\usepackage{url,hyperref,lineno,microtype}
+\usepackage[onehalfspacing]{setspace}
+
+
+% Leave a blank line between paragraphs in stead of using \\
+
+
+\def\keyFont{\fontsize{8}{11}\helveticabold }
+\def\firstAuthorLast{Frontiers} 
+\def\Authors{First Author, Co-Author* and Co-Author}
+% The Corresponding Author should be marked with an asterisk
+% Provide email of the corresponding author
+\def\corrAuthor{Author Name: }
+\def\corrEmail{email@uni.edu}
+
+
+\begin{document}
+\onecolumn
+\firstpage{1}
+
+\title[Supplementary Material]{{\helveticaitalic{Supplementary Material}}:
+\\ \helvetica{Article Title}} %Please insert the title of your article here
+
+\author[\firstAuthorLast ]{\Authors} %This field will be automatically populated
+\correspondance{} %This field will be automatically populated
+
+\extraAuth{}% If there are more than 1 corresponding author, comment this line and uncomment the next one.
+%\extraAuth{Corresponding Author2: email2@uni2.edu}
+
+\maketitle
+
+
+\section{Supplementary Data}
+
+Supplementary Material should be uploaded separately on submission. Please include any supplementary data, figures and/or tables. 
+
+\section{Supplementary Tables and Figures}
+
+\begin{table}[h]
+\textbf{\refstepcounter{table}\label{Tab:01} Supplementary Table \arabic{table}.}{ Enter the caption for your table here.  Repeat as  necessary for each of your tables }
+
+\processtable{ }
+{\begin{tabular}{lllll}\toprule
+ & Abstract max. legth (incl. spaces) & Figures or tables & Manuscript max. length \\\midrule
+Clinical Case Study & & & &\\
+Clinical Trial & & & &\\
+Hypothesis and Theory & & & &\\
+Methods & 2000 characters  & 15 & 12000 words \\
+Original Research & & & &\\
+Review & & & &\\
+Technology Report & & & &\\\midrule
+Focused Review & 2000 characters & 5 & 5000 words \\\midrule
+CPC &  1250 characters& 6 & 2500 words  \\\midrule
+Perspective & 1250 characters & 2 & 3000 words  \\
+Mini Review & & & &\\\midrule
+Data Report & None & 2 & 3000 words\\\midrule
+Classification & 1250 characters & 10 & 2000 words \\\midrule
+Editorial & None & None & 1000 words  \\\midrule
+Frontiers Commentary  & & &\\
+General Commentary & None & 1 & 1000 words\\
+Book review & & & \\\midrule
+Opinion   & & &\\
+Specialty Grand Challenge & None & 1 & 2000 words\\
+Field Grand Challenge & & & &\\\botrule
+\end{tabular}}{}
+\end{table}
+
+%%% There is no need for adding the file termination, as long as you indicate where the file is saved. In the examples below the files (logo1.jpg and logo2.eps) are in the Frontiers LaTeX folder
+%%% If using *.tif files convert them to .jpg or .png
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=15cm]{logo1}% This is a *.jpg file
+\end{center}
+\textbf{\refstepcounter{figure}\label{fig:01} Supplementary Figure \arabic{figure}.}{ Enter the caption for your figure here.  Repeat as  necessary for each of your figures }
+\end{figure}
+
+%\begin{figure}
+%\begin{center}
+%\includegraphics[width=3.5cm]{logo2}% This is an *.eps file
+%\end{center}
+% \textbf{\refstepcounter{figure}\label{fig:02} Figure \arabic{figure}.}{ Enter the caption for your figure here.  Repeat as  necessary for each of your figures }
+%\end{figure}
+
+
+%\bibliographystyle{frontiersinSCNS_ENG_HUMS} %  for Science, Engineering and Humanities and Social Sciences articles, for Humanities and Social Sciences articles please include page numbers in the in-text citations
+%\bibliographystyle{frontiersinHLTH&FPHY} % for Health and Physics articles
+%\bibliography{test}
+
+\end{document}
