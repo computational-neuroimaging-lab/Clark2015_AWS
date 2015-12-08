@@ -24,7 +24,7 @@
 
 
 \def\keyFont{\fontsize{8}{11}\helveticabold }
-\def\firstAuthorLast{Sample {et~al.}} %use et al only if is more than 1 author
+\def\firstAuthorLast{Clark {et~al.}} %use et al only if is more than 1 author
 \def\Authors{Daniel Clark\,$^{1}$, Christian Haselgrove\,$^{3}$, David N. Kennedy\,$^{3}$, Zhizhong Liu\,$^{4}$, Michael Milham\,$^{1,5}$, Petros Petrosyan\,$^{4}$, Carinna M. Torgerson\,$^{4}$, John D. Van Horn\,$^{4}$, and R. Cameron Craddock\,$^{1,2,*}$}
 % Affiliations should be keyed to the author's name with superscript numbers and be listed as follows: Laboratory, Institute, Department, Organization, City, State abbreviation (USA, Canada, Australia), and Country (without detailed address information such as city zip codes or street names).
 % If one of the authors has a change of address, list the new address below the correspondence details using a superscript symbol and use the same symbol to indicate the author in the author list.
@@ -252,7 +252,11 @@ These costs can be broken down to three categories: hardware, maintenance, and e
 
 These costs don’t directly factor in the compute technology becoming obsolete over time, under-utilization, over-utilization (and thus the need to buy more servers), and additional data storage.
 
+% Results
+\section{Results}
 
+%% Results from benchmarks
+\subsection{Results from benchmarks}
 The results from the data processing are outlined in the table below. The nodes category indicates the size of the cluster that was run to process the shown dataset. The parallelization factor indicates the number of datasets to be run on a single node at once. CPU time is a measure of the compute cycles needed to process a given dataset, while the wall time is the actual amount of minutes passed during the processing of a given dataset. The cost and cost per dataset come from the total charges incurred on AWS from preprocessing the datasets using the specified pipeline.
 
 
@@ -260,7 +264,7 @@ These benchmark results yielded realistic estimates for run times, costs, and re
 
 % EC2 instnace pricing table
 \begin{table}[!t]
-\textbf{\refstepcounter{table}\label{Tab:01} Table \arabic{table}.}{ Instance types pricing}
+\textbf{\refstepcounter{table}\label{Tab:02} Table \arabic{table}.}{ Benchmark results}
 
 \processtable{}
 {\begin{tabular}{llllllllll}\toprule
@@ -274,47 +278,19 @@ These benchmark results yielded realistic estimates for run times, costs, and re
 \end{tabular}}{}
 \end{table}
 
-\section{Results}
+%% Results from static simulations
+\subsection{Results from static simulations}
 
-\subsection{Figures}
-Frontiers requires figures to be submitted individually, in the same order as they are referred to in the manuscript. Figures will then be automatically embedded at the bottom of the submitted manuscript. Kindly ensure that each table and figure is mentioned in the text and in numerical order. Permission must be obtained for use of copyrighted material from other sources (including the web). Please note that it is compulsory to follow figure instructions. Figures which are not according to the guidelines will cause substantial delay during the production process.
-\begin{equation}
-\sum x+ y =Z\label{eq:01}
-\end{equation}
+By taking the means of the runtimes, download and upload times, and used storage from the benchmark runs, we were able to parameterize pipeline-level configurations for simulating each pipeline's performance in both a static and spot pricing model. Specifically, we gathered the parameters of the ANTS, C-PAC, and Freesurfer pipeline parameters and ran these through a series of simluations to gauge what scenarios necessitate the use of spot instances versus on-demand in getting the desired results with minimum cost and time.
+
+The static-price model simulated each pipeline's performance across all of the AWS availability zones for a range of dataset sizes.
+
+
 
 \section{Discussion}
 
 Text Text Text Text Text Text  Text Text Text Text Text Text Text Text Text  Text Text Text Text Text Text Text Text Text Text.
 Additional Requirements:
-\subsection{Corrections}
-
-If you need to communicate important changes to a published article please submit a General Commentary. Submit the article with the title “Corrigendum: Original Title of Article”.
-
-\subsection{Commentaries on Articles}
-
-At the beginning of your Commentary, please provide the citation of the article commented on. Rebuttals may be submitted in response to Commentaries; our limit in place is one commentary and one response. Rebuttals should also be submitted as General Commentary articles.
-
-\subsection{Human Search and Animal Research}
-
-All experiments on live vertebrates or higher invertebrates must be performed in accordance with relevant institutional and national guidelines and regulations. In the manuscript, authors must identify the committee approving the experiments and must confirm that all experiments conform to the relevant regulatory standards. For manuscripts reporting experiments on human subjects, authors must identify the committee approving the experiments and must also include a statement confirming that informed consent was obtained from all subjects. In Original Research Articles and Clinical Trial Articles these statements should appear in the Materials and Methods section.
-
-\subsection{Clinical Trial Registration}
-
-Clinical trials should be registered in a public trials registry in order to become the object of a publication at Frontiers. Trials must be registered at or before the start of patient enrollment. A clinical trial is defined as "any research study that prospectively assigns human participants or groups of humans to one or more health-related interventions to evaluate the effects on health outcomes."(\href{www.who.int/ictrp/en}{www.who.int/ictrp/en}). A list of acceptable registries can be found at \href{www.who.int/ictrp/en}{www.who.int/ictrp/en} and \href{www.icmje.org}{www.icmje.org}.
-
-\subsection{Inclusion of Proteomics Data}
-
-Authors should provide relevant information relating to how the peptide/protein matches were undertaken, including methods used to process and analyze data, false discovery rates (FDR) for large-scale studies and threshold or cut-off rates for peptide and protein matches. Further information could include software used, mass spectrometer type, sequence database and version, number of sequences in database, processing methods, mass tolerances used for matching, variable/fixed modifications, allowable missed cleavages, etc.
-
-Authors should provide as supplementary material information used to identify proteins and/or peptides. This should include information such as accession numbers, observed mass (m/z), charge, delta mass, matched mass, peptide/protein scores, peptide modification, miscleavages, peptide sequence, match rank, matched species (for cross species matching), number of peptide matches, ambiguous protein/peptide matches should be indicated, etc.
-For quantitative proteomics analyses authors should provide information to justify the statistical significance including biological replicates, statistical methods, estimates of uncertainty and the methods used for calculating error.
-
-For peptide matches with biologically relevant post-translational modifications (PTM) and for any protein match that has occurred using a single mass spectrum, authors should include this information as raw data, annotated spectra or submit data to an online repository (recommended option).
-Authors are encouraged to submit raw or matched data and 2-DE images to public proteomics repositories. Submission codes and/or links to data should be provided within the manuscript.
-
-\subsection{Data Sharing}
-
-Frontiers supports the policy of data sharing, and authors are advised to make freely available any materials and information described in their article, and any data relevant to the article (while not compromising confidentiality in the context of human-subject research) that may be reasonably requested by others for the purpose of academic and non-commercial research. In regards to deposition of data and data sharing through databases, Frontiers urges authors to comply with the current best practices within their discipline.
 
 \section*{Disclosure/Conflict-of-Interest Statement}
 %Frontiers follows the recommendations by the International Committee of Medical Journal Editors (http://www.icmje.org/ethical_4conflicts.html) which require that all financial, commercial or other relationships that might be perceived by the academic community as representing a potential conflict of interest must be disclosed. If no such relationship exists, authors will be asked to declare that the research was conducted in the absence of any commercial or financial relationships that could be construed as a potential conflict of interest. When disclosing the potential conflict of interest, the authors need to address the following points:
