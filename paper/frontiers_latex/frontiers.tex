@@ -255,6 +255,9 @@ These costs don’t directly factor in the compute technology becoming obsolete 
 
 The results from the data processing are outlined in the table below. The nodes category indicates the size of the cluster that was run to process the shown dataset. The parallelization factor indicates the number of datasets to be run on a single node at once. CPU time is a measure of the compute cycles needed to process a given dataset, while the wall time is the actual amount of minutes passed during the processing of a given dataset. The cost and cost per dataset come from the total charges incurred on AWS from preprocessing the datasets using the specified pipeline.
 
+
+These benchmark results yielded realistic estimates for run times, costs, and resources used; these estimates parameterized static and spot-price models that were simulated across a range of bid ratios and dataset sizes. The static model was developed to calculate the on-demand or fixed-price cost and runtime of preprocessing a dataset on AWS.
+
 % EC2 instnace pricing table
 \begin{table}[!t]
 \textbf{\refstepcounter{table}\label{Tab:01} Table \arabic{table}.}{ Instance types pricing}
