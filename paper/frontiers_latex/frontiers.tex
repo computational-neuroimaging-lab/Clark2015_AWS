@@ -262,7 +262,7 @@ The results from the data processing are outlined in the table below. The nodes 
 
 These benchmark results yielded realistic estimates for run times, costs, and resources used; these estimates parameterized static and spot-price models that were simulated across a range of bid ratios and dataset sizes. The static model was developed to calculate the on-demand or fixed-price cost and runtime of preprocessing a dataset on AWS.
 
-% EC2 instnace pricing table
+% EC2 instance pricing table
 \begin{table}[!t]
 \textbf{\refstepcounter{table}\label{Tab:02} Table \arabic{table}.}{ Benchmark results}
 
@@ -283,13 +283,47 @@ These benchmark results yielded realistic estimates for run times, costs, and re
 
 By taking the means of the runtimes, download and upload times, and used storage from the benchmark runs, we were able to parameterize pipeline-level configurations for simulating each pipeline's performance in both a static and spot pricing model. Specifically, we gathered the parameters of the ANTS, C-PAC, and Freesurfer pipeline parameters and ran these through a series of simluations to gauge what scenarios necessitate the use of spot instances versus on-demand in getting the desired results with minimum cost and time.
 
-The static-price model simulated each pipeline's performance across all of the AWS availability zones for a range of dataset sizes.
+The static-price model simulated each pipeline's performance across all of the AWS availability zones for a range of dataset sizes. It did this assuming a fixed per-hour runtime cost associated with the desired instance (in our case, the mean of the c3.8xlarge spot price history). This model uses each pipeline's performance configurations - including input and output dataset sizes, parallelization factor, processing time, and upload and download transfer rates - to calculate total runtimes and costs associated with processing data through that pipeline on AWS. The model did the calculations based on:
+
+1) uploading the dataset to the master node and storing the data on an EBS volume\\2) processing the data on as many slave nodes as required for the entire dataset size (up to 20)\\3) uploading the output data from the pipeline to S3 as the jobs finish\\4) terminate the cluster when all of the data is finished processing\\5) store outputs in S3 as long as it takes to download them to a local computer
+
+In order to accurately reflect the costs incurred from processing these datasets, the static model keeps track of the EC2 per-hour runtime costs, data transfer costs, EBS storage costs, and S3 storage costs across all of the availability zones.
+
+%% Results from spot simulations
+\subsection{Results from static monte carlo simulations}
+ 
+The spot model was developed with the same pipeline configuration parameters as the static model except that it used the real history of the per-hour spot price of the c3.8xlarge instance (from 3/15/15-9/4/15) during the dataset processing time. In addition to varying the pipeline, dataset size, and availability zone, this model also varied the per-hour bid-price for running the compute nodes. The pipeline would then be run under this bid price; if the spot price for the instance met or exceeded this bid, the processing for the datasets running at the time would be interrupted, and restarted the next time the spot price went below the bid. This simulation was run over and over throughout the history every 20-minutes to yield many results that we can draw statistial conclusions from.
+
+
+% Pipeline configurations
+\begin{table}[!t]
+\textbf{\refstepcounter{table}\label{Tab:03} Table \arabic{table}.}{ Pipeline runtime parameters}
+
+\processtable{}
+{\begin{tabular}{lllllll}\toprule
+        Pipeline & Input size (GB) & Output size (GB) & Parallelization factor & Runtime (mins) & Upload rate (Mb/s) & Download rate (Mb/s)\\\midrule
+        ANTs & 0.007 & 0.097 & 4 & 399 & 18 & 20\\
+        C-PAC & 0.055 & 2.3 & 3 & 33 & 18 & 20\\
+        Freesurfer & 0.007 & 0.379 & 8 & 410.4 & 18 & 20\\
+\end{tabular}}{}
+\end{table}
 
 
 
+% Discussion
 \section{Discussion}
 
-Text Text Text Text Text Text  Text Text Text Text Text Text Text Text Text  Text Text Text Text Text Text Text Text Text Text.
+\subsection{Comparison of cloud vs. computer ownership}
+
+\subsection{Strategies for spot bidding}
+
+\subsection{Finding optimal computing configurations}
+
+\subsection{Improving performance}
+
+% Conclusions
+\section{Conclusions}
+
 Additional Requirements:
 
 \section*{Disclosure/Conflict-of-Interest Statement}
