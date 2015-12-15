@@ -250,7 +250,7 @@ rel_csvs_dir <- 'spot-model/csvs'
 
 # Input parameters
 # Pipeline
-pipeline <- 'cpac'
+pipeline <- 'ants'
 # Plotting parameters
 bid_ratio = 2.5
 num_datasets = 1000
@@ -263,7 +263,7 @@ sim_stat_csv <- file.path(proj_base_dir, rel_csvs_dir,
 sim_stat_df <- read.csv(sim_stat_csv)
 
 # To write out plots
-plot_cost_times(ants_df, num_datasets, bid_ratio,
+plot_cost_times(sim_stat_df, num_datasets, bid_ratio,
                 file.path(proj_base_dir, 'spot-model/plots',
                           paste(pipeline,'_sim_mean.pdf', sep='')))
 

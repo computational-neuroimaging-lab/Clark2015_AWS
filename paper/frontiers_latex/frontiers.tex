@@ -259,8 +259,7 @@ These costs don’t directly factor in the compute technology becoming obsolete 
 \subsection{Results from benchmarks}
 The results from the data processing are outlined in the table below. The nodes category indicates the size of the cluster that was run to process the shown dataset. The parallelization factor indicates the number of datasets to be run on a single node at once. CPU time is a measure of the compute cycles needed to process a given dataset, while the wall time is the actual amount of minutes passed during the processing of a given dataset. The cost and cost per dataset come from the total charges incurred on AWS from preprocessing the datasets using the specified pipeline.
 
-
-These benchmark results yielded realistic estimates for run times, costs, and resources used; these estimates parameterized static and spot-price models that were simulated across a range of bid ratios and dataset sizes. The static model was developed to calculate the on-demand or fixed-price cost and runtime of preprocessing a dataset on AWS.
+These benchmark results yielded realistic estimates for run times, costs, and resources used; these estimates parameterized static and spot-price models that were simulated across a range of bid ratios and dataset sizes.
 
 % EC2 instance pricing table
 \begin{table}[!t]
@@ -281,7 +280,7 @@ These benchmark results yielded realistic estimates for run times, costs, and re
 %% Results from static simulations
 \subsection{Results from static simulations}
 
-By taking the means of the runtimes, download and upload times, and used storage from the benchmark runs, we were able to parameterize pipeline-level configurations for simulating each pipeline's performance in both a static and spot pricing model. Specifically, we gathered the parameters of the ANTS, C-PAC, and Freesurfer pipeline parameters and ran these through a series of simluations to gauge what scenarios necessitate the use of spot instances versus on-demand in getting the desired results with minimum cost and time.
+By taking the means of the runtimes, download and upload times, and used storage from the benchmark runs, we were able to parameterize pipeline-level configurations for simulating each pipeline's performance in both a static and spot pricing model. Specifically, we gathered the parameters of the ANTS, C-PAC, and Freesurfer pipelines and ran these through a series of simluations to gauge what scenarios necessitate the use of spot instances versus on-demand in getting the desired results with minimum cost and time.
 
 The static-price model simulated each pipeline's performance across all of the AWS availability zones for a range of dataset sizes. It did this assuming a fixed per-hour runtime cost associated with the desired instance (in our case, the mean of the c3.8xlarge spot price history). This model uses each pipeline's performance configurations - including input and output dataset sizes, parallelization factor, processing time, and upload and download transfer rates - to calculate total runtimes and costs associated with processing data through that pipeline on AWS. The model did the calculations based on:
 
@@ -291,9 +290,10 @@ In order to accurately reflect the costs incurred from processing these datasets
 
 %% Results from spot simulations
 \subsection{Results from static monte carlo simulations}
- 
+
 The spot model was developed with the same pipeline configuration parameters as the static model except that it used the real history of the per-hour spot price of the c3.8xlarge instance (from 3/15/15-9/4/15) during the dataset processing time. In addition to varying the pipeline, dataset size, and availability zone, this model also varied the per-hour bid-price for running the compute nodes. The pipeline would then be run under this bid price; if the spot price for the instance met or exceeded this bid, the processing for the datasets running at the time would be interrupted, and restarted the next time the spot price went below the bid. This simulation was run over and over throughout the history every 20-minutes to yield many results that we can draw statistial conclusions from.
 
+The static and spot models were run across all 23 availability zones on AWS, varying dataset sizes from [50, 100, 200, 500, 1000, 2000, 5000, 10000]. The spot model was run across the bid ratios [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0] of the mean per-hour spot history - for the static model the bid ratio was fixed to 1.0.
 
 % Pipeline configurations
 \begin{table}[!t]
@@ -307,6 +307,25 @@ The spot model was developed with the same pipeline configuration parameters as 
         Freesurfer & 0.007 & 0.379 & 8 & 410.4 & 18 & 20\\
 \end{tabular}}{}
 \end{table}
+
+% 
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[width=10cm]{logo1}% This is a *.jpg file
+\end{center}
+ \textbf{\refstepcounter{figure}\label{fig:01} Figure \arabic{figure}.}{ Enter the caption for your figure here.  Repeat as  necessary for each of your figures }
+\end{figure}
+
+\subsubsection{price and time vs. spot price ratio}
+
+The static model has the obvious property that because the compute nodes do not face forced termination, its compute time will always happen as fast or faster than the spot-price model. What is interesting is studying by how much faster it is for the price difference one pays for different sized datasets and for different bid ratios.
+
+\subsubsection{price and time vs. num datasets}
+\subsubsection{price and time vs. num nodes}
+\subsubsection{price and time vs. instance types}
+
+%% Monte carlo vs static simulations
+\subsection{Monte carlo vs static simulations}
 
 
 
