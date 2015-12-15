@@ -318,7 +318,11 @@ The static and spot models were run across all 23 availability zones on AWS, var
 
 \subsubsection{price and time vs. spot price ratio}
 
-The static model has the obvious property that because the compute nodes do not face forced termination, its compute time will always happen as fast or faster than the spot-price model. What is interesting is studying by how much faster it is for the price difference one pays for different sized datasets and for different bid ratios.
+The static model has the property that because the compute nodes do not face forced termination, its compute time will always happen as fast or faster than the spot-price model. What is interesting is studying by how much faster it is for the price difference one pays for different sized datasets and for different bid ratios.
+
+It can be seen from the plots that the biggest deciding factor for setting a bid ratio to ensure optimal time/cost for one's goal is dependent on availability zone. However, the cost and runtimes within an avability zone demonstrates a fairly repeatable pattern across pipelines - so it behooves us to focus on the trade-offs of a particular availability zone, or group of availability zones (AWS region). 
+
+Focusing on the US East, northern Virignia, region - it can be seen that the cost for running 1000 datasets really increases after setting a bid ratio of 3.0x. However, a bigger time reduction seems to happen at a bid ratio of around 2.0x; in other words, there is more of a bang for buck at a bid ratio of 2.0x than 3.0x.
 
 \subsubsection{price and time vs. num datasets}
 \subsubsection{price and time vs. num nodes}
