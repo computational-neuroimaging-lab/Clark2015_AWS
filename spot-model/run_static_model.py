@@ -98,6 +98,7 @@ if __name__ == '__main__':
 
     # Import packages
     import argparse
+    import os
 
     # Init argparser
     parser = argparse.ArgumentParser(description=__doc__)
@@ -122,4 +123,5 @@ if __name__ == '__main__':
     static_df = load_and_run(config, av_zone, price_hr)
 
     # Write to disk
-    static_df.to_csv('./static_df.csv')
+    out_df_path = os.path.join(os.getcwd(), os.path.basename(config).split('.')[0], str(price_hr), av_zone, 'on_demand.csv')
+    static_df.to_csv(out_df_path)
