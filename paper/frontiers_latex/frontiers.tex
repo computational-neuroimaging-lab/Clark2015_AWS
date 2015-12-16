@@ -25,7 +25,7 @@
 
 \def\keyFont{\fontsize{8}{11}\helveticabold }
 \def\firstAuthorLast{Clark {et~al.}} %use et al only if is more than 1 author
-\def\Authors{Daniel Clark\,$^{1}$, Christian Haselgrove\,$^{3}$, David N. Kennedy\,$^{3}$, Zhizhong Liu\,$^{4}$, Michael Milham\,$^{1,5}$, Petros Petrosyan\,$^{4}$, Carinna M. Torgerson\,$^{4}$, John D. Van Horn\,$^{4}$, and R. Cameron Craddock\,$^{1,2,*}$}
+\def\Authors{Daniel Clark\,$^{1}$, Christian Haselgrove\,$^{3}$, David N. Kennedy\,$^{3}$, Zhizhong Liu\,$^{4}$, Michael Milham\,$^{1,5}$, Petros Petrosyan\,$^{4}$, Carinna M. Torgerson\,$^{4}$, John D. Van Horn\,$^{4}$, Steven Giavasis,$^{1}$, and R. Cameron Craddock\,$^{1,2,*}$}
 % Affiliations should be keyed to the author's name with superscript numbers and be listed as follows: Laboratory, Institute, Department, Organization, City, State abbreviation (USA, Canada, Australia), and Country (without detailed address information such as city zip codes or street names).
 % If one of the authors has a change of address, list the new address below the correspondence details using a superscript symbol and use the same symbol to indicate the author in the author list.
 \def\Address{$^{1}$Center for the Developing Brain, Child Mind Institute, New York, NY, USA\\
@@ -236,7 +236,11 @@ There are many proposed methods in scientific literature for analyzing the quali
 %% Overall evaluation/static pricing model
 \subsection{Overall evaluation and the static pricing model}
 
-AWS outlines the different service charges in detail; this makes it possible to develop time and cost models for jobs to run on AWS as long as the user is aware of the cluster configuration they’d like to use and the average runtime per job of interest they are submitting. A static pricing model was developed to estimate time and costs for job submissions in Python and Excel. This model breaks the costs down into three categories: compute costs, the costs associated with actual computation and node runtimes, data transfer costs, and storage costs. The model similarly breaks runtimes down into three categories: computing run time, data up transfer time, and data down transfer time. The data transfer and storage costs can vary based on the cluster configuration and storage model being used. For example, data transfer is typically faster when uploading output results to S3 from the cluster, rather than downloading them to a server or workstation. Additionally, storage costs differ between EC2 EBS and S3 storage.
+AWS outlines the different service charges in detail; this makes it possible to develop time and cost models for jobs to run on AWS as long as the user is aware of the cluster configuration they’d like to use and the average runtime per job of interest they are submitting. A static pricing model was developed in Python and Excel to estimate time and costs for job submissions. This model breaks the costs down into three categories: compute costs, the costs associated with actual computation and node runtimes, data transfer costs, and storage costs. The model similarly breaks runtimes down into three categories: computing run time, data up transfer time, and data down transfer time. The data transfer and storage costs can vary based on the cluster configuration and storage model being used. For example, data transfer is typically faster when uploading output results to S3 from the cluster, rather than downloading them to a server or workstation. Additionally, storage costs differ between EC2 EBS and S3 storage.
+
+In order to give comprable runtime parameters of the pipelines, we ran the ANTs cortical thickness, C-PAC, and Freesurfer recon-all pipelines on the same 50 subjects from the CORR dataset (IBA\_TRT site). These numbers were used over the benchmark numbers because of their use on the exact same datasets.
+
+By taking the means of these runtimes, data transfer times, and utilized disk storage from the IBA\_TRT runs, we were able to parameterize pipeline-level configurations for simulating each pipeline's performance in this model.
 
 %% Impact of spot pricing
 \subsection{Impact of spot pricing}
@@ -259,14 +263,12 @@ These costs don’t directly factor in the compute technology becoming obsolete 
 \subsection{Results from benchmarks}
 The results from the data processing are outlined in the table below. The nodes category indicates the size of the cluster that was run to process the shown dataset. The parallelization factor indicates the number of datasets to be run on a single node at once. CPU time is a measure of the compute cycles needed to process a given dataset, while the wall time is the actual amount of minutes passed during the processing of a given dataset. The cost and cost per dataset come from the total charges incurred on AWS from preprocessing the datasets using the specified pipeline.
 
-These benchmark results yielded realistic estimates for run times, costs, and resources used; these estimates parameterized static and spot-price models that were simulated across a range of bid ratios and dataset sizes.
-
 % EC2 instance pricing table
-\begin{table}[!t]
+\begin{table}[!ht]
 \textbf{\refstepcounter{table}\label{Tab:02} Table \arabic{table}.}{ Benchmark results}
 
 \processtable{}
-{\begin{tabular}{llllllllll}\toprule
+{\begin{tabular}{llllllllll}
         Pipeline & Dataset & Dataset size & Platform & Nodes & Parallelization factor & CPU Time & Wall time & Cost (\$) & Cost per dataset (\$)\\\midrule
         ANTs cortical thickness & ABIDE/NDAR & 3197 & C-PAC & 20 & 8 & 23,018 & 147 & 760.24 & 0.24\\
         Resting state fMRI preprocessing (4 strategies) & ABIDE & 1112 & C-PAC & 20 & 3 & 834 & 22 & 80.54 & 0.07\\
@@ -280,7 +282,6 @@ These benchmark results yielded realistic estimates for run times, costs, and re
 %% Results from static simulations
 \subsection{Results from static simulations}
 
-By taking the means of the runtimes, download and upload times, and used storage from the benchmark runs, we were able to parameterize pipeline-level configurations for simulating each pipeline's performance in both a static and spot pricing model. Specifically, we gathered the parameters of the ANTS, C-PAC, and Freesurfer pipelines and ran these through a series of simluations to gauge what scenarios necessitate the use of spot instances versus on-demand in getting the desired results with minimum cost and time.
 
 The static-price model simulated each pipeline's performance across all of the AWS availability zones for a range of dataset sizes. It did this assuming a fixed per-hour runtime cost associated with the desired instance (in our case, the mean of the c3.8xlarge spot price history). This model uses each pipeline's performance configurations - including input and output dataset sizes, parallelization factor, processing time, and upload and download transfer rates - to calculate total runtimes and costs associated with processing data through that pipeline on AWS. The model did the calculations based on:
 
@@ -296,7 +297,7 @@ The spot model was developed with the same pipeline configuration parameters as 
 The static and spot models were run across all 23 availability zones on AWS, varying dataset sizes from [50, 100, 200, 500, 1000, 2000, 5000, 10000]. The spot model was run across the bid ratios [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0] of the mean per-hour spot history - for the static model the bid ratio was fixed to 1.0.
 
 % Pipeline configurations
-\begin{table}[!t]
+\begin{table}[!ht]
 \textbf{\refstepcounter{table}\label{Tab:03} Table \arabic{table}.}{ Pipeline runtime parameters}
 
 \processtable{}
