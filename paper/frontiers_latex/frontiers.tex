@@ -286,12 +286,18 @@ The results from the data processing are outlined in the table below. The nodes 
 %% Results from static simulations
 \subsection{Results from static simulations}
 
-
 The static-price model simulated each pipeline's performance across all of the AWS availability zones for a range of dataset sizes. It did this assuming a fixed per-hour runtime cost associated with the desired instance (in our case, the mean of the c3.8xlarge spot price history). This model uses each pipeline's performance configurations - including input and output dataset sizes, parallelization factor, processing time, and upload and download transfer rates - to calculate total runtimes and costs associated with processing data through that pipeline on AWS. The model did the calculations based on:
 
 1) uploading the dataset to the master node and storing the data on an EBS volume\\2) processing the data on as many slave nodes as required for the entire dataset size (up to 20)\\3) uploading the output data from the pipeline to S3 as the jobs finish\\4) terminate the cluster when all of the data is finished processing\\5) store outputs in S3 as long as it takes to download them to a local computer
 
 In order to accurately reflect the costs incurred from processing these datasets, the static model keeps track of the EC2 per-hour runtime costs, data transfer costs, EBS storage costs, and S3 storage costs across all of the availability zones.
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[width=10cm]{../../spot-model/plots/cpac_ondemand_static.pdf}% This is a *.jpg file
+\end{center}
+ \textbf{\refstepcounter{figure}\label{fig:01} Figure \arabic{figure}.}{ C-PAC static model costs for on-demand and 1.0x mean spot prices of c3.8xlarge instance }
+\end{figure}
 
 %% Results from spot simulations
 \subsection{Results from static monte carlo simulations}
@@ -398,12 +404,6 @@ Text Text Text Text Text Text  Text Text Text Text Text Text Text Text  Text Tex
 %%% There is no need for adding the file termination, as long as you indicate where the file is saved. In the examples below the files (logo1.jpg and logo2.eps) are in the Frontiers LaTeX folder
 %%% If using *.tif files convert them to .jpg or .png
 
-\begin{figure}[h!]
-\begin{center}
-\includegraphics[width=10cm]{logo1}% This is a *.jpg file
-\end{center}
- \textbf{\refstepcounter{figure}\label{fig:01} Figure \arabic{figure}.}{ Enter the caption for your figure here.  Repeat as  necessary for each of your figures }
-\end{figure}
 
 %\begin{figure}
 %\begin{center}
