@@ -238,13 +238,28 @@ There are many proposed methods in scientific literature for analyzing the quali
 
 AWS outlines the different service charges in detail; this makes it possible to develop time and cost models for jobs to run on AWS as long as the user is aware of the cluster configuration they would like to use and the average runtime per job of interest they are submitting. A static pricing model was developed in Python and Excel to estimate time and costs for job submissions. This model breaks the costs down into three categories: compute costs (the costs associated with actual computation and node runtimes) data transfer costs, and storage costs. The model similarly breaks runtimes down into three categories: computing run time, data up transfer time, and data down transfer time. The data transfer and storage costs can vary based on the cluster configuration and storage model being used. For example, data transfer is typically faster when uploading output results to S3 from the cluster, rather than downloading them to a server or workstation. Additionally, storage costs differ between EC2 EBS and S3 storage.
 
-In order to give comprable runtime parameters of the pipelines, we ran the ANTs cortical thickness, C-PAC, and Freesurfer recon-all pipelines on the same 50 subjects from the CORR dataset (IBA\_TRT site). These numbers were used over the benchmark numbers because of their use on the exact same datasets.
+In order to give comprable runtime parameters of the pipelines, we ran the ANTs cortical thickness, C-PAC, and Freesurfer recon-all pipelines on the same 50 subjects from the CORR dataset (IBA\_TRT site). These numbers were used over the benchmark numbers because of their use on the exact same datasets and are shown in \ref{Tab:02}
+
+% Pipeline configurations
+\begin{table}[!ht]
+\textbf{\refstepcounter{table}\label{Tab:02} Table \arabic{table}.}{ Pipeline runtime parameters}
+
+\processtable{}
+{\begin{tabular}{lllllll}\toprule
+        Pipeline & Input size (GB) & Output size (GB) & Parallelization factor & Runtime (mins) & Upload rate (Mb/s) & Download rate (Mb/s)\\\midrule
+        ANTs & 0.007 & 0.097 & 4 & 399 & 18 & 20\\
+        C-PAC & 0.055 & 2.3 & 3 & 33 & 18 & 20\\
+        Freesurfer & 0.007 & 0.379 & 8 & 410.4 & 18 & 20\\
+\end{tabular}}{}
+\end{table}
 
 By taking the means of these runtimes, data transfer times, and utilized disk storage from the IBA\_TRT runs, we were able to parameterize pipeline-level configurations for simulating each pipeline's performance in this model.
 
 %% Impact of spot pricing
 \subsection{Impact of spot pricing}
-To take advantage of the Amazon spot market, another model was developed to pull historical pricing data from AWS and run Monte Carlo simulations to obtain average runtimes and costs for that period of history (03-15 through 09-04 of 2015). The model takes in a bid ratio as an argument and runs Monte Carlo simulations by mocking the pipeline execution incrementally throughout the time period - in our case, every 20 minutes. The bid ratio is expressed as the ratio to the historical mean of the hourly price to run that instance. If the user wants to bid a ratio of 1.5 on an instance with a mean historical spot price of \$0.50, then their bid price will be set to \$0.75. The tuning of this parameter to be a ratio rather than a fixed price helps to control for the mean price fluctuations across time periods and instance types.
+To take advantage of the Amazon spot market, another model was developed to pull historical pricing data from AWS and run Monte Carlo simulations over the pricing history to obtain average runtimes and costs for that period (03-15 through 09-04 of 2015) based on the user bid price.
+
+The model takes in a bid ratio as an argument and runs the simulations by mocking the pipeline execution incrementally throughout the time period - in our case, every 20 minutes. The bid ratio is expressed as the ratio to the historical mean of the hourly price to run that instance. If the user wants to bid a ratio of 1.5 on an instance with a mean historical spot price of \$0.50, then their bid price will be set to \$0.75. The tuning of this parameter to be a ratio rather than a fixed price helps to control for the mean price fluctuations across time periods, availability zones, and instance types.
 
 The model here is similar to the static pricing model except that the hourly price changes with the market as it runs the job submission. In the event that the market price goes above the bid price, the instances have to halt their current processing and resume it when the price dips back below the bid. All of the variables in the Monte Carlo spot pricing model are the same as in the static model except it returns two more quantities of interest: number of interruptions experienced during the run, and the total amount of time spent waiting for the market price to drop down below the bid. With these numbers, the model can provide a probability of forced node termination or the amount of time the user can expect to wait when running their jobs using spot instances.
 
@@ -265,11 +280,11 @@ These costs don’t directly factor in the compute technology becoming obsolete 
 \subsection{Results from benchmarks}
 The benchmark processing performed on the ABIDE and NDAR datasets demonstrates the efficiency, cost-effectiveness, and security of cloud-based solutions. AWS also provided for an easy way for multiple laboratories to interact with the data on a common platform.
 
-The results from the data processing are outlined in the table below. The nodes category indicates the size of the cluster that was run to process the shown dataset. The parallelization factor indicates the number of datasets to be run on a single node at once. CPU time is a measure of the compute cycles needed to process a given dataset, while the wall time is the actual amount of minutes passed during the processing of a given dataset. The cost and cost per dataset come from the total charges incurred on AWS from preprocessing the datasets using the specified pipeline.
+The results from the data processing are outlined in table \ref{Tab:03}. The nodes category indicates the size of the cluster that was run to process the shown dataset. The parallelization factor indicates the number of datasets to be run on a single node at once. CPU time is a measure of the compute cycles needed to process a given dataset, while the wall time is the actual amount of minutes passed during the processing of a given dataset. The cost and cost per dataset come from the total charges incurred on AWS from preprocessing the datasets using the specified pipeline.
 
 % EC2 instance pricing table
 \begin{table}[!ht]
-\textbf{\refstepcounter{table}\label{Tab:02} Table \arabic{table}.}{ Benchmark results}
+\textbf{\refstepcounter{table}\label{Tab:03} Table \arabic{table}.}{ Benchmark results}
 
 \processtable{}
 {\begin{tabular}{llllllllll}
@@ -286,15 +301,20 @@ The results from the data processing are outlined in the table below. The nodes 
 %% Results from static simulations
 \subsection{Results from static simulations}
 
-The static-price model simulated each pipeline's performance across all of the AWS availability zones for a range of dataset sizes. It did this assuming a fixed per-hour runtime cost associated with the desired instance (in our case, the mean of the c3.8xlarge spot price history). This model uses each pipeline's performance configurations - including input and output dataset sizes, parallelization factor, processing time, and upload and download transfer rates - to calculate total runtimes and costs associated with processing data through that pipeline on AWS. The model did the calculations based on:
+The static-price model simulated each pipeline's performance across all of the AWS availability zones for a range of dataset sizes from 50 up to 10,000. It did this assuming a fixed per-hour runtime cost associated with the desired instance. This model uses each pipeline's performance configurations - including input and output dataset sizes, parallelization factor, processing time, and upload and download transfer rates - to calculate total runtimes and costs associated with processing data through that pipeline on AWS. The model did the calculations based on:
 
-1) uploading the dataset to the master node and storing the data on an EBS volume\\2) processing the data on as many slave nodes as required for the entire dataset size (up to 20)\\3) uploading the output data from the pipeline to S3 as the jobs finish\\4) terminate the cluster when all of the data is finished processing\\5) store outputs in S3 as long as it takes to download them to a local computer
+1) uploading the dataset to the master node and storing the data on an EBS volume\\
+2) processing the data on as many slave nodes as required for the entire dataset size (up to 20)\\
+3) uploading the output data from the pipeline to S3 as the jobs finish\\
+4) terminate the cluster when all of the data is finished processing\\
+5) store outputs in S3 as long as it takes to download them to a local computer
 
-In order to accurately reflect the costs incurred from processing these datasets, the static model keeps track of the EC2 per-hour runtime costs, data transfer costs, EBS storage costs, and S3 storage costs across all of the availability zones.
+In order to accurately reflect the costs incurred from processing these datasets, the static model keeps track of the EC2 per-hour runtime costs, data transfer costs, EBS storage costs, and S3 storage costs across all of the availability zones. The total costs and times results for the on-demand compute prices are broken down in figure \ref{fig:01}. The run times are the same across the regions, however the costs greatly differ in this respect. This is an important factor to note as the costs of services offered in AWS differ based on region.
 
-\begin{figure}[h!]
+% On-demand costs/times
+\begin{figure}[!h]
 \begin{center}
-\includegraphics[width=10cm]{../../spot-model/plots/cpac_ondemand_static.pdf}% This is a *.jpg file
+\includegraphics[width=10cm]{../../spot-model/plots/cpac_ondemand.pdf}% This is a *.jpg file
 \end{center}
  \textbf{\refstepcounter{figure}\label{fig:01} Figure \arabic{figure}.}{ C-PAC static model costs for on-demand and 1.0x mean spot prices of c3.8xlarge instance }
 \end{figure}
@@ -302,34 +322,22 @@ In order to accurately reflect the costs incurred from processing these datasets
 %% Results from spot simulations
 \subsection{Results from static monte carlo simulations}
 
-The spot model was developed with the same pipeline configuration parameters as the static model except that it used the real history of the per-hour spot price of the c3.8xlarge instance (from 3/15/15-9/4/15) during the dataset processing time. In addition to varying the pipeline, dataset size, and availability zone, this model also varied the per-hour bid-price for running the compute nodes. The pipeline would then be run under this bid price; if the spot price for the instance met or exceeded this bid, the processing for the datasets running at the time would be interrupted, and restarted the next time the spot price went below the bid. This simulation was run over and over throughout the history every 20-minutes to yield many results that we can draw statistial conclusions from.
+The spot model was developed with the same pipeline configuration parameters as the static model except that it used the real history of the per-hour spot price of the c3.8xlarge instance during the dataset processing time. In addition to varying the pipeline, dataset size, and availability zone, this model also varied the per-hour bid-price for running the compute nodes.
 
-The static and spot models were run across all 23 availability zones on AWS, varying dataset sizes from [50, 100, 200, 500, 1000, 2000, 5000, 10000]. The spot model was run across the bid ratios [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0] of the mean per-hour spot history - for the static model the bid ratio was fixed to 1.0.
+The static and spot models were run across all 23 availability zones on AWS, varying dataset sizes from 50 to 10,000 as in the static model; the bid ratio was also varied from 1.0, incrementally up to 5.0 to help develop a bidding strategy based on spot history. The on-demand prices vary between regions, but the spot market prices vary between availability zones (multiple zones per region in most cases).
 
-% Pipeline configurations
-\begin{table}[!ht]
-\textbf{\refstepcounter{table}\label{Tab:03} Table \arabic{table}.}{ Pipeline runtime parameters}
+A comparison between the on-demand static model and spot-model is shown in figure \ref{fig:02}, where the mean runtimes and prices are plotted with the on-demand quantity being shown as a black line in each plot. This plot shows that one can typically save much on cost by bidding in the spot market, however, the lower bound on runtime is always determined by on-demand instances. It becomes of interest to study how much faster it is for the price difference one pays for different sized datasets and for different bid ratios.
 
-\processtable{}
-{\begin{tabular}{lllllll}\toprule
-        Pipeline & Input size (GB) & Output size (GB) & Parallelization factor & Runtime (mins) & Upload rate (Mb/s) & Download rate (Mb/s)\\\midrule
-        ANTs & 0.007 & 0.097 & 4 & 399 & 18 & 20\\
-        C-PAC & 0.055 & 2.3 & 3 & 33 & 18 & 20\\
-        Freesurfer & 0.007 & 0.379 & 8 & 410.4 & 18 & 20\\
-\end{tabular}}{}
-\end{table}
-
-% 
-\begin{figure}[h!]
+% Spot costs/times
+\begin{figure}[!h]
 \begin{center}
-\includegraphics[width=10cm]{logo1}% This is a *.jpg file
+\includegraphics[width=10cm]{../../spot-model/plots/cpac_sim_mean.pdf}% This is a *.jpg file
 \end{center}
- \textbf{\refstepcounter{figure}\label{fig:01} Figure \arabic{figure}.}{ Enter the caption for your figure here.  Repeat as  necessary for each of your figures }
+ \textbf{\refstepcounter{figure}\label{fig:02} Figure \arabic{figure}.}{ C-PAC mean runtimes and costs versus bid ratio; the black lines are the on-demand times and prices }
 \end{figure}
 
-\subsubsection{price and time vs. spot price ratio}
 
-The static model has the property that because the compute nodes do not face forced termination, its compute time will always happen as fast or faster than the spot-price model. What is interesting is studying by how much faster it is for the price difference one pays for different sized datasets and for different bid ratios.
+
 
 It can be seen from the plots that the biggest deciding factor for setting a bid ratio to ensure optimal time/cost for one's goal is dependent on availability zone. However, the cost and runtimes within an avability zone demonstrates a fairly repeatable pattern across pipelines - so it behooves us to focus on the trade-offs of a particular availability zone, or group of availability zones (AWS region). 
 

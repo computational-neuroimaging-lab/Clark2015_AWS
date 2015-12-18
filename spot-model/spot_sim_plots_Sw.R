@@ -47,11 +47,15 @@ aggregate_df <- function(csv, func_name) {
 
 # Populate regions with name formatted
 format_region <- function(data_frame) {
-  data_frame$region[grep("us-west",data_frame$av_zone)]="US West"
-  data_frame$region[grep("us-east",data_frame$av_zone)]="US East"
-  data_frame$region[grep("ap",data_frame$av_zone)]="Asia Pacific"
-  data_frame$region[grep("eu",data_frame$av_zone)]="Europe"
-  data_frame$region[grep("sa",data_frame$av_zone)]="S. America"
+  data_frame$region[grep('us-west-1',data_frame$av_zone)]='N. California'
+  data_frame$region[grep('us-west-2',data_frame$av_zone)]='Oregon'
+  data_frame$region[grep('us-east-1',data_frame$av_zone)]='N. Virginia'
+  data_frame$region[grep('eu-west-1',data_frame$av_zone)]='Ireland'
+  data_frame$region[grep('eu-central-1',data_frame$av_zone)]='Frankfurt'
+  data_frame$region[grep('ap-southeast-1',data_frame$av_zone)]='Singapore'
+  data_frame$region[grep('ap-southeast-2',data_frame$av_zone)]='Sydney'
+  data_frame$region[grep('ap-northeast-1',data_frame$av_zone)]='Tokyo'
+  data_frame$region[grep('sa-east-1',data_frame$av_zone)]='Sao Paulo'
   #data_frame$region=factor(data_frame$region)
 
   # Return the data frame with region header
@@ -82,11 +86,13 @@ format_cost_times <- function(plot_obj) {
 # Plot and print simulation results to pdf
 plot_cost_times <- function(agg_df, num_ds, bid_rat, out_file) {
   ## Ceiling costs to round to the nearest dollar
+  fixed_ds_df <- subset(agg_df, num_datasets==num_ds)
   # Cost vs. Bid ratio
-  cost_br <- ggplot(subset(agg_df, num_datasets==num_ds),
+  cost_br <- ggplot(fixed_ds_df,
                     aes(x=bid_ratio, y=ceiling(mean_total_cost), col=av_zone)) +
-             labs(x='Bid ratio to mean price', y='Cost ($)',
+             labs(x='Bid ratio', y='Cost ($)',
                   title=paste('Cost vs bid ratio, datasets = ', num_ds))
+  cost_br <- cost_br + geom_hline(aes(yintercept=on_demand_total_cost))
   cost_br <- format_cost_times(cost_br)
 
   # Cost vs. Num datasets
@@ -99,8 +105,9 @@ plot_cost_times <- function(agg_df, num_ds, bid_rat, out_file) {
   # Cost vs. Bid ratio
   time_br <- ggplot(subset(agg_df, num_datasets==num_ds),
                     aes(x=bid_ratio, y=mean_total_time/3600, col=av_zone)) +
-             labs(x='Bid ratio to mean spot price', y='Time (hours)',
+             labs(x='Bid ratio', y='Time (hours)',
                   title=paste('Time vs bid ratio, datasets = ', num_ds))
+  time_br <- time_br + geom_hline(aes(yintercept=static_total_time/3600.0))
   time_br <- format_cost_times(time_br)
 
   # Cost vs. Num datasets
@@ -116,15 +123,55 @@ plot_cost_times <- function(agg_df, num_ds, bid_rat, out_file) {
 
   # Set up the 2x2 grid
   grid.newpage()
-  layout=grid.layout(2,2)
+  layout=grid.layout(1,2)
   pushViewport(viewport(layout=layout))
 
   # Print to pdf
   print(cost_br, vp=viewport(layout.pos.row=1, layout.pos.col=1))
-  print(cost_ds, vp=viewport(layout.pos.row=2, layout.pos.col=1))
+  #print(cost_ds, vp=viewport(layout.pos.row=2, layout.pos.col=1))
   print(time_br, vp=viewport(layout.pos.row=1, layout.pos.col=2))
-  print(time_ds, vp=viewport(layout.pos.row=2, layout.pos.col=2))
+  #print(time_ds, vp=viewport(layout.pos.row=2, layout.pos.col=2))
 
+  # Shutdown printout device
+  dev.off()
+}
+
+# Plot and print simulation results to pdf
+plot_tradeoffs <- function(agg_df, num_ds, bid_rat, out_file) {
+  ## Ceiling costs to round to the nearest dollar
+  fixed_ds_df <- subset(agg_df, num_datasets==num_ds)
+
+  # Cost vs. Bid ratio
+  time_to <- ggplot(fixed_ds_df,
+                    aes(x=bid_ratio, y=time_to_cost, col=av_zone)) +
+    labs(x='Bid ratio', y='Cost ($)',
+         title=paste('Time/cost vs bid ratio, datasets = ', num_ds))
+  time_to <- time_to + geom_hline(aes(yintercept=time_to_cost_od))
+  time_to <- format_cost_times(time_to)
+  
+  # Cost vs. Bid ratio
+  time_pl <- ggplot(fixed_ds_df,
+                    aes(x=bid_ratio, y=time_plus_cost, col=av_zone)) +
+    labs(x='Bid ratio', y='Cost ($)',
+         title=paste('Time/cost vs bid ratio, datasets = ', num_ds))
+  time_pl <- time_pl + geom_hline(aes(yintercept=time_plus_cost_od))
+  time_pl <- format_cost_times(time_pl)
+
+  # Open pdf file to save plots to
+  pdf(file=out_file, title='sim_results', width=180/25.4, height=8,
+      family='ArialMT', paper='special')
+  
+  # Set up the 2x2 grid
+  grid.newpage()
+  layout=grid.layout(1,2)
+  pushViewport(viewport(layout=layout))
+  
+  # Print to pdf
+  print(time_to, vp=viewport(layout.pos.row=1, layout.pos.col=1))
+  #print(cost_ds, vp=viewport(layout.pos.row=2, layout.pos.col=1))
+  print(time_pl, vp=viewport(layout.pos.row=1, layout.pos.col=2))
+  #print(time_ds, vp=viewport(layout.pos.row=2, layout.pos.col=2))
+  
   # Shutdown printout device
   dev.off()
 }
@@ -250,25 +297,28 @@ rel_csvs_dir <- 'spot-model/csvs'
 
 # Input parameters
 # Pipeline
-pipeline <- 'fs'
+pipeline <- 'ants'
 # Plotting parameters
 bid_ratio = 2.5
 num_datasets = 1000
 
 # Define csv
 sim_stat_csv <- file.path(proj_base_dir, rel_csvs_dir,
-                          paste(pipeline, '_avg_sims_and_static.csv', sep=''))
+                          paste(pipeline, '_merged.csv', sep=''))
 
 # Load in sim vs stat dataframe
 sim_stat_df <- read.csv(sim_stat_csv)
 
+sim_stat_df$region = ''
+region_df <- format_region(sim_stat_df)
+
 # To write out plots
-plot_cost_times(sim_stat_df, num_datasets, bid_ratio,
+plot_cost_times(region_df, num_datasets, bid_ratio,
                 file.path(proj_base_dir, 'spot-model/plots',
                           paste(pipeline,'_sim_mean.pdf', sep='')))
 
 # Plot the correlations between simultions and static models
-plot_correlations(sim_stat_df, bid_ratio, pipeline)
+plot_correlations(region_df, bid_ratio, pipeline)
 
 # Iterate over pipelines for plots
 pipelines <- c('ants', 'cpac', 'fs')

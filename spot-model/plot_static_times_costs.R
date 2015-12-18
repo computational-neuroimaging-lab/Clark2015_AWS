@@ -11,11 +11,15 @@ library(reshape2)
 
 # Populate regions with name formatted
 format_region <- function(data_frame) {
-  data_frame$region[grep("us-west",data_frame$av_zone)]="US West"
-  data_frame$region[grep("us-east",data_frame$av_zone)]="US East"
-  data_frame$region[grep("ap",data_frame$av_zone)]="Asia Pacific"
-  data_frame$region[grep("eu",data_frame$av_zone)]="Europe"
-  data_frame$region[grep("sa",data_frame$av_zone)]="S. America"
+  data_frame$region[grep('us-west-1',data_frame$av_zone)]='US West (N. California)'
+  data_frame$region[grep('us-west-2',data_frame$av_zone)]='US West (Oregon)'
+  data_frame$region[grep('us-east-1',data_frame$av_zone)]='US East (N. Virginia)'
+  data_frame$region[grep('eu-west-1',data_frame$av_zone)]='Europe (Ireland)'
+  data_frame$region[grep('eu-central-1',data_frame$av_zone)]='Europe (Frankfurt)'
+  data_frame$region[grep('ap-southeast-1',data_frame$av_zone)]='Asia Pacific (Singapore)'
+  data_frame$region[grep('ap-southeast-2',data_frame$av_zone)]='Asia Pacific (Sydney)'
+  data_frame$region[grep('ap-northeast-1',data_frame$av_zone)]='Asia Pacific (Tokyo)'
+  data_frame$region[grep('sa-east-1',data_frame$av_zone)]='S. America (Sao Paulo)'
   #data_frame$region=factor(data_frame$region)
   
   # Return the data frame with region header
@@ -44,22 +48,22 @@ format_cost_times <- function(plot_obj) {
 
 
 # Plot and print simulation results to pdf
-plot_ondemand_static <- function(df, out_file) {
+plot_ondemand <- function(df, out_file) {
 
   # Get on demand costs plot
-  ondemand_cost <- ggplot(df, aes(x=num_datasets, y=on_demand_total_cost, col=av_zone)) +
+  ondemand_cost <- ggplot(df, aes(x=num_datasets, y=on_demand_total_cost, col=region)) +
     labs(x='Number of datasets', y='Total cost ($)',
-         title='On-demand costs')
-  ondemand_cost <- format_cost_times(ondemand_cost)
+         title='On-demand costs') + geom_line()
+  #ondemand_cost <- format_cost_times(ondemand_cost)
   
   # Get on demand costs plot
-  static_cost <- ggplot(subset(df, bid_ratio==1.0), aes(x=num_datasets, y=static_total_cost, col=av_zone)) +
-    labs(x='Number of datasets', y='Total cost ($)',
-         title='Static costs (1.0x bid ratio)')
-  static_cost <- format_cost_times(static_cost)
+  ondemand_time <- ggplot(df, aes(x=num_datasets, y=static_total_time/3600.0, col='all regions')) +
+    labs(x='Number of datasets', y='Total time (hrs)',
+         title='On-demand times') + geom_line()
+  #ondemand_time <- format_cost_times(ondemand_time)
   
   # Open pdf file to save plots to
-  pdf(file=out_file, title='ondemand_static', width=180/25.4, height=8,
+  pdf(file=out_file, title='ondemand', width=8, height=180/25.4,
       family='ArialMT', paper='special')
   
   # Set up the 2x2 grid
@@ -69,7 +73,7 @@ plot_ondemand_static <- function(df, out_file) {
   
   # Print to pdf
   print(ondemand_cost, vp=viewport(layout.pos.row=1, layout.pos.col=1))
-  print(static_cost, vp=viewport(layout.pos.row=2, layout.pos.col=1))
+  print(ondemand_time, vp=viewport(layout.pos.row=2, layout.pos.col=1))
   
   # Shutdown printout device
   dev.off()
@@ -93,12 +97,12 @@ merged_csv <- file.path(proj_base_dir, rel_csvs_dir,
                           paste(pipeline, '_merged.csv', sep=''))
 
 # Out pdf
-out_pdf <- file.path(proj_base_dir, 'spot-model/plots', paste(pipeline, '_ondemand_static.pdf', sep=''))
+out_pdf <- file.path(proj_base_dir, 'spot-model/plots', paste(pipeline, '_ondemand.pdf', sep=''))
 
 # Load in sim vs stat dataframe
 merged_df <- read.csv(merged_csv)
-
+merged_df$region = ''
 region_df <- format_region(merged_df)
 
 # Plot
-plot_ondemand_static(region_df, out_pdf)
+plot_ondemand(region_df, out_pdf)
