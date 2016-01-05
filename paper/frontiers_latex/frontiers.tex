@@ -25,14 +25,14 @@
 
 \def\keyFont{\fontsize{8}{11}\helveticabold }
 \def\firstAuthorLast{Clark {et~al.}} %use et al only if is more than 1 author
-\def\Authors{Daniel Clark\,$^{1}$, Christian Haselgrove\,$^{3}$, David N. Kennedy\,$^{3}$, Zhizhong Liu\,$^{4}$, Michael Milham\,$^{1,5}$, Petros Petrosyan\,$^{4}$, Carinna M. Torgerson\,$^{4}$, John D. Van Horn\,$^{4}$, Steven Giavasis,$^{1}$, and R. Cameron Craddock\,$^{1,2,*}$}
+\def\Authors{Daniel Clark\,$^{1}$, Steven Giavasis\,$^{1}$, Christian Haselgrove\,$^{2}$, David N. Kennedy\,$^{2}$, Zhizhong Liu\,$^{3}$, Michael Milham\,$^{1,4}$, Petros Petrosyan\,$^{3}$, Carinna M. Torgerson\,$^{3}$, John D. Van Horn\,$^{3}$ and R. Cameron Craddock\,$^{1,5,*}$}
 % Affiliations should be keyed to the author's name with superscript numbers and be listed as follows: Laboratory, Institute, Department, Organization, City, State abbreviation (USA, Canada, Australia), and Country (without detailed address information such as city zip codes or street names).
 % If one of the authors has a change of address, list the new address below the correspondence details using a superscript symbol and use the same symbol to indicate the author in the author list.
 \def\Address{$^{1}$Center for the Developing Brain, Child Mind Institute, New York, NY, USA\\
-$^{2}$Computational Neuroimaging Laboratory, Center for Biomedical Imaging and Neuromodulation, Nathan S. Kline Insitute for Psychiatric Research, Orangeburg, NY, USA\\
-$^{3}$Division of Informatics, Department of Psychiatry, University of Massachusetts Medical School, Worcester, MA, USA\\
-$^{4}$The Institute for Neuroimaging and Informatics (INI) and Laboratory of Neuro Imaging (LONI), Keck School of Medicine of USC, University of Southern California, Los Angeles, CA, USA\\
-$^{5}$Center for Biomedical Imaging and Neuromodulation, Nathan S. Kline Institute for Psychiatric Research, Orangeburg, New York, USA}
+$^{2}$Division of Informatics, Department of Psychiatry, University of Massachusetts Medical School, Worcester, MA, USA\\
+$^{3}$The Institute for Neuroimaging and Informatics (INI) and Laboratory of Neuro Imaging (LONI), Keck School of Medicine of USC, University of Southern California, Los Angeles, CA, USA\\
+$^{4}$Center for Biomedical Imaging and Neuromodulation, Nathan S. Kline Institute for Psychiatric Research, Orangeburg, New York, USA\\
+$^{5}$Computational Neuroimaging Laboratory, Center for Biomedical Imaging and Neuromodulation, Nathan S. Kline Insitute for Psychiatric Research, Orangeburg, NY, USA}
 % The Corresponding Author should be marked with an asterisk
 % Provide the exact contact address (this time including street name and city zip code) and email of the corresponding author
 \def\corrAuthor{R. Cameron Craddock}
@@ -123,9 +123,9 @@ Amazon allows for users to bid on the resources that are not being used at a sig
 
 % EC2 instnace pricing table
 \begin{table}[!t]
-\textbf{\refstepcounter{table}\label{Tab:01} Table \arabic{table}.}{ Instance types pricing}
+%\textbf{\refstepcounter{table}\label{Tab:01} Table \arabic{table}.}{ Instance types pricing}
 
-\processtable{}
+\processtable{ Instance types pricing}
 {\begin{tabular}{lllllll}\toprule
     Instance type & vCPUs & ECUs & Memory (GiB) & On-demand (\$/hr) & Reserved no-upfront, 1 year (\$/hr) & Typical spot (\$/hr)\\\midrule
     t2.small & 1 & Variable & 2 & 0.026 & 0.018 & N/A\\
@@ -228,21 +228,21 @@ Four pipelines were used in processing the aforementioned datasets: C-PAC, ANTs 
 The ANTs cortical thickness pipeline is a volume-based method for extracting cortical thickness estimates from anatomical MRI data. The pipeline is detailed here: http://www.ncbi.nlm.nih.gov/pubmed/24879923, and consists of nonlinear registration to a template, bias correction, tissue segmentation, and cortical thickness estimation. The mean cortical thickness was then calculated at 31 ROIs on each hemisphere of the cortex and using the Desikan-Killiany-Tourville (DKT-31) cortical labelling protocol. Afterwards, the normalized cortical thickness image, and mean ROI values were uploaded to the results bucket on S3. This analysis was done on the ABIDE dataset, IBA\_TRT site of CoRR, and the 2,085 subjects analyzed from NDAR.
 
 
-Freesurfer’s recon-all pipeline extracts cortical and subcortical structures from anatomical data and computes surface and volumetric-based statistics. The pipeline is detailed here: https://surfer.nmr.mgh.harvard.edu/fswiki/recon-all. The image is motion and intensity-corrected, skull-stripped, normalized, registered, and segmented to produce many outputs, of which, statistical derivatives are calculated on. The recon-all function takes in an ‘-openmp’ flag where the user can specify the number of cores to allocate to hyper-threaded executables underlying the pipeline; this decreases computation time. The CoRR IBA\_TRT site was ran through the recon-all pipeline, using 8 cores passed to the ‘-openmp’ flag. Additionally, recon-all supports GPU hardware via the ‘-use-cuda’ flag. By launching the g2.2xlarge instance type into a cluster configuration, recon-all was able to utilize CUDA-enabled executables on GPU hardware in the pipeline for further speed improvements; this pipeline also passed 8 cores to the ‘-openmp’ flag for any executables that still needed to run on the CPU.
+Freesurfer's recon-all pipeline extracts cortical and subcortical structures from anatomical data and computes surface and volumetric-based statistics. The pipeline is detailed here: https://surfer.nmr.mgh.harvard.edu/fswiki/recon-all. The image is motion and intensity-corrected, skull-stripped, normalized, registered, and segmented to produce many outputs, of which, statistical derivatives are calculated on. The recon-all function takes in an \texttt{-openmp} flag where the user can specify the number of cores to allocate to hyper-threaded executables underlying the pipeline; this decreases computation time. The CoRR IBA\_TRT site was ran through the recon-all pipeline, using 8 cores passed to the \texttt{-openmp} flag. Additionally, recon-all supports GPU hardware via the ‘-use-cuda’ flag. By launching the g2.2xlarge instance type into a cluster configuration, recon-all was able to utilize CUDA-enabled executables on GPU hardware in the pipeline for further speed improvements; this pipeline also passed 8 cores to the \texttt{-openmp} flag for any executables that still needed to run on the CPU.
 
 
-There are many proposed methods in scientific literature for analyzing the quality of MRI images.The quantitative methods have been assembled to form the Quality Assessment Protocol (QAP) pipeline. The QAP includes measures for gauging the quality of structural and functional MRI data. The structural measures include (taken from an excerpt of QAP Steve sent me): contrast­to­noise ratio (CNR; Magnotta and Friedman, 2006), entropy focus criterion (EFC, Atkinson 1997), foreground­to­background energy ratio (FBER), voxel smoothness (FWHM, Friedman 2008), percentage of artifact voxels (QI1, Mortamet 2009), and signal­to­noise ratio (SNR, Magnotta and Friedman, 2006). Spatial and temporal measures are calculated on the function data. The spatial measures include: EFC, FBER, and FWHM, in addition to ghost­to­signal ratio (GSR). The temporal measures include: the standardized root mean squared change in fMRI signal between volumes (DVARS; Nichols 2013), mean root mean square deviation (MeanFD, Jenkinson 2003), the percentage of voxels with meanFD > 0.2 (Percent FD; Power 2012), the temporal mean of AFNI’s 3dTqual metric (1 minus the Spearman correlation between each fMRI volume and the median volume; Cox 1995) and the average fraction of outliers found in each volume.
+There are many proposed methods in scientific literature for analyzing the quality of MRI images.The quantitative methods have been assembled to form the Quality Assessment Protocol (QAP) pipeline. The QAP includes measures for gauging the quality of structural and functional MRI data. The structural measures include (taken from an excerpt of QAP Steve sent me): contrast-to-noise ratio (CNR; Magnotta and Friedman, 2006), entropy focus criterion (EFC, Atkinson 1997), foreground-to-background energy ratio (FBER), voxel smoothness (FWHM, Friedman 2008), percentage of artifact voxels (QI1, Mortamet 2009), and signal-to-noise ratio (SNR, Magnotta and Friedman, 2006). Spatial and temporal measures are calculated on the function data. The spatial measures include: EFC, FBER, and FWHM, in addition to ghost-to-signal ratio (GSR). The temporal measures include: the standardized root mean squared change in fMRI signal between volumes (DVARS; Nichols 2013), mean root mean square deviation (MeanFD, Jenkinson 2003), the percentage of voxels with meanFD > 0.2 (Percent FD; Power 2012), the temporal mean of AFNI’s 3dTqual metric (1 minus the Spearman correlation between each fMRI volume and the median volume; Cox 1995) and the average fraction of outliers found in each volume.
 
 %% Overall evaluation/static pricing model
 \subsection{Overall evaluation and the static pricing model}
 
 AWS outlines the different service charges in detail; this makes it possible to develop time and cost models for jobs to run on AWS as long as the user is aware of the cluster configuration they would like to use and the average runtime per job of interest they are submitting. A static pricing model was developed in Python and Excel to estimate time and costs for job submissions. This model breaks the costs down into three categories: compute costs (the costs associated with actual computation and node runtimes) data transfer costs, and storage costs. The model similarly breaks runtimes down into three categories: computing run time, data up transfer time, and data down transfer time. The data transfer and storage costs can vary based on the cluster configuration and storage model being used. For example, data transfer is typically faster when uploading output results to S3 from the cluster, rather than downloading them to a server or workstation. Additionally, storage costs differ between EC2 EBS and S3 storage.
 
-In order to give comprable runtime parameters of the pipelines, we ran the ANTs cortical thickness, C-PAC, and Freesurfer recon-all pipelines on the same 50 subjects from the CORR dataset (IBA\_TRT site). These numbers were used over the benchmark numbers because of their use on the exact same datasets and are shown in \ref{Tab:02}
+In order to give comprable runtime parameters of the pipelines, we ran the ANTs cortical thickness, C-PAC, and Freesurfer recon-all pipelines on the same 50 subjects from the CORR dataset (IBA\_TRT site). These numbers were used over the benchmark numbers because of their use on the exact same datasets and are shown in \ref{tab:static_params}
 
 % Pipeline configurations
 \begin{table}[!ht]
-\textbf{\refstepcounter{table}\label{Tab:02} Table \arabic{table}.}{ Pipeline runtime parameters}
+\textbf{\refstepcounter{table}\label{tab:static_params} Table \arabic{table}.}{ Pipeline runtime parameters}
 
 \processtable{}
 {\begin{tabular}{lllllll}\toprule
@@ -278,41 +278,49 @@ These costs don’t directly factor in the compute technology becoming obsolete 
 
 %% Results from benchmarks
 \subsection{Results from benchmarks}
-The benchmark processing performed on the ABIDE and NDAR datasets demonstrates the efficiency, cost-effectiveness, and security of cloud-based solutions. AWS also provided for an easy way for multiple laboratories to interact with the data on a common platform.
+The benchmark processing performed on the ABIDE and NDAR data collections demonstrates the efficiency, cost-effectiveness, and security of cloud-based solutions. These factors allow for a collaborative datasharing and computing environment while also encouraging multiple laboratories to interact with the data on a common platform.
 
-The results from the data processing are outlined in table \ref{Tab:03}. The nodes category indicates the size of the cluster that was run to process the shown dataset. The parallelization factor indicates the number of datasets to be run on a single node at once. CPU time is a measure of the compute cycles needed to process a given dataset, while the wall time is the actual amount of minutes passed during the processing of a given dataset. The cost and cost per dataset come from the total charges incurred on AWS from preprocessing the datasets using the specified pipeline.
+The results from the data processing are outlined in table \ref{tab:benchmark}. The nodes category indicates the size of the cluster that was run to process the shown dataset. The parallelization factor indicates the number of datasets to be run on a single node at once. CPU time is the number of total CPU hours to run the data collection through the pipeline, while the wall time is the amount of hours needed to process the data collection. The cost and cost-per-dataset come from the total charges incurred on AWS from preprocessing the datasets using the specified pipeline.
 
 % EC2 instance pricing table
 \begin{table}[!ht]
-\textbf{\refstepcounter{table}\label{Tab:03} Table \arabic{table}.}{ Benchmark results}
+%\textbf{\refstepcounter{table}\label{Tab:03} Table \arabic{table}.}{ }
 
-\processtable{}
-{\begin{tabular}{llllllllll}
-        Pipeline & Dataset & Dataset size & Platform & Nodes & Parallelization factor & CPU Time & Wall time & Cost (\$) & Cost per dataset (\$)\\\midrule
-        ANTs cortical thickness & ABIDE/NDAR & 3197 & C-PAC & 20 & 8 & 23,018 & 147 & 760.24 & 0.24\\
-        Resting state fMRI preprocessing (4 strategies) & ABIDE & 1112 & C-PAC & 20 & 3 & 834 & 22 & 80.54 & 0.07\\
-        Quality assessment protocol & ABIDE & 1112 & C-PAC & 20 & 4 & 380 & 14 & 19.02 & 0.02\\
-        Freesurfer recon-all & NDAR & 986 & NITRC-CE & 4 & 32 & 23,644 & 193 & 211.44 & 0.21\\
-        FSL first & NDAR & 1247 & NITRC-CE & 4 & 32 & 208 & 3 & 2.19 & <0.01 \\
-        Temporal QA & NDAR & 1349 & NITRC-CE & 4 & 32 & 450 & 13 & 4.69 & <0.01
-\end{tabular}}{}
+\processtable{ \textbf{Benchmark results.} DC: Data Collection, N: Number of datasets, PF: Parallelization factor, T$_{CPU}$: CPU time, T$_{Wall}$: Wall time, C/N: Cost per dataset, A: ABIDE data collection, N: NDAR data collection\label{tab:benchmark}}{
+\begin{tabular}{llrlrrrrrr}
+        \midrule
+        Pipeline & DC & N & Platform & Nodes & PF & T$_{CPU}$ (h) & T$_{Wall}$ (h) & Cost (\$) & C/N (\$)\\
+        \midrule
+        ANTs cortical thickness & A\&N & 3,197 & C-PAC & 20 & 8 & 23,018 & 147 & 760.24 & 0.24\\
+        R-fMRI preprocessing (4 strat.) & A & 1,112 & C-PAC & 20 & 3 & 834 & 22 & 80.54 & 0.07\\
+        Quality assessment protocol & A & 1,112 & C-PAC & 20 & 4 & 380 & 14 & 19.02 & 0.02\\
+        Freesurfer recon-all & N & 986 & NITRC-CE & 4 & 32 & 23,644 & 193 & 211.44 & 0.21\\
+        FSL first & N & 1,247 & NITRC-CE & 4 & 32 & 208 & 3 h & 2.19 & \textless 0.01 \\
+        s-MRI quality assessment & N & 1,349 & NITRC-CE & 4 & 32 & 450 & 13 & 4.69 & \textless 0.01 \\
+        \midrule
+\end{tabular}%
+}{}
 \end{table}
 
 %% Results from static simulations
 \subsection{Results from static simulations}
 
-The static-price model simulated each pipeline's performance across all of the AWS availability zones for a range of dataset sizes from 50 up to 10,000. It did this assuming a fixed per-hour runtime cost associated with the desired instance. This model uses each pipeline's performance configurations - including input and output dataset sizes, parallelization factor, processing time, and upload and download transfer rates - to calculate total runtimes and costs associated with processing data through that pipeline on AWS. The model did the calculations based on:
+The static-price model simulated each pipeline's performance across all of the AWS availability zones for a range of data collection sizes from 50 up to 10,000. It did this assuming a fixed per-hour runtime cost associated with the desired instance. This model uses each pipeline's performance configurations - including input and output dataset sizes, parallelization factor, processing time, and upload and download transfer rates - to calculate total runtimes and costs associated with processing data through that pipeline on AWS (see table \ref{tab:static_params}. The model did the calculations based on:
 
-1) uploading the dataset to the master node and storing the data on an EBS volume\\
-2) processing the data on as many slave nodes as required for the entire dataset size (up to 20)\\
-3) uploading the output data from the pipeline to S3 as the jobs finish\\
-4) terminate the cluster when all of the data is finished processing\\
-5) store outputs in S3 as long as it takes to download them to a local computer
+
+\begin{enumerate}
+\item Upload the dataset to the master node and storing the data on an EBS volume
+\item Process the data on as many slave nodes as required for the entire dataset size (up to 20)
+\item Upload the output data from the pipeline to S3 as the jobs finish
+\item Terminate the cluster when all of the data is finished processing
+\item Store outputs in S3 as long as it takes to download them to a local computer
+\item Transfer outputs to local computer via S3 download requests and transfer times
+\end{enumerate}
 
 In order to accurately reflect the costs incurred from processing these datasets, the static model keeps track of the EC2 per-hour runtime costs, data transfer costs, EBS storage costs, and S3 storage costs across all of the availability zones. The total costs and times results for the on-demand compute prices are broken down in figure \ref{fig:01}. The run times are the same across the regions, however the costs greatly differ in this respect. This is an important factor to note as the costs of services offered in AWS differ based on region.
 
 % On-demand costs/times
-\begin{figure}[!h]
+\begin{figure}[!ht]
 \begin{center}
 \includegraphics[width=10cm]{../../spot-model/plots/cpac_ondemand.pdf}% This is a *.jpg file
 \end{center}
@@ -322,24 +330,21 @@ In order to accurately reflect the costs incurred from processing these datasets
 %% Results from spot simulations
 \subsection{Results from static monte carlo simulations}
 
-The spot model was developed with the same pipeline configuration parameters as the static model except that it used the real history of the per-hour spot price of the c3.8xlarge instance during the dataset processing time. In addition to varying the pipeline, dataset size, and availability zone, this model also varied the per-hour bid-price for running the compute nodes.
+The spot model was developed with the same pipeline configuration parameters as the static model except that it used the real history of the per-hour spot price of the c3.8xlarge instance during the processing time in each availability zone. In addition to varying the pipeline, dataset size, and availability zone, this model also varied the per-hour bid-price for running the compute nodes.
 
-The static and spot models were run across all 23 availability zones on AWS, varying dataset sizes from 50 to 10,000 as in the static model; the bid ratio was also varied from 1.0, incrementally up to 5.0 to help develop a bidding strategy based on spot history. The on-demand prices vary between regions, but the spot market prices vary between availability zones (multiple zones per region in most cases).
+The spot model was simulated across all 23 availability zones on AWS, varying dataset sizes from 50 to 10,000 as in the static model; the bid ratio was also varied from 1.0, incrementally up to 5.0 to help develop a bidding strategy based on spot history. The on-demand prices vary between regions, but the spot market prices vary between availability zones (multiple zones per region).
 
-A comparison between the on-demand static model and spot-model is shown in figure \ref{fig:02}, where the mean runtimes and prices are plotted with the on-demand quantity being shown as a black line in each plot. This plot shows that one can typically save much on cost by bidding in the spot market, however, the lower bound on runtime is always determined by on-demand instances. It becomes of interest to study how much faster it is for the price difference one pays for different sized datasets and for different bid ratios.
+A comparison between the on-demand static model and spot-model is shown in figure \ref{fig:02}, where the mean runtimes and prices are plotted with the on-demand quantity being shown as a black line in each plot. This plot shows that one can typically save much on cost by bidding in the spot market, however, the lower bound on runtime is always determined by on-demand instances, as they never face forced termination.
 
 % Spot costs/times
-\begin{figure}[!h]
+\begin{figure}[!ht]
 \begin{center}
 \includegraphics[width=10cm]{../../spot-model/plots/cpac_sim_mean.pdf}% This is a *.jpg file
 \end{center}
  \textbf{\refstepcounter{figure}\label{fig:02} Figure \arabic{figure}.}{ C-PAC mean runtimes and costs versus bid ratio; the black lines are the on-demand times and prices }
 \end{figure}
 
-
-
-
-It can be seen from the plots that the biggest deciding factor for setting a bid ratio to ensure optimal time/cost for one's goal is dependent on availability zone. However, the cost and runtimes within an avability zone demonstrates a fairly repeatable pattern across pipelines - so it behooves us to focus on the trade-offs of a particular availability zone, or group of availability zones (AWS region). 
+Figure \ref{fig:02} shows that the biggest deciding factor for setting a bid ratio to ensure optimal time/cost for one's goal is dependent on availability zone. However, the cost and runtimes within an avability zone demonstrates a fairly repeatable pattern across pipelines - so it behooves us to focus on the trade-offs of a particular availability zone, or group of availability zones (AWS region). 
 
 Focusing on the US East, northern Virignia, region - it can be seen that the cost for running 1000 datasets really increases after setting a bid ratio of 3.0x. However, a bigger time reduction seems to happen at a bid ratio of around 2.0x; in other words, there is more of a bang for buck at a bid ratio of 2.0x than 3.0x.
 
