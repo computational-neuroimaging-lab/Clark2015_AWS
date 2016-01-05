@@ -46,6 +46,24 @@ format_cost_times <- function(plot_obj) {
   return(frmt_plot)
 }
 
+# Format cost/time vs num_ds/bid_ratio plots
+breakout_bid_ratios <- function(plot_obj) {
+  
+  # Add ggplot2 formatting to plot object
+  frmt_plot <- plot_obj +
+    facet_grid(bid_ratio~., scales='free_y') +
+    theme_bw() +
+    theme(legend.position='None',
+          axis.title.x=element_text(size=10, colour='black', vjust=-.8),
+          axis.title.y=element_text(size=10, colour='black'),
+          axis.text.x=element_text(size=8, colour='black', angle=35),
+          axis.text.y=element_text(size=8, colour='black'),
+          strip.text.y=element_text(size=8, colour='black'))
+  
+  # Return formatted plot
+  return(frmt_plot)
+}
+
 
 # Plot and print simulation results to pdf
 plot_ondemand <- function(df, out_file) {
@@ -79,6 +97,93 @@ plot_ondemand <- function(df, out_file) {
   dev.off()
 }
 
+
+
+
+# Plot the costs vs times
+plot_cost_vs_times <- function(df, out_file) {
+  on_demand <- ggplot(df, aes(x=static_total_time/3600.0,
+                              y=on_demand_total_cost, col=region)) +
+    labs(x='Total time (hrs)', y='Total cost ($)', title='On-demand cost vs time') +
+    geom_point(alpha=0.2)
+  
+  spot <- ggplot(df, aes(x=mean_total_time/3600.0, y=mean_total_cost, col=region)) +
+    labs(x='Total time (hrs)', y='Total cost ($)', title='Mean spot cost vs time') +
+    geom_point(alpha=0.2)
+  
+  pdf(file=out_file, title='time vs cost', width=8, height=180/25.4,
+      family='ArialMT', paper='special')
+  
+  grid.newpage()
+  layout=grid.layout(2,1)
+  pushViewport(viewport(layout=layout))
+  
+  print(on_demand, vp=viewport(layout.pos.row=1, layout.pos.col=1))
+  print(spot, vp=viewport(layout.pos.row=2, layout.pos.col=1))
+  
+  dev.off()
+}
+
+plot_cost_vs_times_br <- function(df, out_file) {
+  spot <- ggplot(df, aes(x=mean_total_time/3600.0, y=mean_total_cost, col=region)) +
+    labs(x='Total time (hrs)', y='Total cost ($)', title='Mean spot cost vs time') +
+    geom_point(alpha=0.2)
+  
+  pdf(file=out_file, title='time vs cost br', width=8, height=180/25.4,
+      family='ArialMT', paper='special')
+  spot <- breakout_bid_ratios(spot)
+#   grid.newpage()
+#   layout=grid.layout(1,1)
+#   pushViewport(viewport(layout=layout))
+  
+  print(spot)#, vp=viewport(layout.pos.row=1, layout.pos.col=1))
+  dev.off()
+}
+
+
+plot_br_violin <- function(df, out_file) {
+  br_time <- ggplot(df, aes(x=factor(bid_ratio), y=total_time/3600.0, col=bid_ratio)) +
+    labs(x='Bid ratio', y='Total time (hrs)', title='Time distribution vs bid ratio') +
+    geom_violin()
+  br_cost <- ggplot(df, aes(x=factor(bid_ratio), y=total_cost, col=bid_ratio)) +
+    labs(x='Bid ratio', y='Total cost ($)', title='Cost distribution vs bid ratio') +
+    geom_violin(alpha=0.2)
+  
+  pdf(file=out_file, title='br', width=8, height=180/25.4,
+      family='ArialMT', paper='special')
+  
+  grid.newpage()
+  layout=grid.layout(2,1)
+  pushViewport(viewport(layout=layout))
+  
+  print(br_time, vp=viewport(layout.pos.row=1, layout.pos.col=1))
+  print(br_cost, vp=viewport(layout.pos.row=2, layout.pos.col=1))
+  
+  dev.off()
+}
+
+plot_av_violin <- function(df, out_file) {
+
+  av_time <- ggplot(df, aes(x=factor(av_zone), y=total_time/3600.0, col=region)) +
+    labs(x='Avail. zone', y='Total time (hrs)', title='Time distribution vs avail. zone') +
+    geom_violin(alpha=0.2) + theme(axis.text.x=element_blank())
+  av_cost <- ggplot(df, aes(x=factor(av_zone), y=total_cost, col=region)) +
+    labs(x='Avail. zone', y='Total cost ($)', title='Cost distribution vs avail. zone') +
+    geom_violin(alpha=0.2) + theme(axis.text.x=element_blank())
+
+  pdf(file=out_file, title='av', width=8, height=180/25.4,
+      family='ArialMT', paper='special')
+  
+  grid.newpage()
+  layout=grid.layout(2,1)
+  pushViewport(viewport(layout=layout))
+
+  print(av_time, vp=viewport(layout.pos.row=1, layout.pos.col=1))
+  print(av_cost, vp=viewport(layout.pos.row=2, layout.pos.col=1))
+  
+  dev.off()
+}
+
 # Init variables
 # Local dir of project base on computer
 proj_base_dir <- '~/Documents/projects/Clark2015_AWS'
@@ -87,7 +192,7 @@ rel_csvs_dir <- 'spot-model/csvs'
 
 # Input parameters
 # Pipeline
-pipeline <- 'fs'
+pipeline <- 'cpac'
 # # Plotting parameters
 # bid_ratio = 2.5
 # num_datasets = 1000
