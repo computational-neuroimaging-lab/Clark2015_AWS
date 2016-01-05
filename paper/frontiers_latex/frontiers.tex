@@ -334,7 +334,7 @@ The spot model was developed with the same pipeline configuration parameters as 
 
 The spot model was simulated across all 23 availability zones on AWS, varying dataset sizes from 50 to 10,000 as in the static model; the bid ratio was also varied from 1.0, incrementally up to 5.0 to help develop a bidding strategy based on spot history. The on-demand prices vary between regions, but the spot market prices vary between availability zones (multiple zones per region).
 
-A comparison between the on-demand static model and spot-model is shown in figure \ref{fig:02}, where the mean runtimes and prices are plotted with the on-demand quantity being shown as a black line in each plot. This plot shows that one can typically save much on cost by bidding in the spot market, however, the lower bound on runtime is always determined by on-demand instances, as they never face forced termination.
+A comparison between the on-demand static model and spot-model is shown in figure \ref{fig:02}, where the mean runtimes and prices are plotted with the on-demand quantity being shown as a black line in each plot. This plot shows that one can typically save much on cost by bidding in the spot market. It can be seen that the lower bound on runtime is always determined by on-demand instances, as they never face forced termination. However, the upper bound on cost is not determined by on-demand instances necessarily; the spot price can sometimes exceed the on-demand price (as is the case with the northern California region plot in purple in figure \ref{fig:02}).
 
 % Spot costs/times
 \begin{figure}[!ht]
@@ -344,7 +344,7 @@ A comparison between the on-demand static model and spot-model is shown in figur
  \textbf{\refstepcounter{figure}\label{fig:02} Figure \arabic{figure}.}{ C-PAC mean runtimes and costs versus bid ratio; the black lines are the on-demand times and prices }
 \end{figure}
 
-Figure \ref{fig:02} shows that the biggest deciding factor for setting a bid ratio to ensure optimal time/cost for one's goal is dependent on availability zone. However, the cost and runtimes within an avability zone demonstrates a fairly repeatable pattern across pipelines - so it behooves us to focus on the trade-offs of a particular availability zone, or group of availability zones (AWS region). 
+It can be seen in figure \ref{fig:02} that the biggest deciding factor for setting a bid ratio to ensure optimal time/cost for one's goal is dependent on availability zone. This is more plainly illustrated in the violin plots of figures \ref{fig:03} and \ref{fig:04}.  However, the cost and runtimes within an avability zone demonstrates a fairly repeatable pattern across pipelines - so it behooves us to focus on the trade-offs of a particular availability zone, or group of availability zones (AWS region). 
 
 Focusing on the US East, northern Virignia, region - it can be seen that the cost for running 1000 datasets really increases after setting a bid ratio of 3.0x. However, a bigger time reduction seems to happen at a bid ratio of around 2.0x; in other words, there is more of a bang for buck at a bid ratio of 2.0x than 3.0x.
 
