@@ -63,9 +63,12 @@ def return_av_zones(region):
     # Import packages
     import boto
     import boto.ec2
+    from CPAC.AWS import fetch_creds
 
     # Init variables
-    ec2_conn = boto.connect_ec2(region=region)
+    creds_path = '/home2/dclark/secure-creds/aws-keys/dclark_cmi/dclark_cmi_keys.csv'
+    aws_sak, aws_aki = fetch_creds.return_aws_keys(creds_path)
+    ec2_conn = boto.connect_ec2(aws_sak, aws_aki, region=region)
     av_zones = ec2_conn.get_all_zones()
 
     # Get names as strings
@@ -134,11 +137,15 @@ def return_spot_history(start_time, instance_type, product, region):
     import logging
     from boto.exception import BotoServerError
 
+    from CPAC.AWS import fetch_creds
+
     # Init variables
+    creds_path = '/home2/dclark/secure-creds/aws-keys/dclark_cmi/dclark_cmi_keys.csv'
     full_sh_list = []
 
     # Grab region of interest and connect to ec2 in that region
-    ec2_conn = boto.connect_ec2(region=region)
+    aws_sak, aws_aki = fetch_creds.return_aws_keys(creds_path)
+    ec2_conn = boto.connect_ec2(aws_sak, aws_aki, region=region)
 
     # Get logger
     sh_log = logging.getLogger('sh_log')
@@ -255,6 +262,7 @@ def main(out_dir, num_cores):
     import os
     import pandas as pd
     from multiprocessing import Process
+    from CPAC.AWS import fetch_creds
 
     # Import local packages
     import utils
@@ -263,6 +271,7 @@ def main(out_dir, num_cores):
     proc_list = []
     out_csvs = []
     df_list = []
+    creds_path = '/home2/dclark/secure-creds/aws-keys/dclark_cmi/dclark_cmi_keys.csv'
 
     # Set up logger
     now_date = datetime.datetime.now()
@@ -272,7 +281,8 @@ def main(out_dir, num_cores):
     sh_log = utils.setup_logger('sh_log', log_path, logging.INFO, to_screen=True)
 
     # Get list of regions
-    reg_conn = boto.connect_ec2()
+    aws_sak, aws_aki = fetch_creds.return_aws_keys(creds_path)
+    reg_conn = boto.connect_ec2(aws_sak, aws_aki)
     regions = reg_conn.get_all_regions()
     reg_conn.close()
 

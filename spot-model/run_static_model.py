@@ -11,6 +11,7 @@ def load_and_run(config, av_zone, price_hr):
     '''
 
     # Import packages
+    import os
     import numpy as np
     import pandas as pd
     import yaml
@@ -88,6 +89,9 @@ def load_and_run(config, av_zone, price_hr):
 
     # Create static model dataframe
     static_df = pd.DataFrame.from_records(df_rows)
+
+    out_df_path = os.path.join(os.getcwd(), os.path.basename(config).split('.')[0], str(price_hr), av_zone, 'on_demand.csv')
+    static_df.to_csv(out_df_path)
 
     # Return dataframe
     return static_df
