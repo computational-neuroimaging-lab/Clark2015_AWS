@@ -141,13 +141,23 @@ plot_cost_vs_times_br <- function(df, out_file) {
 }
 
 
+data_summary <- function (x)
+{
+  q=median_hilow(x, conf.int=.5)
+  print(q)
+  return(q)
+}
+
 plot_br_violin <- function(df, out_file) {
   br_time <- ggplot(df, aes(x=factor(bid_ratio), y=total_time/3600.0, col=bid_ratio)) +
-    labs(x='Bid ratio', y='Total time (hrs)', title='Time distribution vs bid ratio') +
-    geom_violin()
+    labs(x='Bid ratio', y='Total time (hrs)', title='A') +
+    geom_violin(outlier.size=0,width=0.5,fill="white") + stat_summary(aes(colour=bid_ratio), fun.data=data_summary, size=.5, geom="pointrange")
+    #+scale_y_continuous(limits=quantile(df$total_time/3600.0, c(0.1, 0.9)))
   br_cost <- ggplot(df, aes(x=factor(bid_ratio), y=total_cost, col=bid_ratio)) +
-    labs(x='Bid ratio', y='Total cost ($)', title='Cost distribution vs bid ratio') +
-    geom_violin(alpha=0.2)
+    labs(x='Bid ratio', y='Total cost ($)', title='B') +
+    geom_boxplot(outlier.shape=NA)
+    #geom_violin(outlier.size=0,width=0.5,fill="white") + stat_summary(aes(colour=bid_ratio), fun.data=data_summary, size=.5, geom="pointrange") +
+    scale_y_continuous(limits=quantile(df$total_cost, c(0.1, 0.9)))
   
   pdf(file=out_file, title='br', width=8, height=180/25.4,
       family='ArialMT', paper='special')
@@ -162,15 +172,19 @@ plot_br_violin <- function(df, out_file) {
   dev.off()
 }
 
+
 plot_av_violin <- function(df, out_file) {
 
   av_time <- ggplot(df, aes(x=factor(av_zone), y=total_time/3600.0, col=region)) +
-    labs(x='Avail. zone', y='Total time (hrs)', title='Time distribution vs avail. zone') +
-    geom_violin(alpha=0.2) + theme(axis.text.x=element_blank())
+    labs(x='Avail. zone', y='Total time (hrs)', title='A') +
+    #geom_boxplot() +
+    geom_violin(outlier.size=0,width=0.5,fill="white") + stat_summary(aes(colour=region), fun.data=data_summary, size=.5, geom="pointrange") +
+    theme(axis.text.x=element_blank()) #+ scale_y_continuous(limits=quantile(df$total_time/3600.0, c(0.1, 0.87)))
   av_cost <- ggplot(df, aes(x=factor(av_zone), y=total_cost, col=region)) +
-    labs(x='Avail. zone', y='Total cost ($)', title='Cost distribution vs avail. zone') +
-    geom_violin(alpha=0.2) + theme(axis.text.x=element_blank())
-
+    labs(x='Avail. zone', y='Total cost ($)', title='B') +
+    geom_boxplot(outlier.shape=NA) +
+    #geom_violin(outlier.size=0,width=0.5,fill="white") + stat_summary(aes(colour=region), fun.data=data_summary, size=.5, geom="pointrange") +
+    theme(axis.text.x=element_blank()) + scale_y_continuous(limits=quantile(df$total_cost, c(0.1, 0.9)))
   pdf(file=out_file, title='av', width=8, height=180/25.4,
       family='ArialMT', paper='special')
   
@@ -180,9 +194,66 @@ plot_av_violin <- function(df, out_file) {
 
   print(av_time, vp=viewport(layout.pos.row=1, layout.pos.col=1))
   print(av_cost, vp=viewport(layout.pos.row=2, layout.pos.col=1))
+  #print(legend, vp=viewport(layout.pos.row=1:2, layout.pos.col=2))
   
   dev.off()
 }
+
+
+plot_av_boxplot <- function(df, out_file) {
+  
+  av_time <- ggplot(df, aes(x=factor(av_zone), y=total_time/3600.0, col=region)) +
+    labs(x='Avail. zone', y='Total time (hrs)', title='Time distribution vs avail. zone') +
+    geom_violin(alpha=0.2) + theme(axis.text.x=element_blank()) + scale_y_continuous
+  av_cost <- ggplot(df, aes(x=factor(av_zone), y=total_cost, col=region)) +
+    labs(x='Avail. zone', y='Total cost ($)', title='Cost distribution vs avail. zone') +
+    geom_violin(alpha=0.2) + theme(axis.text.x=element_blank()) + scale_y_log10()
+  
+  pdf(file=out_file, title='av', width=8, height=180/25.4,
+      family='ArialMT', paper='special')
+  
+  grid.newpage()
+  layout=grid.layout(2,1)
+  pushViewport(viewport(layout=layout))
+  
+  print(av_time, vp=viewport(layout.pos.row=1, layout.pos.col=1))
+  print(av_cost, vp=viewport(layout.pos.row=2, layout.pos.col=1))
+  
+  dev.off()
+}
+
+plot_mean_vars_hist <- function(df, out_file) {
+  
+  mean_hist_time <- ggplot(df, aes(x=history_mean, y=mean_total_time/3600.0, col=region)) +
+    labs(x='Mean history price ($)', y='Mean run time (hrs)', title='Mean price history vs mean run time') +
+    geom_point(alpha=0.2) + theme(legend.position='none')
+  mean_hist_cost <- ggplot(df, aes(x=history_mean, y=mean_total_cost, col=region)) +
+    labs(x='Mean history price ($)', y='Mean total cost ($)', title='Mean price history vs mean total cost') +
+    geom_point(alpha=0.2)+ theme(legend.position='none')
+  var_hist_time <- ggplot(df, aes(x=history_var, y=mean_total_time/3600.0, col=region)) +
+    labs(x='Price history variance ($)', y='Mean run time (hrs)', title='Price variance vs mean run time') +
+    geom_point(alpha=0.2) + theme(legend.position='none')
+  var_hist_cost <- ggplot(df, aes(x=history_var, y=mean_total_cost, col=region)) +
+    labs(x='Price history variance ($)', y='Mean total cost ($)', title='Price variance vs mean total cost') +
+    geom_point(alpha=0.2)+ theme(legend.position='none')
+  
+  pdf(file=out_file, title='av', width=8, height=180/25.4,
+      family='ArialMT', paper='special')
+  
+  grid.newpage()
+  layout=grid.layout(2,2)
+  pushViewport(viewport(layout=layout))
+  
+  print(mean_hist_time, vp=viewport(layout.pos.row=1, layout.pos.col=1))
+  print(mean_hist_cost, vp=viewport(layout.pos.row=1, layout.pos.col=2))
+  print(var_hist_time, vp=viewport(layout.pos.row=2, layout.pos.col=1))
+  print(var_hist_cost, vp=viewport(layout.pos.row=2, layout.pos.col=2))
+  
+  dev.off()
+}
+  
+
+
 
 # Init variables
 # Local dir of project base on computer
