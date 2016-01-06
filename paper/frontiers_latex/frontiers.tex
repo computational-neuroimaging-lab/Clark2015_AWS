@@ -328,7 +328,7 @@ In order to accurately reflect the costs incurred from processing these datasets
 \end{figure}
 
 %% Results from spot simulations
-\subsection{Results from static monte carlo simulations}
+\subsection{Results from monte carlo simulations}
 
 The spot model was developed with the same pipeline configuration parameters as the static model except that it used the real history of the per-hour spot price of the c3.8xlarge instance during the processing time in each availability zone. In addition to varying the pipeline, dataset size, and availability zone, this model also varied the per-hour bid-price for running the compute nodes.
 
@@ -339,18 +339,37 @@ A comparison between the on-demand static model and spot-model is shown in figur
 % Spot costs/times
 \begin{figure}[!ht]
 \begin{center}
-\includegraphics[width=10cm]{../../spot-model/plots/cpac_sim_mean.pdf}% This is a *.jpg file
+\includegraphics[width=10cm]{../../spot-model/plots/cpac_sim_mean.pdf}
 \end{center}
  \textbf{\refstepcounter{figure}\label{fig:02} Figure \arabic{figure}.}{ C-PAC mean runtimes and costs versus bid ratio; the black lines are the on-demand times and prices }
 \end{figure}
 
-It can be seen in figure \ref{fig:02} that the biggest deciding factor for setting a bid ratio to ensure optimal time/cost for one's goal is dependent on availability zone. This is more plainly illustrated in the violin plots of figures \ref{fig:03} and \ref{fig:04}.  However, the cost and runtimes within an avability zone demonstrates a fairly repeatable pattern across pipelines - so it behooves us to focus on the trade-offs of a particular availability zone, or group of availability zones (AWS region). 
+It can be seen in figure \ref{fig:02} that the biggest deciding factor for setting a bid ratio to ensure optimal time/cost for one's goal is dependent on availability zone. This is more plainly illustrated in the violin plots of figures \ref{fig:br_violin} and \ref{fig:av_violin}. Figure \ref{fig:br_violin} seems to show that bid ratio is the primary factor in determining cost and time. However, when these distributions are factorized by availability zone, as in figure \ref{fig:av_violin}, it becomes clear that spot market of the availability zones are the greatest factor. The runtime variance seen in the 1.0-1.5x bid ratios can be explained by the runtime variance occurring mostly in the northern California region. Likewise, the cost variance seen in the 4.5-5.0x bid ratios is dominated by that cost variance in the Tokyo and northern California regions. For this reason, it becomes most important to look at the pricing history of the desired region where the data is being processed in order to develop a good bidding strategy.
 
-Focusing on the US East, northern Virignia, region - it can be seen that the cost for running 1000 datasets really increases after setting a bid ratio of 3.0x. However, a bigger time reduction seems to happen at a bid ratio of around 2.0x; in other words, there is more of a bang for buck at a bid ratio of 2.0x than 3.0x.
+% Spot costs/times
+\begin{figure}[!ht]
+\begin{center}
+\includegraphics[width=10cm]{../../spot-model/plots/cpac_violin_br.pdf}
+\end{center}
+ \textbf{\refstepcounter{figure}\label{fig:br_violin} Figure \arabic{figure}.}{ A) Runtimes distribution with outliers B) Cost distribution box plots, Across bid ratios for processing 1,000 datasets in C-PAC }
+\end{figure}
 
-\subsubsection{price and time vs. num datasets}
-\subsubsection{price and time vs. num nodes}
-\subsubsection{price and time vs. instance types}
+% Spot costs/times
+\begin{figure}[!ht]
+\begin{center}
+\includegraphics[width=10cm]{../../spot-model/plots/cpac_violin_av.pdf}
+\end{center}
+ \textbf{\refstepcounter{figure}\label{fig:av_violin} Figure \arabic{figure}.}{ A) Runtimes distribution with outliers B) Cost distribution box plots, Across availability zones for processing 1,000 datasets in C-PAC }
+\end{figure}
+
+
+
+Focusing on the US East, northern Virginia, region - it can be seen that the cost for running 1000 datasets really increases after setting a bid ratio of 3.0x. However, a bigger time reduction seems to happen at a bid ratio of around 2.0x; in other words, there is more of a bang for buck at a bid ratio of 2.0x than 3.0x.
+
+
+%\subsubsection{price and time vs. num datasets}
+%\subsubsection{price and time vs. num nodes}
+%\subsubsection{price and time vs. instance types}
 
 %% Monte carlo vs static simulations
 \subsection{Monte carlo vs static simulations}
