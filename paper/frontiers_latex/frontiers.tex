@@ -363,6 +363,22 @@ It can be seen in figure \ref{fig:02} that the biggest deciding factor for setti
 \end{figure}
 
 
+%%% Availability zone
+\subsection{Choosing an availability zone}
+
+There are three factors in determining the optimal availability zone for computation: price history, costs related to non-computation (e.g. storage, data transfer), and the geographic region from where data will be uploaded and downloaded from the cloud.
+
+In order to achieve the lowest computation cost for processing a dataset, the spot history for the availability of interest should have as stable and low of a market price as possible. Often, this combination is hard to find. Some availability zones may have a low mean or median price history but are also volatile. In these cases, the computation costs are minimized to a degree, however the computation time tends to be much greater. Likewise, availability zones with higher spot prices but less volatile activity minimize computation time but increase the associated costs. Figure \ref{fig:spot_history}
+
+% Spot history
+\begin{figure}[!ht]
+\begin{center}
+\includegraphics[width=10cm]{../../spot-model/plots/spot_histories.pdf}
+\end{center}
+ \textbf{\refstepcounter{figure}\label{fig:spot_history} Figure \arabic{figure}.}{ The spot prices from mid March early September 2015 for the Linux/UNIX c3.8xlarge instance } 
+\end{figure}
+
+\subsection{Choosing a bid price}
 
 Focusing on the US East, northern Virginia, region - it can be seen that the cost for running 1000 datasets really increases after setting a bid ratio of 3.0x. However, a bigger time reduction seems to happen at a bid ratio of around 2.0x; in other words, there is more of a bang for buck at a bid ratio of 2.0x than 3.0x.
 
