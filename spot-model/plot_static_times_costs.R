@@ -7,19 +7,20 @@ library(ggplot2)
 library(gridExtra)
 library(plyr)
 library(reshape2)
+library(scales)
 
 
 # Populate regions with name formatted
 format_region <- function(data_frame) {
-  data_frame$region[grep('us-west-1',data_frame$av_zone)]='US West (N. California)'
-  data_frame$region[grep('us-west-2',data_frame$av_zone)]='US West (Oregon)'
-  data_frame$region[grep('us-east-1',data_frame$av_zone)]='US East (N. Virginia)'
-  data_frame$region[grep('eu-west-1',data_frame$av_zone)]='Europe (Ireland)'
-  data_frame$region[grep('eu-central-1',data_frame$av_zone)]='Europe (Frankfurt)'
-  data_frame$region[grep('ap-southeast-1',data_frame$av_zone)]='Asia Pacific (Singapore)'
-  data_frame$region[grep('ap-southeast-2',data_frame$av_zone)]='Asia Pacific (Sydney)'
-  data_frame$region[grep('ap-northeast-1',data_frame$av_zone)]='Asia Pacific (Tokyo)'
-  data_frame$region[grep('sa-east-1',data_frame$av_zone)]='S. America (Sao Paulo)'
+  data_frame$region[grep('us-west-1',data_frame$av_zone)]='N. California'
+  data_frame$region[grep('us-west-2',data_frame$av_zone)]='Oregon'
+  data_frame$region[grep('us-east-1',data_frame$av_zone)]='N. Virginia'
+  data_frame$region[grep('eu-west-1',data_frame$av_zone)]='Ireland'
+  data_frame$region[grep('eu-central-1',data_frame$av_zone)]='Frankfurt'
+  data_frame$region[grep('ap-southeast-1',data_frame$av_zone)]='Singapore'
+  data_frame$region[grep('ap-southeast-2',data_frame$av_zone)]='Sydney'
+  data_frame$region[grep('ap-northeast-1',data_frame$av_zone)]='Tokyo'
+  data_frame$region[grep('sa-east-1',data_frame$av_zone)]='Sao Paulo'
   #data_frame$region=factor(data_frame$region)
   
   # Return the data frame with region header
@@ -28,7 +29,7 @@ format_region <- function(data_frame) {
 
 
 # Format cost/time vs num_ds/bid_ratio plots
-format_cost_times <- function(plot_obj) {
+factorize_region <- function(plot_obj) {
   
   # Add ggplot2 formatting to plot object
   frmt_plot <- plot_obj +
@@ -38,13 +39,14 @@ format_cost_times <- function(plot_obj) {
     theme(legend.position='None',
           axis.title.x=element_text(size=10, colour='black', vjust=-.8),
           axis.title.y=element_text(size=10, colour='black'),
-          axis.text.x=element_text(size=8, colour='black', angle=35),
+          axis.text.x=element_text(size=8, colour='black', angle=0),
           axis.text.y=element_text(size=8, colour='black'),
           strip.text.y=element_text(size=8, colour='black'))
   
   # Return formatted plot
   return(frmt_plot)
 }
+
 
 # Format cost/time vs num_ds/bid_ratio plots
 breakout_bid_ratios <- function(plot_obj) {
@@ -72,13 +74,13 @@ plot_ondemand <- function(df, out_file) {
   ondemand_cost <- ggplot(df, aes(x=num_datasets, y=on_demand_total_cost, col=region)) +
     labs(x='Number of datasets', y='Total cost ($)',
          title='On-demand costs') + geom_line()
-  #ondemand_cost <- format_cost_times(ondemand_cost)
+  #ondemand_cost <- factorize_region(ondemand_cost)
   
   # Get on demand costs plot
   ondemand_time <- ggplot(df, aes(x=num_datasets, y=static_total_time/3600.0, col='all regions')) +
     labs(x='Number of datasets', y='Total time (hrs)',
          title='On-demand times') + geom_line()
-  #ondemand_time <- format_cost_times(ondemand_time)
+  #ondemand_time <- factorize_region(ondemand_time)
   
   # Open pdf file to save plots to
   pdf(file=out_file, title='ondemand', width=8, height=180/25.4,
@@ -96,8 +98,6 @@ plot_ondemand <- function(df, out_file) {
   # Shutdown printout device
   dev.off()
 }
-
-
 
 
 # Plot the costs vs times
@@ -124,6 +124,28 @@ plot_cost_vs_times <- function(df, out_file) {
   dev.off()
 }
 
+
+# 
+plot_history <- function(df, out_file) {
+  df$Timestamp <- as.POSIXct(df$Timestamp)
+  sh <- ggplot(df, aes(x=Timestamp, y=Spot.price, col=Availability.zone)) + geom_line() +
+        scale_x_datetime(labels=date_format(format='%Y-%m')) + labs(x='Date', y='Spot price ($/hr)',
+                                                                    title='Spot market history across regions')
+  
+  pdf(file=out_file, title='br', width=8, height=180/25.4,
+      family='ArialMT', paper='special')
+  
+  grid.newpage()
+  layout=grid.layout(1,1)
+  pushViewport(viewport(layout=layout))
+  sh <- factorize_region(sh)
+  print(sh, vp=viewport(layout.pos.row=1, layout.pos.col=1))
+  
+  dev.off()
+}
+
+
+# 
 plot_cost_vs_times_br <- function(df, out_file) {
   spot <- ggplot(df, aes(x=mean_total_time/3600.0, y=mean_total_cost, col=region)) +
     labs(x='Total time (hrs)', y='Total cost ($)', title='Mean spot cost vs time') +
@@ -155,7 +177,7 @@ plot_br_violin <- function(df, out_file) {
     #+scale_y_continuous(limits=quantile(df$total_time/3600.0, c(0.1, 0.9)))
   br_cost <- ggplot(df, aes(x=factor(bid_ratio), y=total_cost, col=bid_ratio)) +
     labs(x='Bid ratio', y='Total cost ($)', title='B') +
-    geom_boxplot(outlier.shape=NA)
+    geom_boxplot(outlier.shape=NA) +
     #geom_violin(outlier.size=0,width=0.5,fill="white") + stat_summary(aes(colour=bid_ratio), fun.data=data_summary, size=.5, geom="pointrange") +
     scale_y_continuous(limits=quantile(df$total_cost, c(0.1, 0.9)))
   
@@ -176,12 +198,12 @@ plot_br_violin <- function(df, out_file) {
 plot_av_violin <- function(df, out_file) {
 
   av_time <- ggplot(df, aes(x=factor(av_zone), y=total_time/3600.0, col=region)) +
-    labs(x='Avail. zone', y='Total time (hrs)', title='A') +
+    labs(x='Avail. zone', y='Total time (hrs)', title='C') +
     #geom_boxplot() +
     geom_violin(outlier.size=0,width=0.5,fill="white") + stat_summary(aes(colour=region), fun.data=data_summary, size=.5, geom="pointrange") +
     theme(axis.text.x=element_blank()) #+ scale_y_continuous(limits=quantile(df$total_time/3600.0, c(0.1, 0.87)))
   av_cost <- ggplot(df, aes(x=factor(av_zone), y=total_cost, col=region)) +
-    labs(x='Avail. zone', y='Total cost ($)', title='B') +
+    labs(x='Avail. zone', y='Total cost ($)', title='D') +
     geom_boxplot(outlier.shape=NA) +
     #geom_violin(outlier.size=0,width=0.5,fill="white") + stat_summary(aes(colour=region), fun.data=data_summary, size=.5, geom="pointrange") +
     theme(axis.text.x=element_blank()) + scale_y_continuous(limits=quantile(df$total_cost, c(0.1, 0.9)))
@@ -200,41 +222,19 @@ plot_av_violin <- function(df, out_file) {
 }
 
 
-plot_av_boxplot <- function(df, out_file) {
-  
-  av_time <- ggplot(df, aes(x=factor(av_zone), y=total_time/3600.0, col=region)) +
-    labs(x='Avail. zone', y='Total time (hrs)', title='Time distribution vs avail. zone') +
-    geom_violin(alpha=0.2) + theme(axis.text.x=element_blank()) + scale_y_continuous
-  av_cost <- ggplot(df, aes(x=factor(av_zone), y=total_cost, col=region)) +
-    labs(x='Avail. zone', y='Total cost ($)', title='Cost distribution vs avail. zone') +
-    geom_violin(alpha=0.2) + theme(axis.text.x=element_blank()) + scale_y_log10()
-  
-  pdf(file=out_file, title='av', width=8, height=180/25.4,
-      family='ArialMT', paper='special')
-  
-  grid.newpage()
-  layout=grid.layout(2,1)
-  pushViewport(viewport(layout=layout))
-  
-  print(av_time, vp=viewport(layout.pos.row=1, layout.pos.col=1))
-  print(av_cost, vp=viewport(layout.pos.row=2, layout.pos.col=1))
-  
-  dev.off()
-}
-
 plot_mean_vars_hist <- function(df, out_file) {
   
   mean_hist_time <- ggplot(df, aes(x=history_mean, y=mean_total_time/3600.0, col=region)) +
-    labs(x='Mean history price ($)', y='Mean run time (hrs)', title='Mean price history vs mean run time') +
+    labs(x='Mean history price ($)', y='Mean run time (hrs)', title='A') +
     geom_point(alpha=0.2) + theme(legend.position='none')
   mean_hist_cost <- ggplot(df, aes(x=history_mean, y=mean_total_cost, col=region)) +
-    labs(x='Mean history price ($)', y='Mean total cost ($)', title='Mean price history vs mean total cost') +
+    labs(x='Mean history price ($)', y='Mean total cost ($)', title='B') +
     geom_point(alpha=0.2)+ theme(legend.position='none')
   var_hist_time <- ggplot(df, aes(x=history_var, y=mean_total_time/3600.0, col=region)) +
-    labs(x='Price history variance ($)', y='Mean run time (hrs)', title='Price variance vs mean run time') +
+    labs(x='Price history variance ($)', y='Mean run time (hrs)', title='C') +
     geom_point(alpha=0.2) + theme(legend.position='none')
   var_hist_cost <- ggplot(df, aes(x=history_var, y=mean_total_cost, col=region)) +
-    labs(x='Price history variance ($)', y='Mean total cost ($)', title='Price variance vs mean total cost') +
+    labs(x='Price history variance ($)', y='Mean total cost ($)', title='D') +
     geom_point(alpha=0.2)+ theme(legend.position='none')
   
   pdf(file=out_file, title='av', width=8, height=180/25.4,
@@ -251,7 +251,37 @@ plot_mean_vars_hist <- function(df, out_file) {
   
   dev.off()
 }
+
+
+plot_mean_vars_hist <- function(df, out_file) {
   
+  mean_hist_time <- ggplot(df, aes(x=history_mean, y=mean_total_time/3600.0, col=region)) +
+    labs(x='Mean history price ($)', y='Mean run time (hrs)', title='A') +
+    geom_point(alpha=0.2) + theme(legend.position='none')
+  mean_hist_cost <- ggplot(df, aes(x=history_mean, y=mean_total_cost, col=region)) +
+    labs(x='Mean history price ($)', y='Mean total cost ($)', title='B') +
+    geom_point(alpha=0.2)+ theme(legend.position='none')
+  var_hist_time <- ggplot(df, aes(x=history_var, y=mean_total_time/3600.0, col=region)) +
+    labs(x='Price history variance ($)', y='Mean run time (hrs)', title='C') +
+    geom_point(alpha=0.2) + theme(legend.position='none')
+  var_hist_cost <- ggplot(df, aes(x=history_var, y=mean_total_cost, col=region)) +
+    labs(x='Price history variance ($)', y='Mean total cost ($)', title='D') +
+    geom_point(alpha=0.2)+ theme(legend.position='none')
+  
+  pdf(file=out_file, title='av', width=8, height=180/25.4,
+      family='ArialMT', paper='special')
+  
+  grid.newpage()
+  layout=grid.layout(2,2)
+  pushViewport(viewport(layout=layout))
+  
+  print(mean_hist_time, vp=viewport(layout.pos.row=1, layout.pos.col=1))
+  print(mean_hist_cost, vp=viewport(layout.pos.row=1, layout.pos.col=2))
+  print(var_hist_time, vp=viewport(layout.pos.row=2, layout.pos.col=1))
+  print(var_hist_cost, vp=viewport(layout.pos.row=2, layout.pos.col=2))
+  
+  dev.off()
+}
 
 
 
