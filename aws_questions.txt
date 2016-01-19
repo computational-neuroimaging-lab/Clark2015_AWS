@@ -1,6 +1,0 @@
-1) Trade-off between on-demand price/time and spot price/time? At what point does on-demand win?
-    * Add on-demand model columns to dataframe
-
-2) Impose celiing on costs/times, how choose bid ratio (given dataset size)? *Discussion point: bid only affects runtime, cost is fixed - this assumes our resource demands dont affect market price, which we can't prove or disprove either way.
-
-3) Plots of affordability vs computer ownership (using spot-model instead of static, by region...?)

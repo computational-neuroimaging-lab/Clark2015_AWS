@@ -125,7 +125,7 @@ plot_cost_vs_times <- function(df, out_file) {
 }
 
 
-# 
+# Plot spot history
 plot_history <- function(df, out_file) {
   df$Timestamp <- as.POSIXct(df$Timestamp)
   sh <- ggplot(df, aes(x=Timestamp, y=Spot.price, col=Availability.zone)) + geom_line() +
