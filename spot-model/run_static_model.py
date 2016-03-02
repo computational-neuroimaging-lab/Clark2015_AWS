@@ -91,6 +91,8 @@ def load_and_run(config, av_zone, price_hr):
     static_df = pd.DataFrame.from_records(df_rows)
 
     out_df_path = os.path.join(os.getcwd(), os.path.basename(config).split('.')[0], str(price_hr), av_zone, 'on_demand.csv')
+    if not os.path.exists(os.path.dirname(out_df_path)):
+        os.makedirs(os.path.dirname(out_df_path))
     static_df.to_csv(out_df_path)
 
     # Return dataframe
